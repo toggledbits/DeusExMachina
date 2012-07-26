@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<scpd xmlns="urn:schemas-upn-org:service-1-0">
+	<specVersion>
+		<major>1</major>
+		<minor>0</minor>
+	</specVersion>
+	<serviceStateTable>
+		<stateVariable sendEvents="yes">
+			<name>Enabled</name>
+			<dataType>boolean</dataType>
+			<defaultValue>0</defaultValue>
+			<shortCode>Enabled</shortCode>
+		</stateVariable>
+		<stateVariable sendEvents="no">
+			<name>LightsOutTime</name>
+			<dataType>time</dataType>
+			<defaultValue>nil</defaultValue>
+			<shortCode>lightsout</shortCode>
+		</stateVariable>
+	</serviceStateTable>
+	<actionList>
+		<action>
+			<name>SetEnabled</name>
+			<argumentList>
+				<name>NewEnabledValue</name>
+				<relatedStateVariable>Enabled</relatedStateVariable>
+				<direction>in</direction>
+			</argumentList>
+		</action>
+	</actionList>
+</scpd>

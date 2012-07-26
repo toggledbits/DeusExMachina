@@ -1,0 +1,124 @@
+{
+	"flashicon": "icons\/generic_icon.png",
+	"doc_url": {
+		"doc_language": 1,
+		"doc_manual": 1,
+		"doc_version": 1,
+		"doc_platform": 0,
+		"doc_page": "devices"
+	},
+	"in_scene": 1,
+	"x": 2,
+	"y": 4,
+	"Tabs": [
+	         {
+	        	 "Label": {
+	        		 "lang_tag": "tabname_control",
+	        		 "text": "Control"
+	        	 },
+	        	 "Position": "0",
+	        	 "TabType": "flash",
+	        	 "ControlGroup": [
+	        	                  {
+	        	                	  "id": "1",
+	        	                	  "isSingle": "0",
+	        	                	  "sceneGroup": "1"
+	        	                  },
+	        	                  {
+	        	                	  "id": "1",
+	        	                	  "isSingle": "0",
+	        	                	  "sceneGroup": "1"
+	        	                  }
+	        	                 ],
+                  "SceneGroup": [
+				        	 	 {
+				        	 		"id": "1",
+				        	 		"top": "2",
+				        	 		"left": "0",
+				        	 		"x": "2",
+				        	 		"y": "1"
+				        	 	 }
+	        	 				],
+                  "Control": [
+                              {
+                            	  "ControlGroup": "2",
+                            	  "ControlType": "button",
+                            	  "top": 0,
+                            	  "left": 1,
+                            	  "Label": {
+                            		  "lang_tag": "cmd_enabled",
+                            		  "text": "Enabled"
+                            	  },
+                            	  "Display": {
+                            		  "Top": 20,
+                            		  "Left": 20,
+                            		  "Width": 80,
+                            		  "Height": 20,
+                            		  "Service": "urn:futzle-com:serviceId:DeusExMachina1",
+                            		  "Variable": "Enabled",
+                            		  "Value": "1"
+                            	  },
+                            	  "Command": {
+                            		  "Service": "urn:futzle-com:serviceId:DeusExMachina1",
+                            		  "Action": "SetEnabled",
+                            		  "Parameters": [
+                            		                 {
+                            		                	 "Name": "NewEnabledValue",
+                            		                	 "Value": "1"
+                            		                 }
+                            		                 ]
+                            	  }
+                              },
+                              {
+                            	  "ControlGroup": "1",
+                            	  "ControlType": "button",
+                            	  "top": 0,
+                            	  "left": 0,
+                            	  "Label": {
+                            		  "lang_tag": "cmd_disabled",
+                            		  "text": "Disabled"
+                            	  },
+                            	  "Display": {
+                            		  "Top": 20,
+                            		  "Left": 120,
+                            		  "Width": 80,
+                            		  "Height": 20,
+                            		  "Service": "urn:futzle-com:serviceId:DeusExMachina1",
+                            		  "Variable": "Enabled",
+                            		  "Value": "0"
+                            	  },
+                            	  "Command": {
+                            		  "Service": "urn:futzle-com:serviceId:DeusExMachina1",
+                            		  "Action": "SetEnabled",
+                            		  "Parameters": [
+                            		                 {
+                            		                	 "Name": "NewEnabledValue",
+                            		                	 "Value": "0"
+                            		                 }
+                            		                 ]
+                            	  }
+                              }
+                    ]
+	         },
+	         {
+	        	 "Label": {
+	        		 "lang_tag": "configure",
+	        		 "text": "Configure"
+	        	 },
+	        	 "Position": "2",
+	        	 "TabType": "javascript",
+	        	 "ScriptName": "J_DeusExMachina1.js",
+	        	 "Function": "configureDeus" 
+	         },
+	         {
+	        	 "Label": {
+	        		 "lang_tag": "advanced",
+	        		 "text": "Advanced" 
+	        	 },
+	        	 "Position": "3",
+	        	 "TabType": "javascript",
+	        	 "ScriptName": "shared.js",
+	        	 "Function": "advanced_device" 
+	         }
+	         ]
+}

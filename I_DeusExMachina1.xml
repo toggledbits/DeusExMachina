@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<implementation>
+	<functions>
+		SID = "urn:futzle-com:serviceId:DeusExMachina1"
+		SWITCH_SID = "urn:upnp-org:serviceId:SwitchPower1"
+		runStamp = 0
+		
+		function isEnabled() 
+			local enabledTmp = luup.variable_get(SID, "Enabled", lul_device)
+			if (enabledTmp == nil) then
+				return 0
+			elseif (enabledTmp == "1") then
+				return 1
+			else
+				return 0
+			end
+		end
+		
+		function deusInit(deusDevice)
+			if (isEnabled() == 1) then
+				deusEnable()
+			end
+		end
+		
+		function deusEnable()
+			runStamp = os.time()
+			deusStep(runStamp)
+		end
+		
+		function isBedtime()
+			if (not luup.is_night()) then
+				return 1
+			end
+			local bedtime_tmp = luup.variable_get(SID, "LightsOutTime", lul_device)
+			if (bedtime_tmp == nil) then
+				return 0
+			end
+			local bedtime = tonumber(bedtime_tmp) / 1000
+			local date = os.date('*t', luup.sunset())
+			local sunset = (date['hour'] * 60 + date['min']) * 60 * 1000
+			date = os.date('*t')
+			local time = (date['hour'] * 60 + date['min']) * 60 * 1000
+			if (bedtime &gt; sunset) then
+				if (time &lt; bedtime) then
+					return 0
+				else 
+					return 1
+				end
+			else
+				if (time &gt; sunset or time &lt; (bedtime * 1000)) then
+					return 0
+				else
+					return 1
+				end
+			end
+		end
+		
+		function getMax()
+			local max_tmp = luup.variable_get(SID, "controlCount", lul_device)
+			if (max_tmp == nil) then
+				return 0
+			end
+			local max = tonumber(max_tmp)
+			if (max == nil) then
+				return 0
+			else
+				return max
+			end
+		end
+		
+		
+		function turnOffLight()
+			local max = getMax()
+			if (max &gt; 0) then
+				local on = {}
+				local count = 0
+				for i = 0, max - 1,1 do
+					local deviceId = getDeviceId(i)
+					if (luup.variable_get(SWITCH_SID, "Status", deviceId) == "1") then
+						table.insert(on, deviceId)
+						count = count + 1
+					end
+				end 
+				if (count &lt;= 0) then
+					return 0
+				else
+					local change = math.random(1, count)
+					luup.call_action(SWITCH_SID, "SetTarget", {newTargetValue="0"}, on[change])
+					luup.log("DeusExMachina: Set " .. on[change] .. " to Off")
+					return 1
+				end
+			else
+				return 0
+			end
+		end
+		
+		function getDeviceId(control)
+			local deviceId_tmp = luup.variable_get(SID, "control" .. control, lul_device)
+			if (deviceId_tmp == nil or deviceId_tmp == "") then
+				return nil
+			end
+			return tonumber(deviceId_tmp)
+		end
+		
+		function deusStep(stepStampCheck)
+			local stepStamp = tonumber(stepStampCheck)
+			luup.log("DeusExMachina: Checking Iteration " .. stepStampCheck)
+			if (isEnabled() == 1) then
+				if (stepStamp == runStamp) then
+					if (isBedtime() == 1) then
+						luup.log("DeusExMachina: Lights out time.")
+						if (turnOffLight() == 0) then
+							local nextSunset = luup.sunset() - os.time() + math.random(300, 1800)
+							luup.log("DeusExMachina: All lights out. Waiting for startup in " .. nextSunset .. " seconds")
+							luup.call_delay("deusStep", nextSunset, stepStamp, 1)
+							return
+						end
+					else
+						luup.log("DeusExMachina: Running Iteration")
+						local max = getMax()
+						if (max &gt; 0) then
+							local change = math.random(0, max - 1)
+							local deviceId = getDeviceId(change)
+							if (deviceId ~= nil) then
+								local status = luup.variable_get(SWITCH_SID, "Status", deviceId)
+								if (status == "1") then
+									luup.call_action(SWITCH_SID, "SetTarget", {newTargetValue="0"}, deviceId)
+									luup.log("DeusExMachina: Set " .. deviceId .. " to Off")
+								else
+									luup.call_action(SWITCH_SID, "SetTarget", {newTargetValue="1"}, deviceId)
+									luup.log("DeusExMachina: Set " .. deviceId .. " to On")
+								end
+							end
+						end
+					end
+					local delay = math.random(300, 1800)
+					luup.call_delay("deusStep", delay, stepStamp, 1)
+					luup.log("DeusExMachina: Iteration finished. Next iteration in " .. delay .. " seconds")
+				else
+					luup.log("DeusExMachina: Another iteration started. Skipping Iteration")
+				end
+			else
+				luup.log("DeusExMachina: Not enabled. Skipping Iteration")
+			end
+		end
+	</functions>
+	<startup>deusInit</startup>
+	<actionList>
+		<action>
+			<serviceId>urn:futzle-com:serviceId:DeusExMachina1</serviceId>
+			<name>SetEnabled</name>
+			<job>
+				local newEnabledValue = lul_settings.NewEnabledValue
+				if (newEnabledValue == "1") then
+					luup.variable_set(SID, "Enabled", 1, lul_device)
+					deusEnable()
+				else
+					luup.variable_set(SID, "Enabled", 0, lul_device)
+				end
+			</job>
+		</action>
+	</actionList>
+</implementation>
