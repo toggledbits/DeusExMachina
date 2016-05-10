@@ -1,0 +1,211 @@
+{
+    "default_icon": "http://download.mios.com/plugin-icons/deus.png",
+    "doc_url": {
+        "doc_language": 1,
+        "doc_manual": 1,
+        "doc_version": 1,
+        "doc_platform": 0,
+        "doc_page": "devices"
+    },
+	"state_icons": [
+		{
+			"img": "http://download.mios.com/plugin-icons/deus.png",
+			"conditions": [
+				{
+					"service": "urn:futzle-com:serviceId:DeusExMachina1",
+					"variable": "Enabled",
+					"operator": "==",
+					"value": 0,
+					"subcategory_num": 0
+				}
+			]
+		},
+		{
+			"img": "binary_light_on.png",
+			"conditions": [
+				{
+					"service": "urn:futzle-com:serviceId:DeusExMachina1",
+					"variable": "Enabled",
+					"operator": "==",
+					"value": 1,
+					"subcategory_num": 0
+				}
+			]
+		}
+	],
+    "x": "2",
+    "y": "4",
+    "inScene": "1",
+	"ToggleButton": "1",
+    "Tabs": [
+        {
+            "Label": {
+                "lang_tag": "ui7_tabname_control",
+                "text": "Control"
+            },
+            "Position": "0",
+            "TabType": "flash",
+			"top_navigation_tab": 1,
+            "ControlGroup": [{
+                    "id": "1",
+                    "isSingle": "1",
+                    "scenegroup": "1"
+                }
+            ],
+            "SceneGroup": [{
+                    "id": "1",
+                    "top": "2",
+                    "left": "0",
+                    "x": "2",
+                    "y": "1"
+                }
+            ],
+            "Control": [
+				{
+                    "ControlGroup": "1",
+                    "ControlType": "multi_state_button",
+                    "top": "0",
+                    "left": "1",
+					"states": [
+						{
+							"Label": {
+								"lang_tag": "dem_enable",
+								"text": "Enabled"
+							},
+							"ControlGroup": 1,
+							"Display": {
+								"Service": "urn:futzle-com:serviceId:DeusExMachina1",
+								"Variable": "Enabled",
+								"Value": "1"
+							},
+							"Command": {
+								"Service": "urn:futzle-com:serviceId:DeusExMachina1",
+								"Action": "SetEnabled",
+								"Parameters": [
+									{
+										"Name": "NewEnabledValue",
+										"Value": "1"
+									}
+								]
+							},
+							"ControlCode": "dem_enable"
+						},
+						{
+							"Label": {
+								"lang_tag": "dem_disable",
+								"text": "Disabled"
+							},
+							"ControlGroup": 1,
+							"Display": {
+								"Service": "urn:futzle-com:serviceId:DeusExMachina1",
+								"Variable": "Enabled",
+								"Value": "0"
+							},
+							"Command": {
+								"Service": "urn:futzle-com:serviceId:DeusExMachina1",
+								"Action": "SetEnabled",
+								"Parameters": [
+									{
+										"Name": "NewEnabledValue",
+										"Value": "0"
+									}
+								]
+							},
+							"ControlCode": "dem_disable"
+						}
+					]
+				}
+			]
+        }, {
+            "Label": {
+                "lang_tag": "configure",
+                "text": "Configure"
+            },
+            "Position": "2",
+            "TabType": "javascript",
+            "ScriptName": "J_DeusExMachina1_UI7.js",
+            "Function": "DeusExMachina.configureDeus"
+        }, {
+            "Label": {
+                "lang_tag": "advanced",
+                "text": "Advanced"
+            },
+            "Position": "3",
+            "TabType": "javascript",
+            "ScriptName": "shared.js",
+            "Function": "advanced_device"
+        }
+    ],
+    "sceneList": {
+        "group_1": {
+          "cmd_1": {
+            "label": "ON",
+            "serviceId": "urn:futzle-com:serviceId:DeusExMachina1",
+            "action": "SetEnabled",
+            "arguments": {
+              "NewEnabledValue": "1"
+            },
+            "display": {
+              "service": "urn:futzle-com:serviceId:DeusExMachina1",
+              "variable": "Enabled",
+              "value": "1"
+            }
+          },
+          "cmd_2": {
+            "label": "OFF",
+            "serviceId": "urn:futzle-com:serviceId:DeusExMachina1",
+            "action": "SetEnabled",
+            "arguments": {
+              "NewEnabledValue": "0"
+            },
+            "display": {
+              "service": "urn:futzle-com:serviceId:DeusExMachina1",
+              "variable": "Enabled",
+              "value": "0"
+            }
+          }
+        }
+    },
+    "eventList2": [
+        {
+            "id": 1,
+            "label": {
+                "lang_tag": "a_device_is_turned_on_off",
+                "text": "A device is turned on or off"
+            },
+            "serviceId": "urn:futzle-com:serviceId:DeusExMachina1",
+            "argumentList": [
+                {
+                    "id": 1,
+                    "dataType": "boolean",
+                    "defaultValue": "0",
+                    "allowedValueList": [
+                        {
+                            "Disabled": "0",
+                            "HumanFriendlyText": {
+                                "lang_tag": "dem_disabled",
+                                "text": "_DEVICE_NAME_ is disabled"
+                            }
+                        },
+                        {
+                            "Enabled": "1",
+                            "HumanFriendlyText": {
+                                "lang_tag": "dem_enabled",
+                                "text": "_DEVICE_NAME_ is enabled"
+                            }
+                        }
+                    ],
+                    "name": "status",
+                    "comparisson": "=",
+                    "prefix": {
+                        "lang_tag": "ui7_which_mode",
+                        "text": "Which mode"
+                    },
+                    "suffix": {}
+                }
+            ]
+        }
+    ],
+    "DeviceType": "urn:schemas-futzle-com:device:DeusExMachina:1",
+	"device_type": "urn:schemas-futzle-com:device:DeusExMachina:1"
+}
