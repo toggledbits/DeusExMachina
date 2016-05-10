@@ -111,12 +111,14 @@
 		end
 		
 		function deusEnable()
+			luup.log("DeusExMachina: enabling...")
 			runStamp = os.time()
 			deusStep(runStamp)
 		end
 		
 		function deusDisable()
 			local state = getVarNumeric("State", STATE_STANDBY)
+			luup.log("DeusExMachina: disabling...")
 			if ( state == STATE_CYCLE or state == STATE_SHUTDOWN ) then
 				local count = getMax()
 				local i

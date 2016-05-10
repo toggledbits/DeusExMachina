@@ -113,7 +113,8 @@
 							},
 							"ControlCode": "dem_disable"
 						}
-					]
+					],
+					"ControlCode": "dem_statecontrol"
 				}
 			]
         }, {
