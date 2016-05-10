@@ -130,7 +130,6 @@
 		
 		function deusInit(deusDevice)
 			luup.log("(DeusExMachina)::(deusInit) : Starting up...")
-			luup.log("(DeusExMachine)::(deusInit) : Version 1.1p1, patches by rigpapa 2016-05-16")
 			
 			--check UI version
 			checkVersion()
