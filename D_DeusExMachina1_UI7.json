@@ -9,10 +9,10 @@
     },
 	"state_icons": [
 		{
-			"img": "http://download.mios.com/plugin-icons/deus.png",
+			"img": "deus-red.png",
 			"conditions": [
 				{
-					"service": "urn:futzle-com:serviceId:DeusExMachina1",
+					"service": "urn:toggledbits-com:serviceId:DeusExMachina1",
 					"variable": "Enabled",
 					"operator": "==",
 					"value": 0,
@@ -21,10 +21,10 @@
 			]
 		},
 		{
-			"img": "binary_light_on.png",
+			"img": "deus-green.png",
 			"conditions": [
 				{
-					"service": "urn:futzle-com:serviceId:DeusExMachina1",
+					"service": "urn:toggledbits-com:serviceId:DeusExMachina1",
 					"variable": "Enabled",
 					"operator": "==",
 					"value": 1,
@@ -74,12 +74,12 @@
 							},
 							"ControlGroup": 1,
 							"Display": {
-								"Service": "urn:futzle-com:serviceId:DeusExMachina1",
+								"Service": "urn:toggledbits-com:serviceId:DeusExMachina1",
 								"Variable": "Enabled",
 								"Value": "1"
 							},
 							"Command": {
-								"Service": "urn:futzle-com:serviceId:DeusExMachina1",
+								"Service": "urn:toggledbits-com:serviceId:DeusExMachina1",
 								"Action": "SetEnabled",
 								"Parameters": [
 									{
@@ -97,12 +97,12 @@
 							},
 							"ControlGroup": 1,
 							"Display": {
-								"Service": "urn:futzle-com:serviceId:DeusExMachina1",
+								"Service": "urn:toggledbits-com:serviceId:DeusExMachina1",
 								"Variable": "Enabled",
 								"Value": "0"
 							},
 							"Command": {
-								"Service": "urn:futzle-com:serviceId:DeusExMachina1",
+								"Service": "urn:toggledbits-com:serviceId:DeusExMachina1",
 								"Action": "SetEnabled",
 								"Parameters": [
 									{
@@ -140,26 +140,26 @@
         "group_1": {
           "cmd_1": {
             "label": "ON",
-            "serviceId": "urn:futzle-com:serviceId:DeusExMachina1",
+            "serviceId": "urn:toggledbits-com:serviceId:DeusExMachina1",
             "action": "SetEnabled",
             "arguments": {
               "NewEnabledValue": "1"
             },
             "display": {
-              "service": "urn:futzle-com:serviceId:DeusExMachina1",
+              "service": "urn:toggledbits-com:serviceId:DeusExMachina1",
               "variable": "Enabled",
               "value": "1"
             }
           },
           "cmd_2": {
             "label": "OFF",
-            "serviceId": "urn:futzle-com:serviceId:DeusExMachina1",
+            "serviceId": "urn:toggledbits-com:serviceId:DeusExMachina1",
             "action": "SetEnabled",
             "arguments": {
               "NewEnabledValue": "0"
             },
             "display": {
-              "service": "urn:futzle-com:serviceId:DeusExMachina1",
+              "service": "urn:toggledbits-com:serviceId:DeusExMachina1",
               "variable": "Enabled",
               "value": "0"
             }
@@ -173,7 +173,7 @@
                 "lang_tag": "a_device_is_turned_on_off",
                 "text": "A device is turned on or off"
             },
-            "serviceId": "urn:futzle-com:serviceId:DeusExMachina1",
+            "serviceId": "urn:toggledbits-com:serviceId:DeusExMachina1",
             "argumentList": [
                 {
                     "id": 1,
@@ -206,6 +206,6 @@
             ]
         }
     ],
-    "DeviceType": "urn:schemas-futzle-com:device:DeusExMachina:1",
-	"device_type": "urn:schemas-futzle-com:device:DeusExMachina:1"
+    "DeviceType": "urn:schemas-toggledbits-com:device:DeusExMachina:1",
+	"device_type": "urn:schemas-toggledbits-com:device:DeusExMachina:1"
 }

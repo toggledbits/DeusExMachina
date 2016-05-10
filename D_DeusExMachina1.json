@@ -54,12 +54,12 @@
                             		  "Left": 20,
                             		  "Width": 80,
                             		  "Height": 20,
-                            		  "Service": "urn:futzle-com:serviceId:DeusExMachina1",
+                            		  "Service": "urn:toggledbits-com:serviceId:DeusExMachina1",
                             		  "Variable": "Enabled",
                             		  "Value": "1"
                             	  },
                             	  "Command": {
-                            		  "Service": "urn:futzle-com:serviceId:DeusExMachina1",
+                            		  "Service": "urn:toggledbits-com:serviceId:DeusExMachina1",
                             		  "Action": "SetEnabled",
                             		  "Parameters": [
                             		                 {
@@ -83,12 +83,12 @@
                             		  "Left": 120,
                             		  "Width": 80,
                             		  "Height": 20,
-                            		  "Service": "urn:futzle-com:serviceId:DeusExMachina1",
+                            		  "Service": "urn:toggledbits-com:serviceId:DeusExMachina1",
                             		  "Variable": "Enabled",
                             		  "Value": "0"
                             	  },
                             	  "Command": {
-                            		  "Service": "urn:futzle-com:serviceId:DeusExMachina1",
+                            		  "Service": "urn:toggledbits-com:serviceId:DeusExMachina1",
                             		  "Action": "SetEnabled",
                             		  "Parameters": [
                             		                 {

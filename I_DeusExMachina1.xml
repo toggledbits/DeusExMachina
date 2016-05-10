@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <implementation>
 	<functions>
-		SID = "urn:futzle-com:serviceId:DeusExMachina1"
+		SID = "urn:toggledbits-com:serviceId:DeusExMachina1"
 		SWITCH_SID = "urn:upnp-org:serviceId:SwitchPower1"
 		
 		STATE_STANDBY = 0
@@ -38,7 +38,7 @@
 		
 		local function isBedtime()
 			local testing = getVarNumeric("TestMode", 0)
-			if (testing) then luup.log('DeusExMachina: TestMode on') end
+			if (testing ~= 0) then luup.log('DeusExMachina: TestMode on') end
 			if (not (testing or luup.is_night())) then
 				return 1
 			end
@@ -51,14 +51,14 @@
 			local bedtime = tonumber(bedtime_tmp) / 1000
 			local date = os.date('*t', luup.sunset())
 			local sunset = (date['hour'] * 60 + date['min']) * 60
-			if (testing) then 
+			if (testing ~= 0) then 
 				local s = getVarNumeric( "TestSunset", nil )
 				if (s ~= nil) then sunset = tonumber(s,10) * 60 end
 				luup.log('DeusExMachina:isBedtime: testing mode sunset time is ' .. tostring(sunset))
 			end
 			date = os.date('*t')
 			local time = (date['hour'] * 60 + date['min']) * 60
-			if (testing) then			
+			if (testing ~= 0) then			
 				luup.log('DeusExMachina: time=' .. tostring(time) .. ', sunset=' .. tostring(sunset) .. ', bedtime=' .. tostring(bedtime))
 			end
 			local ret = 1;
@@ -73,7 +73,7 @@
 					ret = 0
 				end
 			end
-			if (testing) then luup.log("DeusExMachina:isBedtime() returning " .. tostring(ret)) end
+			if (testing ~= 0) then luup.log("DeusExMachina:isBedtime() returning " .. tostring(ret)) end
 			return ret
 		end
 		
@@ -122,7 +122,7 @@
 				local i
 				for i=0, count-1, 1 do
 					local deviceid = getDeviceId(i)
-					luup.call_action(SWITCH_SID, "SetTarget", { newTargetValue="0"}, deviceid)
+					luup.call_action(SWITCH_SID, "SetTarget", { newTargetValue="0" }, deviceid)
 				end
 			end
 			luup.variable_set(SID, "State", STATE_STANDBY, lul_device)
@@ -134,6 +134,7 @@
 			--check UI version
 			checkVersion()
 			
+			-- Start up if we're enabled
 			if (isEnabled() == 1) then
 				deusEnable()
 			end
@@ -145,7 +146,7 @@
 			local now = os.time()
 			luup.log("DeusExMachina: Checking Iteration " .. stepStampCheck)
 			local testing = getVarNumeric("TestMode", 0)
-			if (testing) then
+			if (testing ~= 0) then
 				-- Note that TestSunset is expressed in MINUTES since midnight
 				local s = getVarNumeric("TestSunset", nil)
 				if (s ~= nil) then
@@ -179,7 +180,7 @@
 						end
 					else
 						luup.log("DeusExMachina: Running toggle cycle")
-						luup.variable_set(SID, "State", STATE_CYCLE. lul_device)
+						luup.variable_set(SID, "State", STATE_CYCLE, lul_device)
 						mindelay = getVarNumeric("MinCycleDelay", 300)
 						maxdelay = getVarNumeric("MaxCycleDelay", 1800)
 						local max = getMax()
@@ -212,7 +213,7 @@
 	<startup>deusInit</startup>
 	<actionList>
 		<action>
-			<serviceId>urn:futzle-com:serviceId:DeusExMachina1</serviceId>
+			<serviceId>urn:toggledbits-com:serviceId:DeusExMachina1</serviceId>
 			<name>SetEnabled</name>
 			<job>
 				local newEnabledValue = lul_settings.NewEnabledValue

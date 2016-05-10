@@ -15,7 +15,7 @@ PHR 01: MCV examples all supply 0 as last argument (for unsupplied optional args
     // unique identifier for this plugin...
     var uuid = '07EE8EAA-739D-4CEE-97E4-7C2B651A03A6';
 
-    var serviceId = "urn:futzle-com:serviceId:DeusExMachina1";
+    var serviceId = "urn:toggledbits-com:serviceId:DeusExMachina1";
 
     var myModule = {};
 	
