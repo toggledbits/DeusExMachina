@@ -26,14 +26,11 @@ var checkTime;
 		}
 		
 		function getControlled() {
-			var count = get_device_state(deusDevice, serviceId, "controlCount", 0);
-			if (typeof(count) == "undefined") {
-				count = 0;
+			var list = get_device_state(deusDevice, serviceId, "Devices", 0);
+			if (typeof(list) == "undefined" || list.match(/^\s*$/)) {
+				return [];
 			}
-			var res = [];
-			for (var i=0; i<count; i++) {
-				res.push(get_device_state(deusDevice, serviceId, "control"+i, 0));
-			}
+			var res = list.split(',');
 			return res;
 		}
 		controlled = getControlled();
@@ -71,10 +68,7 @@ var checkTime;
 			controlled.push(deviceId);
 		}
 		
-		set_device_state(deusDevice, serviceId, "controlCount", controlled.length, 0);
-		for (var i=0; i<controlled.length; i++) {
-			set_device_state(deusDevice, serviceId, "control"+i, controlled[i], 0);
-		}
+		set_device_state(deusDevice, serviceId, "Devices", controlled.join(','), 0);
 	}
 	
 	function timeMsToStr(ms) {

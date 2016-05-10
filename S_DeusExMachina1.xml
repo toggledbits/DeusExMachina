@@ -9,7 +9,7 @@
 			<name>Enabled</name>
 			<dataType>boolean</dataType>
 			<defaultValue>0</defaultValue>
-			<shortCode>Enabled</shortCode>
+			<shortCode>enabled</shortCode>
 		</stateVariable>
 		<stateVariable sendEvents="no">
 			<name>LightsOutTime</name>
@@ -18,46 +18,16 @@
 			<shortCode>lightsout</shortCode>
 		</stateVariable>
 		<stateVariable sendEvents="no">
-			<name>controlCount</name>
-			<dataType>ui2</dataType>
-			<defaultValue>0</defaultValue>
-			<shortCode>ctrlcount</shortCode>
-		</stateVariable>
-		<stateVariable sendEvents="no">
-			<name>MinCycleDelay</name>
-			<dataType>ui4</dataType>
-			<defaultValue>300</defaultValue>
-			<shortCode>mincycle</shortCode>
-		</stateVariable>
-		<stateVariable sendEvents="no">
-			<name>MaxCycleDelay</name>
-			<dataType>ui4</dataType>
-			<defaultValue>1800</defaultValue>
-			<shortCode>maxcycle</shortCode>
-		</stateVariable>
-		<stateVariable sendEvents="no">
-			<name>MinOffDelay</name>
-			<dataType>ui4</dataType>
-			<defaultValue>300</defaultValue>
-			<shortCode>minoff</shortCode>
-		</stateVariable>
-		<stateVariable sendEvents="no">
-			<name>MaxOffDelay</name>
-			<dataType>ui4</dataType>
-			<defaultValue>maxoff</defaultValue>
-			<shortCode>maxoff</shortCode>
-		</stateVariable>
-		<stateVariable sendEvents="no">
-			<name>TestMode</name>
-			<dataType>boolean</dataType>
-			<defaultValue>0</defaultValue>
-			<shortCode>testmode</shortCode>
-		</stateVariable>
-		<stateVariable sendEvents="no">
-			<name>TestSunset</name>
-			<dataType>ui4</dataType>
+			<name>Devices</name>
+			<dataType>string</dataType>
 			<defaultValue>nil</defaultValue>
-			<shortCode>testsunset</shortCode>
+			<shortCode>devices</shortCode>
+		</stateVariable>
+		<stateVariable sendEvents="no">
+			<name>State</name>
+			<dataType>ui1</dataType>
+			<defaultValue>0</defaultValue>
+			<shortCode>state</shortCode>
 		</stateVariable>
 	</serviceStateTable>
 	<actionList>
