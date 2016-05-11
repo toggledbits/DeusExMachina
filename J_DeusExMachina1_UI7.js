@@ -1,20 +1,7 @@
 var DeusExMachina = (function(api) {
 
-/* **************************************************************************************
-Patrick Rigney (rigpapa) bug fixes 2016-05-06
-
-PHR 03: jQuery.inArray() requires type match, so make sure any numeric value passed into
-        the search is a string, because that's what we're usually looking for in the
-        array.
-PHR 02: Wrong variable name used, seems copied from MCV template; changed to correct name
-PHR 01: MCV examples all supply 0 as last argument (for unsupplied optional args). Also
-        use setDeviceStatePersistent to make settings stick.
-
-************************************************************************************** */
-
     // unique identifier for this plugin...
-    // var uuid = '07EE8EAA-739D-4CEE-97E4-7C2B651A03A6';
-	var uuid = '11816aa9-0c7c-4e8f-b490-aab429fa140f';
+    var uuid = '11816AA9-0C7C-4E8F-B490-AAB429FA140F';
 
     var serviceId = "urn:toggledbits-com:serviceId:DeusExMachina1";
 
@@ -22,26 +9,23 @@ PHR 01: MCV examples all supply 0 as last argument (for unsupplied optional args
 
     var deusDevice = api.getCpanelDeviceId();
     var controlled;
-    ////////////////////////////
+
     function onBeforeCpanelClose(args) {
         console.log('handler for before cpanel close');
     }
 
     function init() {
-        // register to events...
         api.registerEventHandler('on_ui_cpanel_before_close', myModule, 'onBeforeCpanelClose');
     }
 
     function isLight(device) {
         switch(device.device_type) {
-        case "urn:schemas-upnp-org:device:BinaryLight:1":
-            return true;
+            case "urn:schemas-upnp-org:device:BinaryLight:1":
+            case "urn:schemas-upnp-org:device:DimmableLight:1":
+                return true;
 
-        case "urn:schemas-upnp-org:device:DimmableLight:1":
-            return true;
-
-        default:
-            return false;
+            default:
+                return false;
         }
     }
 
@@ -113,7 +97,7 @@ PHR 01: MCV examples all supply 0 as last argument (for unsupplied optional args
 
             var i, j, roomObj, roomid, html = "";
             html += "<label for=\"deusExTime\">Enter the time (after sunset) to begin shutting off lights:</label><br/>";
-            html += "<input type=\"text\" onChange=\"DeusExMachina.checkTime()\" id=\"deusExTime\" />&nbsp;(HH:MM)";
+            html += "<input type=\"text\" width=\"6\" maxlength=\"5\" onChange=\"DeusExMachina.checkTime()\" id=\"deusExTime\" />&nbsp;(HH:MM)";
 
             var devices = api.getListOfDevices();
             var rooms = [];
@@ -142,15 +126,15 @@ PHR 01: MCV examples all supply 0 as last argument (for unsupplied optional args
                 }
             );
 
-            html += "<p>Select the lights to be controlled when enabled.</p>";
+            html += "<p>&nbsp;</p><div><label for=\"controlled\">Select the devices to be controlled when enabled:</label>";
             controlled = getControlled();
             for (j=0; j<r.length; j+=1) {
                 roomObj = r[j];
-                if (roomObj === undefined || roomObj.devices.length == 0) continue; // skip gaps in our sparse list, or rooms with no devices
+                if (roomObj === undefined || roomObj.devices.length == 0) continue; // skip gaps in our sparse list, and rooms with no devices
                 roomid = roomObj.id;
                 html += '<div class="room_container_header_title">' + roomObj.name + "</div>";
                 for (i=0; i<roomObj.devices.length; i+=1) {
-                    html += "<input type=\"checkbox\"";
+                    html += "<input id=\"controlled\" type=\"checkbox\"";
                     if (jQuery.inArray(roomObj.devices[i].id.toString(), controlled) >= 0) { // PHR 03
                         html += " checked=\"true\"";
                     }
@@ -161,6 +145,7 @@ PHR 01: MCV examples all supply 0 as last argument (for unsupplied optional args
                     html += "<br />\n";
                 }
             }
+            html += "</div>";
 
             var time = "23:59";
             var timeMs = parseInt(api.getDeviceState(deusDevice, serviceId, "LightsOutTime"));
