@@ -42,7 +42,16 @@
         
         -- Shortcut function to return state of Enabled variable
         local function isEnabled() 
-            return getVarNumeric("Enabled", 0)
+            local s = luup.variable_get(SID, "Enabled", lul_device)
+            if (s == "1") then
+                return 1
+            elseif (s == "0") then
+                return 0
+            end
+            
+            -- Ensure predictable string (helps initial button state display in UI)
+            luup.variable_set(SID, "Enabled", "0", lul_device)
+            return 0
         end
         
         -- DEM cycles lights between sunset and the user-specified off time. This function returns 0
@@ -149,8 +158,8 @@
             local state = getVarNumeric("State", STATE_STANDBY)
             luup.log("DeusExMachina: disabling...")
             if ( state == STATE_CYCLE or state == STATE_SHUTDOWN ) then
-                local devs = getDeviceList()
-                local count = table.getn(devs)
+                local devs, count
+                devs, count = getDeviceList()
                 while count &gt; 0 do
                     luup.call_action(SWITCH_SID, "SetTarget", { newTargetValue="0" }, tonumber(devs[count],10))
                     count = count - 1
