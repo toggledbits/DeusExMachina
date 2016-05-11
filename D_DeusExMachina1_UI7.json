@@ -1,5 +1,5 @@
 {
-    "default_icon": "http://download.mios.com/plugin-icons/deus.png",
+    "default_icon": "http://www.toggledbits.com/mios/DeusExMachinaII/img/deus.png",
     "doc_url": {
         "doc_language": 1,
         "doc_manual": 1,
@@ -8,7 +8,7 @@
         "doc_page": "devices"
     },
     "state_icons": [{
-        "img": "deus-red.png",
+        "img": "http://www.toggledbits.com/mios/DeusExMachinaII/img/deus-red.png",
         "conditions": [{
             "service": "urn:toggledbits-com:serviceId:DeusExMachina1",
             "variable": "Enabled",
@@ -17,7 +17,7 @@
             "subcategory_num": 0
         }]
     }, {
-        "img": "deus-green.png",
+        "img": "http://www.toggledbits.com/mios/DeusExMachinaII/img/deus-green.png",
         "conditions": [{
             "service": "urn:toggledbits-com:serviceId:DeusExMachina1",
             "variable": "Enabled",
