@@ -9,13 +9,25 @@
 			<name>Enabled</name>
 			<dataType>boolean</dataType>
 			<defaultValue>0</defaultValue>
-			<shortCode>Enabled</shortCode>
+			<shortCode>enabled</shortCode>
 		</stateVariable>
 		<stateVariable sendEvents="no">
 			<name>LightsOutTime</name>
 			<dataType>time</dataType>
 			<defaultValue>nil</defaultValue>
 			<shortCode>lightsout</shortCode>
+		</stateVariable>
+		<stateVariable sendEvents="no">
+			<name>Devices</name>
+			<dataType>string</dataType>
+			<defaultValue>nil</defaultValue>
+			<shortCode>devices</shortCode>
+		</stateVariable>
+		<stateVariable sendEvents="no">
+			<name>State</name>
+			<dataType>ui1</dataType>
+			<defaultValue>0</defaultValue>
+			<shortCode>state</shortCode>
 		</stateVariable>
 	</serviceStateTable>
 	<actionList>

@@ -5,15 +5,14 @@
 		<minor>0</minor>
 	</specVersion>
 	<device>
-		<deviceType>urn:schemas-futzle-com:device:DeusExMachina:1</deviceType>
+		<deviceType>urn:schemas-toggledbits-com:device:DeusExMachina:1</deviceType>
 		<staticJson>D_DeusExMachina1.json</staticJson>
 		<serviceList>
 	      <service>
-	        <serviceType>urn:schemas-futzle-com:service:DeusExMachina:1</serviceType>
-	        <serviceId>urn:futzle-com:serviceId:DeusExMachina1</serviceId>
+	        <serviceType>urn:schemas-toggledbits-com:service:DeusExMachina:1</serviceType>
+	        <serviceId>urn:toggledbits-com:serviceId:DeusExMachina1</serviceId>
 	        <SCPDURL>S_DeusExMachina1.xml</SCPDURL>
 	      </service>
 	    </serviceList>
 	</device>
 </root>
-	
