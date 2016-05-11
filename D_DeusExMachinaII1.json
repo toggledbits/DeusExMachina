@@ -1,5 +1,6 @@
 {
 	"flashicon": "http://www.toggledbits.com/mios/DeusExMachinaII/img/deusII.png",
+	"default_icon": "http://www.toggledbits.com/mios/DeusExMachinaII/img/deusII.png",
 	"doc_url": {
 		"doc_language": 1,
 		"doc_manual": 1,
@@ -20,11 +21,7 @@
 		"ControlGroup": [{
 			"id": "1",
 			"isSingle": "0",
-			"sceneGroup": "1"
-		}, {
-			"id": "1",
-			"isSingle": "0",
-			"sceneGroup": "1"
+			"scenegroup": "1"
 		}],
 		"SceneGroup": [{
 			"id": "1",
@@ -34,32 +31,6 @@
 			"y": "1"
 		}],
 		"Control": [{
-			"ControlGroup": "2",
-			"ControlType": "button",
-			"top": 0,
-			"left": 1,
-			"Label": {
-				"lang_tag": "cmd_enabled",
-				"text": "Enabled"
-			},
-			"Display": {
-				"Top": 20,
-				"Left": 20,
-				"Width": 80,
-				"Height": 20,
-				"Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
-				"Variable": "Enabled",
-				"Value": "1"
-			},
-			"Command": {
-				"Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
-				"Action": "SetEnabled",
-				"Parameters": [{
-					"Name": "NewEnabledValue",
-					"Value": "1"
-				}]
-			}
-		}, {
 			"ControlGroup": "1",
 			"ControlType": "button",
 			"top": 0,
@@ -84,7 +55,35 @@
 					"Name": "NewEnabledValue",
 					"Value": "0"
 				}]
-			}
+			},
+			"ControlCode": "dem_disable"
+		}, {
+			"ControlGroup": "1",
+			"ControlType": "button",
+			"top": 0,
+			"left": 1,
+			"Label": {
+				"lang_tag": "cmd_enabled",
+				"text": "Enabled"
+			},
+			"Display": {
+				"Top": 20,
+				"Left": 20,
+				"Width": 80,
+				"Height": 20,
+				"Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
+				"Variable": "Enabled",
+				"Value": "1"
+			},
+			"Command": {
+				"Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
+				"Action": "SetEnabled",
+				"Parameters": [{
+					"Name": "NewEnabledValue",
+					"Value": "1"
+				}]
+			},
+			"ControlCode": "dem_enable"
 		}]
 	}, {
 		"Label": {
@@ -104,5 +103,6 @@
 		"TabType": "javascript",
 		"ScriptName": "shared.js",
 		"Function": "advanced_device"
-	}]
+	}],
+    "device_type": "urn:schemas-toggledbits-com:device:DeusExMachinaII:1"
 }
