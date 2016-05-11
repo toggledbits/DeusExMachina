@@ -104,5 +104,5 @@
 		"ScriptName": "shared.js",
 		"Function": "advanced_device"
 	}],
-    "device_type": "urn:schemas-toggledbits-com:device:DeusExMachinaII:1"
+	"device_type": "urn:schemas-toggledbits-com:device:DeusExMachinaII:1"
 }
