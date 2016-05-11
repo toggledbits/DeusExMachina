@@ -36,7 +36,7 @@ As of version 2.0 and on UI7, DeusExMachina can be enabled or disabled like a li
 A Lua interface is also supported since version 1.1 for both UI5 and UI7, via a luup.call_action() call:
 
 ```
-luup.call_action("urn:toggledbits-com:serviceId:DeusExMachina1", "SetEnabled", { NewEnabledValue = "0|1" }, deviceID)
+luup.call_action("urn:toggledbits-com:serviceId:DeusExMachinaII1", "SetEnabled", { NewEnabledValue = "0|1" }, deviceID)
 ```
 
 Of course, only one of either "0" or "1" should be specified.
