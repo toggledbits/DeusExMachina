@@ -5,13 +5,13 @@
 		<minor>0</minor>
 	</specVersion>
 	<device>
-		<deviceType>urn:schemas-toggledbits-com:device:DeusExMachina:1</deviceType>
-		<staticJson>D_DeusExMachina1.json</staticJson>
+		<deviceType>urn:schemas-toggledbits-com:device:DeusExMachinaII:1</deviceType>
+		<staticJson>D_DeusExMachinaII1.json</staticJson>
 		<serviceList>
 	      <service>
-	        <serviceType>urn:schemas-toggledbits-com:service:DeusExMachina:1</serviceType>
-	        <serviceId>urn:toggledbits-com:serviceId:DeusExMachina1</serviceId>
-	        <SCPDURL>S_DeusExMachina1.xml</SCPDURL>
+	        <serviceType>urn:schemas-toggledbits-com:service:DeusExMachinaII:1</serviceType>
+	        <serviceId>urn:toggledbits-com:serviceId:DeusExMachinaII1</serviceId>
+	        <SCPDURL>S_DeusExMachinaII1.xml</SCPDURL>
 	      </service>
 	    </serviceList>
 	</device>

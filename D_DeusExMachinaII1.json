@@ -47,12 +47,12 @@
 				"Left": 20,
 				"Width": 80,
 				"Height": 20,
-				"Service": "urn:toggledbits-com:serviceId:DeusExMachina1",
+				"Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
 				"Variable": "Enabled",
 				"Value": "1"
 			},
 			"Command": {
-				"Service": "urn:toggledbits-com:serviceId:DeusExMachina1",
+				"Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
 				"Action": "SetEnabled",
 				"Parameters": [{
 					"Name": "NewEnabledValue",
@@ -73,12 +73,12 @@
 				"Left": 120,
 				"Width": 80,
 				"Height": 20,
-				"Service": "urn:toggledbits-com:serviceId:DeusExMachina1",
+				"Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
 				"Variable": "Enabled",
 				"Value": "0"
 			},
 			"Command": {
-				"Service": "urn:toggledbits-com:serviceId:DeusExMachina1",
+				"Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
 				"Action": "SetEnabled",
 				"Parameters": [{
 					"Name": "NewEnabledValue",
@@ -93,7 +93,7 @@
 		},
 		"Position": "2",
 		"TabType": "javascript",
-		"ScriptName": "J_DeusExMachina1.js",
+		"ScriptName": "J_DeusExMachinaII1.js",
 		"Function": "configureDeus"
 	}, {
 		"Label": {

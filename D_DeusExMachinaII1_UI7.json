@@ -10,7 +10,7 @@
     "state_icons": [{
         "img": "http://www.toggledbits.com/mios/DeusExMachinaII/img/deus-red.png",
         "conditions": [{
-            "service": "urn:toggledbits-com:serviceId:DeusExMachina1",
+            "service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
             "variable": "Enabled",
             "operator": "==",
             "value": 0,
@@ -19,7 +19,7 @@
     }, {
         "img": "http://www.toggledbits.com/mios/DeusExMachinaII/img/deus-green.png",
         "conditions": [{
-            "service": "urn:toggledbits-com:serviceId:DeusExMachina1",
+            "service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
             "variable": "Enabled",
             "operator": "==",
             "value": 1,
@@ -62,12 +62,12 @@
                 },
                 "ControlGroup": 1,
                 "Display": {
-                    "Service": "urn:toggledbits-com:serviceId:DeusExMachina1",
+                    "Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
                     "Variable": "Enabled",
                     "Value": "1"
                 },
                 "Command": {
-                    "Service": "urn:toggledbits-com:serviceId:DeusExMachina1",
+                    "Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
                     "Action": "SetEnabled",
                     "Parameters": [{
                         "Name": "NewEnabledValue",
@@ -82,12 +82,12 @@
                 },
                 "ControlGroup": 1,
                 "Display": {
-                    "Service": "urn:toggledbits-com:serviceId:DeusExMachina1",
+                    "Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
                     "Variable": "Enabled",
                     "Value": "0"
                 },
                 "Command": {
-                    "Service": "urn:toggledbits-com:serviceId:DeusExMachina1",
+                    "Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
                     "Action": "SetEnabled",
                     "Parameters": [{
                         "Name": "NewEnabledValue",
@@ -119,7 +119,7 @@
         },
         "Position": "2",
         "TabType": "javascript",
-        "ScriptName": "J_DeusExMachina1_UI7.js",
+        "ScriptName": "J_DeusExMachinaII1_UI7.js",
         "Function": "DeusExMachina.configureDeus"
     }, {
         "Label": {
@@ -135,26 +135,26 @@
         "group_1": {
             "cmd_1": {
                 "label": "ON",
-                "serviceId": "urn:toggledbits-com:serviceId:DeusExMachina1",
+                "serviceId": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
                 "action": "SetEnabled",
                 "arguments": {
                     "NewEnabledValue": "1"
                 },
                 "display": {
-                    "service": "urn:toggledbits-com:serviceId:DeusExMachina1",
+                    "service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
                     "variable": "Enabled",
                     "value": "1"
                 }
             },
             "cmd_2": {
                 "label": "OFF",
-                "serviceId": "urn:toggledbits-com:serviceId:DeusExMachina1",
+                "serviceId": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
                 "action": "SetEnabled",
                 "arguments": {
                     "NewEnabledValue": "0"
                 },
                 "display": {
-                    "service": "urn:toggledbits-com:serviceId:DeusExMachina1",
+                    "service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
                     "variable": "Enabled",
                     "value": "0"
                 }
@@ -167,7 +167,7 @@
             "lang_tag": "a_device_is_turned_on_off",
             "text": "A device is turned on or off"
         },
-        "serviceId": "urn:toggledbits-com:serviceId:DeusExMachina1",
+        "serviceId": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
         "argumentList": [{
             "id": 1,
             "dataType": "boolean",
@@ -194,6 +194,6 @@
             "suffix": {}
         }]
     }],
-    "DeviceType": "urn:schemas-toggledbits-com:device:DeusExMachina:1",
-    "device_type": "urn:schemas-toggledbits-com:device:DeusExMachina:1"
+    "DeviceType": "urn:schemas-toggledbits-com:device:DeusExMachinaII:1",
+    "device_type": "urn:schemas-toggledbits-com:device:DeusExMachinaII:1"
 }

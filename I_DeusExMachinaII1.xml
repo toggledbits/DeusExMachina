@@ -8,7 +8,7 @@
         -- A big thanks to Andy for passing the torch so that this great plug-in can live on.
         -- -------------------------------------------------------------------------------------------------------------------------
         
-        SID = "urn:toggledbits-com:serviceId:DeusExMachina1"
+        SID = "urn:toggledbits-com:serviceId:DeusExMachinaII1"
         SWITCH_SID = "urn:upnp-org:serviceId:SwitchPower1"
         
         STATE_STANDBY = 0
@@ -26,7 +26,7 @@
             end
             if( luup.version_branch == 1 and luup.version_major == 7 and ui7Check == "false") then
                 luup.variable_set(SID, "UI7Check", "true", lul_device)
-                luup.attr_set("device_json", "D_DeusExMachina1_UI7.json", lul_device)
+                luup.attr_set("device_json", "D_DeusExMachinaII1_UI7.json", lul_device)
                 luup.reload()
             end
         end
@@ -256,7 +256,7 @@
     <startup>deusInit</startup>
     <actionList>
         <action>
-            <serviceId>urn:toggledbits-com:serviceId:DeusExMachina1</serviceId>
+            <serviceId>urn:toggledbits-com:serviceId:DeusExMachinaII1</serviceId>
             <name>SetEnabled</name>
             <job>
                 local newEnabledValue = lul_settings.NewEnabledValue

@@ -3,7 +3,7 @@ var updateDeusControl;
 var checkTime;
 
 (function() {
-	var serviceId = "urn:toggledbits-com:serviceId:DeusExMachina1";
+	var serviceId = "urn:toggledbits-com:serviceId:DeusExMachinaII1";
 	var controlled;
 	var deusDevice;
 	

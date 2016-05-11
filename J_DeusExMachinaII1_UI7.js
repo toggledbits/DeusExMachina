@@ -3,7 +3,7 @@ var DeusExMachina = (function(api) {
     // unique identifier for this plugin...
     var uuid = '11816AA9-0C7C-4E8F-B490-AAB429FA140F';
 
-    var serviceId = "urn:toggledbits-com:serviceId:DeusExMachina1";
+    var serviceId = "urn:toggledbits-com:serviceId:DeusExMachinaII1";
 
     var myModule = {};
 
