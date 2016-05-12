@@ -83,17 +83,17 @@ Version 2.0 also added the ability for a change of DeusExMachina's Enabled state
 
 Version 2.0 on UI7 supports events (e.g. to trigger a scene or use with Program Logic Event Generator) for its state changes.
 
-If the "The device is enabled or disable" event is chosen, the trigger will fire when DEMII is enabled or disabled (you will be given the option to choose which).
+If the "device is enabled or disabled" event is chosen, the trigger will fire when DEMII's state is changed to enabled or disabled (you will be given the option to choose which).
 
-For "The operating mode changes", the event is triggered when DEMII's operating mode changes as follows:
+For the "operating mode changes" event, the trigger fires when DEMII's operating mode changes. DEMII's operating modes are:
 
-* Standby - DEMII goes into standby mode, which is the operating mode when disabled. This is equivalent to testing for disabled state;
+* Standby - DEMII is disabled (this is equivalent to the "device is disabled" state event);
 
-* Ready - DEMII goes into ready state any time it is enabled but not the configured cycling period between sunset and shut-off time (i.e. it's in ready state when it's waiting for sunset);
+* Ready - DEMII is enabled and waiting for the next sunset;
 
-* Cycling - DEMII is enabled and enters the active period at sunset (i.e. it is now actively cycling lights);
+* Cycling - DEMII is enabled and cycling lights in the active period after sunset and before the "lights out" time;
 
-* Shut-off - DEMII is enabled and enters the shut-off period (i.e. it is now turning lights off).
+* Shut-off - DEMII is enabled and shutting off lights, having reached the "lights out" time.
 
 When disabled, DEMII is always in Standby mode. When enabled, DEMII enters the Ready mode, then transitions to Cycling mode at sunset, then Shut-off mode at the "lights out" time, and then when all lights have
 been shut off, returns to the Ready mode waiting for the next day's sunset. The transition between Ready, Cycling, and Shut-off continues until DEMII is disabled (at which point it goes to Standby).
