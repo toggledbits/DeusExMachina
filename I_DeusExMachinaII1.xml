@@ -227,6 +227,8 @@
             -- Start up if we're enabled
             if (isEnabled() == 1) then
                 deusEnable()
+			else
+				deusDisable()
             end
         end
         
