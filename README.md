@@ -5,6 +5,12 @@ DeusExMachina: The Vacation Plugin
 
 DeusExMachina is a plugin for the MiCasaVerde Vera home automation system. It takes over your house while you're away on vacation by creating a ghost that moves from room to room, turning on and off lights. Simply specify the lights you want to have controlled by the plugin, specify a "Lights Out" time when lights will begin to turn off, and come sundown DeusExMachina will take over.
 
+There are currently two versions of Deus Ex Machina available:
+
+* Deus Ex Machina -- version 1.1, for UI5; this is the legacy version and although it installs for UI6 and UI7, it does not work properly on those platforms.
+
+* Deus Ex Machina II -- version 2.0, for UI7; this is the new plugin. It is for all versions of firmware, but has only been tested under UI7. Testing and bug reports for UI5 and UI6 would be appreciated.
+
 ### History ###
 
 DeusExMachina was originally written and published in 2012 by Andy Lintner (beowulfe), and maintained by Andy through the 1.x versions. In May 2016, Andy turned the project over to Patrick Rigney (toggledbits here on Github, rigpapa in the MCV/Mios world) for ongoing support (version 2.0 onward).
@@ -36,7 +42,11 @@ As of version 2.0 and on UI7, DeusExMachina can be enabled or disabled like a li
 A Lua interface is also supported since version 1.1 for both UI5 and UI7, via a luup.call_action() call:
 
 ```
+-- For the new Deus Ex Machina II plugin (v2.0 and higher), do this:
 luup.call_action("urn:toggledbits-com:serviceId:DeusExMachinaII1", "SetEnabled", { NewEnabledValue = "0|1" }, deviceID)
+
+-- For the old Deus Ex Machina plugin (v1.1 and earlier) running on UI5 or UI7, do this:
+luup.call_action("urn:futzle-com:serviceId:DeusExMachina1", "SetEnabled", { NewEnabledValue = "0|1" }, deviceID)
 ```
 
 Of course, only one of either "0" or "1" should be specified.
