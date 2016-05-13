@@ -1,5 +1,5 @@
 {
-    "default_icon": "http://www.toggledbits.com/mios/DeusExMachinaII/img/deusII.png",
+    "default_icon": "https://i.imgur.com/qZLXVbE.png",
     "doc_url": {
         "doc_language": 1,
         "doc_manual": 1,
@@ -8,7 +8,7 @@
         "doc_page": "devices"
     },
     "state_icons": [{
-        "img": "http://www.toggledbits.com/mios/DeusExMachinaII/img/deus-red.png",
+        "img": "https://i.imgur.com/k5gwcN2.png",
         "conditions": [{
             "service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
             "variable": "Enabled",
@@ -17,7 +17,7 @@
             "subcategory_num": 0
         }]
     }, {
-        "img": "http://www.toggledbits.com/mios/DeusExMachinaII/img/deus-green.png",
+        "img": "https://i.imgur.com/O3jzrPe.png",
         "conditions": [{
             "service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
             "variable": "Enabled",
