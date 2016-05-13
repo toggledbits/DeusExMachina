@@ -216,7 +216,7 @@
         
         -- Initialize.
         function deusInit(deusDevice)
-            luup.log("DeusExMachinaII::deusInit(): Version 2.0 (2016-05-12), starting up...")
+            luup.log("DeusExMachinaII::deusInit(): Version 2.2 (2016-05-13), starting up...")
             
             -- One-time stuff
             runOnce()
@@ -227,8 +227,8 @@
             -- Start up if we're enabled
             if (isEnabled() == 1) then
                 deusEnable()
-			else
-				deusDisable()
+            else
+                deusDisable()
             end
         end
         
