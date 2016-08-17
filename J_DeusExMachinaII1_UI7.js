@@ -69,16 +69,16 @@ var DeusExMachinaII = (function(api) {
 
         api.setDeviceStatePersistent(deusDevice, serviceId, "Devices", controlled.join(','), 0); // PHR 01
     }
-	
-	function changeHouseModeSelector( eventObject ) 
-	{
-		var mask = 0;
-		jQuery(".hmselect:checked").each( function( i, e ) {
-			mask |= 1 << jQuery(e).val();
-		});
-		console.log('Mask is now ' + mask);
-		api.setDeviceStatePersistent(deusDevice, serviceId, "HouseModes", mask, 0);
-	}
+    
+    function changeHouseModeSelector( eventObject ) 
+    {
+        var mask = 0;
+        jQuery(".hmselect:checked").each( function( i, e ) {
+            mask |= 1 << jQuery(e).val();
+        });
+        console.log('Mask is now ' + mask);
+        api.setDeviceStatePersistent(deusDevice, serviceId, "HouseModes", mask, 0);
+    }
 
     function checkTime()
     {
@@ -108,14 +108,14 @@ var DeusExMachinaII = (function(api) {
             var i, j, roomObj, roomid, html = "";
             html += "<label for=\"deusExTime\">Enter the time (after sunset) to begin shutting off lights:</label><br/>";
             html += "<input type=\"text\" size=\"6\" maxlength=\"5\" onChange=\"DeusExMachinaII.checkTime()\" id=\"deusExTime\" />&nbsp;(HH:MM)";
-			
-			html += "<p>";
-			html += "<label for=\"houseMode\">When enabled, run <i>only</i> in these House Modes (if all unchecked, runs in any mode):</label><br/>";
-			html += '<input type="checkbox" id="mode1" class="hmselect" name="houseMode" value="1" onChange="DeusExMachinaII.changeHouseModeSelector(this);">&nbsp;Home</input>';
-			html += '&nbsp;&nbsp;<input type="checkbox" id="mode2" class="hmselect" name="houseMode" value="2" onChange="DeusExMachinaII.changeHouseModeSelector(this);">&nbsp;Away</input>';
-			html += '&nbsp;&nbsp;<input type="checkbox" id="mode3" class="hmselect" name="houseMode" value="3" onChange="DeusExMachinaII.changeHouseModeSelector(this);">&nbsp;Night</input>';
-			html += '&nbsp;&nbsp;<input type="checkbox" id="mode4" class="hmselect" name="houseMode" value="4" onChange="DeusExMachinaII.changeHouseModeSelector(this);">&nbsp;Vacation</input>';
-			html += "</p>";
+            
+            html += "<p>";
+            html += "<label for=\"houseMode\">When enabled, run <i>only</i> in these House Modes (if all unchecked, runs in any mode):</label><br/>";
+            html += '<input type="checkbox" id="mode1" class="hmselect" name="houseMode" value="1" onChange="DeusExMachinaII.changeHouseModeSelector(this);">&nbsp;Home</input>';
+            html += '&nbsp;&nbsp;<input type="checkbox" id="mode2" class="hmselect" name="houseMode" value="2" onChange="DeusExMachinaII.changeHouseModeSelector(this);">&nbsp;Away</input>';
+            html += '&nbsp;&nbsp;<input type="checkbox" id="mode3" class="hmselect" name="houseMode" value="3" onChange="DeusExMachinaII.changeHouseModeSelector(this);">&nbsp;Night</input>';
+            html += '&nbsp;&nbsp;<input type="checkbox" id="mode4" class="hmselect" name="houseMode" value="4" onChange="DeusExMachinaII.changeHouseModeSelector(this);">&nbsp;Vacation</input>';
+            html += "</p>";
 
             var devices = api.getListOfDevices();
             var rooms = [];
@@ -165,11 +165,11 @@ var DeusExMachinaII = (function(api) {
             }
             html += "</div>";
 
-			// Finish up
-			
+            // Finish up
+            
             api.setCpanelContent(html);
-			
-			// Restore time field
+            
+            // Restore time field
             var time = "23:59";
             var timeMs = parseInt(api.getDeviceState(deusDevice, serviceId, "LightsOutTime"));
             if (!isNaN(timeMs))
@@ -177,12 +177,12 @@ var DeusExMachinaII = (function(api) {
                 time = timeMsToStr(timeMs);
             }
             jQuery("#deusExTime").val(time);
-			
-			// Restore house modes
-			var houseModes = parseInt(api.getDeviceState(deusDevice, serviceId, "HouseModes"));
-			for (var k=1; k<=4; ++k) {
-				if (houseModes & (2<<k)) jQuery('input#mode' + k).attr('checked', true);
-			}
+            
+            // Restore house modes
+            var houseModes = parseInt(api.getDeviceState(deusDevice, serviceId, "HouseModes"));
+            for (var k=1; k<=4; ++k) {
+                if (houseModes & (2<<k)) jQuery('input#mode' + k).attr('checked', true);
+            }
         }
         catch (e)
         {
@@ -194,7 +194,7 @@ var DeusExMachinaII = (function(api) {
         uuid: uuid,
         init: init,
         onBeforeCpanelClose: onBeforeCpanelClose,
-		changeHouseModeSelector: changeHouseModeSelector,
+        changeHouseModeSelector: changeHouseModeSelector,
         checkTime: checkTime,
         updateDeusControl: updateDeusControl,
         configureDeus: configureDeus
