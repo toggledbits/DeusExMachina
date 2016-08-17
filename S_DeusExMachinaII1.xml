@@ -23,7 +23,7 @@
             <defaultValue>nil</defaultValue>
             <shortCode>devices</shortCode>
         </stateVariable>
-        <stateVariable sendEvents="no">
+        <stateVariable sendEvents="yes">
             <name>State</name>
             <dataType>ui1</dataType>
             <defaultValue>0</defaultValue>
