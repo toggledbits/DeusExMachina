@@ -55,6 +55,10 @@ Deus Ex Machina's "Configure" tab allows you to set up the set of lights that sh
 The "Lights Out" time is a time, expressed in 24-hour HH:MM format, that is the time at which lights should begin shutting off. This time should be after sunset. Keep in mind that sunset is a moving target, and
 at certain times of year in some places can be quite late, so a Lights Out time of 20:15, for example, may be too early. The lights out time can be a time after midnight.
 
+UI7 introduced the concept of "House Modes." Version 2.3 and beyond of Deus Ex Machina have the ability to run only when the 
+house is in one or more selected house modes. A set of checkboxes is used to selected which modes allow Deus Ex Machina to run. 
+If no modes are chosen, it is the same as choosing all modes (Deus operates in any house mode).
+
 Selecting the lights to be controlled is a simple matter of clicking the check boxes. Lights on dimmers cannot be set to values less than 100% in the current version of the plugin. Because the operating cycle of
 the plug-in is random, any controlled light may be turned on and off several times during the cycling period (between sunset and Lights Out time).
 
