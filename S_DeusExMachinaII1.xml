@@ -29,6 +29,12 @@
             <defaultValue>0</defaultValue>
             <shortCode>state</shortCode>
         </stateVariable>
+        <stateVariable sendEvents="no">
+            <name>HouseModes</name>
+            <dataType>ui1</dataType>
+            <defaultValue>0</defaultValue>
+            <shortCode>housemodes</shortCode>
+        </stateVariable>
     </serviceStateTable>
     <actionList>
         <action>
