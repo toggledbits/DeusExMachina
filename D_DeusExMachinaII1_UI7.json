@@ -103,7 +103,7 @@
             "left": "0",
             "Label": {
                 "lang_tag": "dem_about",
-                "text": "DeusExMachina II ver 2.2 2016-05-13<br>For documentation or to report bugs, please go to the <a target='_blank' href='https://github.com/toggledbits/DeusExMachina'>DeusExMachina Github repository</a>."
+                "text": "DeusExMachina II ver 2.3RC1 2016-08-14<br>For documentation or to report bugs, please go to the <a target='_blank' href='https://github.com/toggledbits/DeusExMachina'>DeusExMachina Github repository</a>."
             },
             "Display": {
                 "Top": "80",
@@ -120,7 +120,7 @@
         "Position": "2",
         "TabType": "javascript",
         "ScriptName": "J_DeusExMachinaII1_UI7.js",
-        "Function": "DeusExMachina.configureDeus"
+        "Function": "DeusExMachinaII.configureDeus"
     }, {
         "Label": {
             "lang_tag": "advanced",
