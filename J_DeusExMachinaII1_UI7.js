@@ -76,7 +76,6 @@ var DeusExMachinaII = (function(api) {
         jQuery(".hmselect:checked").each( function( i, e ) {
             mask |= 1 << jQuery(e).val();
         });
-        console.log('Mask is now ' + mask);
         api.setDeviceStatePersistent(deusDevice, serviceId, "HouseModes", mask, 0);
     }
 
@@ -181,7 +180,7 @@ var DeusExMachinaII = (function(api) {
             // Restore house modes
             var houseModes = parseInt(api.getDeviceState(deusDevice, serviceId, "HouseModes"));
             for (var k=1; k<=4; ++k) {
-                if (houseModes & (2<<k)) jQuery('input#mode' + k).attr('checked', true);
+                if (houseModes & (1<<k)) jQuery('input#mode' + k).attr('checked', true);
             }
         }
         catch (e)
