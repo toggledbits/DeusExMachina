@@ -9,10 +9,10 @@
         -- -------------------------------------------------------------------------------------------------------------------------
         
         SID = "urn:toggledbits-com:serviceId:DeusExMachinaII1"
-		SWITCH_TYPE = "urn:schemas-upnp-org:device:BinaryLight:1"
+        SWITCH_TYPE = "urn:schemas-upnp-org:device:BinaryLight:1"
         SWITCH_SID  = "urn:upnp-org:serviceId:SwitchPower1"
-		DIMMER_TYPE = "urn:schemas-upnp-org:device:DimmableLight:1"
-		DIMMER_SID  = "urn:upnp-org:serviceId:Dimming1"
+        DIMMER_TYPE = "urn:schemas-upnp-org:device:DimmableLight:1"
+        DIMMER_SID  = "urn:upnp-org:serviceId:Dimming1"
         
         STATE_STANDBY = 0
         STATE_IDLE = 1
@@ -111,33 +111,33 @@
             until k &gt; string.len(s)
             return t, n
         end
-		
-		-- Light on or off? Returns boolean
-		local function isDeviceOn(devid)
-			local t = luup.devices[devid].device_type
-			local val = 0
-			if (t == SWITCH_TYPE) then
-				val =  luup.variable_get(SWITCH_SID, "Status", devid)
-			elseif (t == DIMMER_TYPE) then
-				val = luup.variable_get(DIMMER_SID, "LoadLevelStatus", devid)
-			else
-				luup.log("DeusExMachinaII::isDeviceOn(): device " .. tostring(devid) .. " unknown device_type " .. tostring(t))
-			end
-			return val ~= "0"
-		end
-		
-		-- Control device
-		local function deviceControl(devid, turnOn)
-			local t = luup.devices[devid].device_type
-			local lvl = 0
-			if (t == DIMMER_TYPE) then
-				if (turnOn) then lvl = 100 end
-				luup.call_action(DIMMER_SID, "SetLoadLevelTarget", {newLoadlevelTarget=lvl}, devid) -- note odd case inconsistency
-			elseif (t == SWITCH_TYPE) then
-				if (turnOn) then lvl = 1 end
+        
+        -- Light on or off? Returns boolean
+        local function isDeviceOn(devid)
+            local t = luup.devices[devid].device_type
+            local val = 0
+            if (t == SWITCH_TYPE) then
+                val =  luup.variable_get(SWITCH_SID, "Status", devid)
+            elseif (t == DIMMER_TYPE) then
+                val = luup.variable_get(DIMMER_SID, "LoadLevelStatus", devid)
+            else
+                luup.log("DeusExMachinaII::isDeviceOn(): device " .. tostring(devid) .. " unknown device_type " .. tostring(t))
+            end
+            return val ~= "0"
+        end
+        
+        -- Control device
+        local function deviceControl(devid, turnOn)
+            local t = luup.devices[devid].device_type
+            local lvl = 0
+            if (t == DIMMER_TYPE) then
+                if (turnOn) then lvl = 100 end
+                luup.call_action(DIMMER_SID, "SetLoadLevelTarget", {newLoadlevelTarget=lvl}, devid) -- note odd case inconsistency
+            elseif (t == SWITCH_TYPE) then
+                if (turnOn) then lvl = 1 end
                 luup.call_action(SWITCH_SID, "SetTarget", {newTargetValue=lvl}, devid)
-			end
-		end
+            end
+        end
 
         -- Turn off a light, if any is on. Returns 1 if there are more lights to turn off; otherwise 0.
         local function turnOffLight()
@@ -279,28 +279,28 @@
                 return
             end
 
-			local runCycle = 1
-			
-			-- Check to see if house mode bits are non-zero, and if so, apply current mode as mask.
-			-- If bit is set (current mode is in the bitset), we can run, otherwise skip.
-			local modebits = getVarNumeric("HouseModes", 0)
-			if (modebits ~= 0) then
-				local bit = require("bit")
-				-- Get the current house mode (1=Home,2=Away,3=Night,4=Vacation)
-				local currentMode = luup.attr_get("Mode") -- luup.inet.wget("http://127.0.0.1:3480/data_request?id=variableget&amp;Variable=Mode",0)
-				currentMode = math.pow(2, tonumber(currentMode,10))
-				if (bit.band(modebits, currentMode) == 0) then
-                    luup.log('DeusExMachinaII::deusStep(): Current mode bit ' .. string.format("0x%x", currentMode) .. ' not in set ' .. string.format("0x%x", modebits))
-					runCycle = 0
-				end
-			end
-			
-			if (runCycle and isBedtime() ~= 0) then
-                luup.log("DeusExMachinaII::deusStep(): lights out time")
-				runCycle = 0
-			end
+            local runCycle = 1
             
-			-- See if we're in test mode. If so, compute possible sunset override (debug)
+            -- Check to see if house mode bits are non-zero, and if so, apply current mode as mask.
+            -- If bit is set (current mode is in the bitset), we can run, otherwise skip.
+            local modebits = getVarNumeric("HouseModes", 0)
+            if (modebits ~= 0) then
+                local bit = require("bit")
+                -- Get the current house mode (1=Home,2=Away,3=Night,4=Vacation)
+                local currentMode = luup.attr_get("Mode") -- luup.inet.wget("http://127.0.0.1:3480/data_request?id=variableget&amp;Variable=Mode",0)
+                currentMode = math.pow(2, tonumber(currentMode,10))
+                if (bit.band(modebits, currentMode) == 0) then
+                    luup.log('DeusExMachinaII::deusStep(): Current mode bit ' .. string.format("0x%x", currentMode) .. ' not in set ' .. string.format("0x%x", modebits))
+                    runCycle = 0
+                end
+            end
+            
+            if (runCycle and isBedtime() ~= 0) then
+                luup.log("DeusExMachinaII::deusStep(): lights out time")
+                runCycle = 0
+            end
+            
+            -- See if we're in test mode. If so, compute possible sunset override (debug)
             local mindelay, maxdelay
             local sunset = luup.sunset()
             local now = os.time()
@@ -322,7 +322,7 @@
                 end 
             end
 
-			-- See if we've crossed the lights-out time
+            -- See if we've crossed the lights-out time
             if (runCycle == 0) then
                 luup.log("DeusExMachinaII::deusStep(): lights out time, running off cycle")
                 luup.variable_set(SID, "State", STATE_SHUTDOWN, lul_device)
@@ -356,8 +356,8 @@
                             luup.log("DeusExMachinaII::deusStep(): set " .. deviceId .. " to ON")
                         end
                     end
-				else
-					luup.log("DeusExMachinaII:deusStep(): no devices to control")
+                else
+                    luup.log("DeusExMachinaII:deusStep(): no devices to control")
                 end
             end
             
