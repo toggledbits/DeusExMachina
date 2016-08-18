@@ -279,15 +279,38 @@
                 return
             end
 
+            local modebits = getVarNumeric("HouseModes", 0)
+            -- local currentMode = luup.attr_get("Mode")
+			local currentMode
+			local status
+			status, currentMode = luup.inet.wget("http://127.0.0.1:3480/data_request?id=variableget&amp;Variable=Mode",0)
+			
+            local currentState = getVarNumeric("State", 0)
+            if (currentState == 0 or currentState == 1) then
+                luup.log("DeusExMachinaII:deusStep(): run in state " 
+                    .. tostring(currentState)
+                    .. ", modebits=" .. tostring(modebits)
+                    .. ", currentMode=" .. tostring(currentMode)
+                    .. ", lightsout=" .. tostring(luup.variable_get(SID, "LightsOutTime", lul_device))
+                    .. ", luup.sunset=" .. tostring(luup.sunset())
+                    .. ", os.time=" .. tostring(os.time())
+                )
+                luup.log("+++ longitude="
+                    .. tostring(luup.longitude)
+                    .. ", latitude=" .. tostring(luup.latitude)
+                    .. ", timezone=" .. tostring(luup.timezone)
+                    .. ", city=" .. tostring(luup.city)
+                    .. ", version=" .. tostring(luup.version)
+                )
+            end
+
             local runCycle = 1
             
             -- Check to see if house mode bits are non-zero, and if so, apply current mode as mask.
             -- If bit is set (current mode is in the bitset), we can run, otherwise skip.
-            local modebits = getVarNumeric("HouseModes", 0)
             if (modebits ~= 0) then
                 local bit = require("bit")
                 -- Get the current house mode (1=Home,2=Away,3=Night,4=Vacation)
-                local currentMode = luup.attr_get("Mode") -- luup.inet.wget("http://127.0.0.1:3480/data_request?id=variableget&amp;Variable=Mode",0)
                 currentMode = math.pow(2, tonumber(currentMode,10))
                 if (bit.band(modebits, currentMode) == 0) then
                     luup.log('DeusExMachinaII::deusStep(): Current mode bit ' .. string.format("0x%x", currentMode) .. ' not in set ' .. string.format("0x%x", modebits))
@@ -324,7 +347,7 @@
 
             -- See if we've crossed the lights-out time
             if (runCycle == 0) then
-                luup.log("DeusExMachinaII::deusStep(): lights out time, running off cycle")
+                luup.log("DeusExMachinaII::deusStep(): running off cycle")
                 luup.variable_set(SID, "State", STATE_SHUTDOWN, lul_device)
                 mindelay = getVarNumeric("MinOffDelay", 60)
                 maxdelay = getVarNumeric("MaxOffDelay", 300)
