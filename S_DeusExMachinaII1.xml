@@ -12,9 +12,9 @@
             <shortCode>enabled</shortCode>
         </stateVariable>
         <stateVariable sendEvents="no">
-            <name>LightsOutTime</name>
-            <dataType>time</dataType>
-            <defaultValue>nil</defaultValue>
+            <name>LightsOut</name>
+            <dataType>ui4</dataType>
+            <defaultValue>1439</defaultValue>
             <shortCode>lightsout</shortCode>
         </stateVariable>
         <stateVariable sendEvents="no">
