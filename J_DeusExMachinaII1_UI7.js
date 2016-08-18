@@ -38,9 +38,8 @@ var DeusExMachinaII = (function(api) {
         return res;
     }
 
-    function timeMsToStr(ms)
+    function timeMinsToStr(totalMinutes)
     {
-        var totalMinutes = ms / 1000 / 60;
         var hours = Math.floor(totalMinutes / 60);
         if (hours < 10) {
             hours = "0"+hours;
@@ -52,9 +51,9 @@ var DeusExMachinaII = (function(api) {
         return hours+":"+minutes;
     }
 
-    function updateTime(timeMs)
+    function updateTime(timeMins)
     {
-        api.setDeviceStatePersistent(deusDevice, serviceId, "LightsOutTime", timeMs, 0); // PHR 01
+        api.setDeviceStatePersistent(deusDevice, serviceId, "LightsOut", timeMins, 0);
     }
 
     function updateDeusControl(deviceId)
@@ -87,11 +86,8 @@ var DeusExMachinaII = (function(api) {
         if (res) {
             var hours = parseInt(res[1]);
             var minutes = parseInt(res[2]);
-            if (hours <= 23 && minutes <= 59) {
-                var totalMinutes = hours * 60 + minutes;
-                var totalSeconds = totalMinutes * 60;
-                var totalMs = totalSeconds * 1000;
-                updateTime(totalMs);
+            if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
+                updateTime(hours * 60 + minutes);
                 return;
             }
         }
@@ -170,10 +166,10 @@ var DeusExMachinaII = (function(api) {
             
             // Restore time field
             var time = "23:59";
-            var timeMs = parseInt(api.getDeviceState(deusDevice, serviceId, "LightsOutTime"));
-            if (!isNaN(timeMs))
+            var timeMins = parseInt(api.getDeviceState(deusDevice, serviceId, "LightsOut"));
+            if (!isNaN(timeMins))
             {
-                time = timeMsToStr(timeMs);
+                time = timeMinsToStr(timeMins);
             }
             jQuery("#deusExTime").val(time);
             

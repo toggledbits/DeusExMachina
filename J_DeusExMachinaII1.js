@@ -47,9 +47,9 @@ var checkTime;
             }
         }
         var time = "23:59";
-        var timeMs = parseInt(get_device_state(deusDevice, serviceId, "LightsOutTime", 0));
-        if (!isNaN(timeMs)) {
-            time = timeMsToStr(timeMs);
+        var timeMins = parseInt(get_device_state(deusDevice, serviceId, "LightsOut", 0));
+        if (!isNaN(timeMins)) {
+            time = timeMinsToStr(timeMins);
         }
          
         html += "<br />";
@@ -71,8 +71,7 @@ var checkTime;
         set_device_state(deusDevice, serviceId, "Devices", controlled.join(','), 0);
     }
     
-    function timeMsToStr(ms) {
-        var totalMinutes = ms / 1000 / 60;
+    function timeMinsToStr(totalMinutes) {
         var hours = Math.floor(totalMinutes / 60);
         if (hours < 10) {
             hours = "0"+hours;
@@ -84,8 +83,8 @@ var checkTime;
         return hours+":"+minutes;
     }
     
-    function updateTime(timeMs) {
-        set_device_state(deusDevice, serviceId, "LightsOutTime", timeMs, 0);
+    function updateTime(timeMins) {
+        set_device_state(deusDevice, serviceId, "LightsOut", timeMins, 0);
     }
     
     checkTime = function() {
@@ -96,10 +95,7 @@ var checkTime;
             var hours = parseInt(res[1]);
             var minutes = parseInt(res[2]);
             if (hours <= 23 && minutes <= 59) {
-                var totalMinutes = hours * 60 + minutes;
-                var totalSeconds = totalMinutes * 60;
-                var totalMs = totalSeconds * 1000;
-                updateTime(totalMs);
+                updateTime(hours * 60 + minutes);
                 return;
             }
         }
