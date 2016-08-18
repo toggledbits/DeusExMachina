@@ -4,7 +4,7 @@
         -- -------------------------------------------------------------------------------------------------------------------------
         -- Deus Ex Machina (II)
         -- https://github.com/toggledbits/DeusExMachina
-        -- Original code and releases 1.x by Andy Lintner (beowulfe) Version 2.0 and beyond by Patrick Rigney (rigpapa).
+        -- Original code and releases 1.x by Andy Lintner (beowulfe) Version 2.0 and beyond by Patrick Rigney (rigpapa/toggledbits).
         -- A big thanks to Andy for passing the torch so that this great plug-in can live on.
         -- -------------------------------------------------------------------------------------------------------------------------
         
@@ -43,6 +43,15 @@
             return s
         end
         
+        -- Delete a variable
+        local function deleteVar( name )
+            -- Interestingly, setting a variable to nil with luup.variable_set does nothing interesting; too bad, it 
+            -- could have been used to delete variables, since a later get would yield nil anyway. But it turns out
+            -- that using the variableget Luup request with no value WILL delete the variable.
+            local status, result = luup.inet.wget("http://127.0.0.1:3480/data_request?id=variableset&amp;DeviceNum="
+                .. lul_device .. "&amp;serviceId=" .. SID .. "&amp;Variable=" .. name .. "&amp;Value=")
+        end
+        
         -- Shortcut function to return state of Enabled variable
         local function isEnabled() 
             return getVarNumeric("Enabled", 0)
@@ -56,24 +65,23 @@
             if (not (testing or luup.is_night())) then
                 return 1
             end
-            -- rigpapa 2016-05-06: keep LightsOutTime in ms for compatibility with
-            --                     existing configs; everything else simplified.
-            local bedtime_tmp = luup.variable_get(SID, "LightsOutTime", lul_device)
-            if (bedtime_tmp == nil) then
-                return 1
+            local bedtime = 1439 -- that's 23:59 in minutes since midnight (default)
+            local bedtime_tmp = luup.variable_get(SID, "LightsOut", lul_device)
+            if (bedtime_tmp ~= nil) then
+                bedtime_tmp = tonumber(bedtime_tmp,10)
+                if (bedtime_tmp &gt;= 0 and bedtime_tmp &lt; 1440) then bedtime = bedtime_tmp end
             end
-            local bedtime = tonumber(bedtime_tmp) / 1000
             local date = os.date('*t', luup.sunset())
-            local sunset = (date['hour'] * 60 + date['min']) * 60
+            local sunset = date['hour'] * 60 + date['min']
             if (testing ~= 0) then 
                 local s = getVarNumeric( "TestSunset", nil )
-                if (s ~= nil) then sunset = tonumber(s,10) * 60 end
+                if (s ~= nil) then sunset = tonumber(s, 10) end
                 luup.log('DeusExMachinaII::isBedtime(): testing mode sunset override time is ' .. tostring(sunset))
             end
             date = os.date('*t')
-            local time = (date['hour'] * 60 + date['min']) * 60
+            local time = date['hour'] * 60 + date['min']
             if (testing ~= 0) then          
-                luup.log('DeusExMachinaII:isBedtime(): time=' .. tostring(time) .. ', sunset=' .. tostring(sunset) .. ', bedtime=' .. tostring(bedtime))
+                luup.log('DeusExMachinaII:isBedtime(): times (mins since midnight) are now=' .. tostring(time) .. ', sunset=' .. tostring(sunset) .. ', bedtime=' .. tostring(bedtime))
             end
             local ret = 1;
             if (bedtime &gt; sunset) then
@@ -189,7 +197,9 @@
                     local oldsid = "urn:futzle-com:serviceId:DeusExMachina1"
                     s = luup.variable_get(oldsid, "LightsOutTime", olddev)
                     if (s ~= nil) then
-                        luup.variable_set(SID, "LightsOutTime", s, lul_device)
+                        local n = tonumber(s,10) / 60000
+                        luup.variable_set(SID, "LightsOut", n, lul_device)
+                        deleteVar("LightsOutTime")
                     end
                     s = luup.variable_get(oldsid, "controlCount", olddev)
                     if (s ~= nil) then
@@ -204,6 +214,7 @@
                         end
                         s = table.concat(t, ",")
                         luup.variable_set(SID, "Devices", s, lul_device)
+                        deleteVar("controlCount")
                     end
                     
                     -- Finally, turn off old Deus
@@ -215,9 +226,28 @@
                 luup.variable_set(SID, "MaxCycleDelay", "1800", lul_device)
                 luup.variable_set(SID, "MinOffDelay", "60", lul_device)
                 luup.variable_set(SID, "MaxOffDelay", "300", lul_device)
-            
-                -- Force a value for Enabled so we don't run here again.
+                luup.variable_set(SID, "LightsOut", 1439, lul_device)
                 luup.variable_set(SID, "Enabled", "0", lul_device)
+                luup.variable_set(SID, "Version", 20300, lul_device)
+            end
+
+            -- Consider per-version changes.
+            -- v2.3: LightsOutTime (in milliseconds) deprecated, now using LightsOut (in minutes since midnight)
+            s = getVarNumeric("Version", 0)
+            if (s &lt; 20300) then
+                s = luup.variable_get(SID, "LightsOut", lul_device)
+                if (s == nil) then
+                    s = getVarNumeric("LightsOutTime") -- get pre-2.2 variable
+                    if (s == nil) then
+                        luup.variable_set(SID, "LightsOut", 1439, lul_device) -- default 23:59
+                    else
+                        luup.variable_set(SID, "LightsOut", tonumber(s,10) / 60000, lul_device) -- conv ms to minutes
+                        deleteVar("LightsOutTime")
+                    end
+                end
+                
+                -- Update version last.
+                luup.variable_set(SID, "Version", 20300, lul_device)
             end
         end
         
@@ -281,17 +311,17 @@
 
             local modebits = getVarNumeric("HouseModes", 0)
             -- local currentMode = luup.attr_get("Mode")
-			local currentMode
-			local status
-			status, currentMode = luup.inet.wget("http://127.0.0.1:3480/data_request?id=variableget&amp;Variable=Mode",0)
-			
+            local currentMode
+            local status
+            status, currentMode = luup.inet.wget("http://127.0.0.1:3480/data_request?id=variableget&amp;Variable=Mode",0)
+            
             local currentState = getVarNumeric("State", 0)
             if (currentState == 0 or currentState == 1) then
                 luup.log("DeusExMachinaII:deusStep(): run in state " 
                     .. tostring(currentState)
                     .. ", modebits=" .. tostring(modebits)
                     .. ", currentMode=" .. tostring(currentMode)
-                    .. ", lightsout=" .. tostring(luup.variable_get(SID, "LightsOutTime", lul_device))
+                    .. ", lightsout=" .. tostring(luup.variable_get(SID, "LightsOut", lul_device))
                     .. ", luup.sunset=" .. tostring(luup.sunset())
                     .. ", os.time=" .. tostring(os.time())
                 )
@@ -385,10 +415,10 @@
             end
             
             -- Arm for next cycle
-            -- PHR??? Should we sure delay doesn't roll past LightsOutTime? Does it matter?
+            -- PHR??? Should we sure delay doesn't roll past LightsOut? Does it matter?
             local delay = math.random(mindelay, maxdelay)
             luup.call_delay("deusStep", delay, stepStamp, 1)
-            luup.log("DeusExMachinaII::deusStep(): cycle finished, next in " .. delay)
+            luup.log("DeusExMachinaII::deusStep(): cycle finished, next in " .. delay .. " seconds")
         end
     </functions>
     <startup>deusInit</startup>
