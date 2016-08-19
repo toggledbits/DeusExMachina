@@ -13,6 +13,7 @@
         SWITCH_SID  = "urn:upnp-org:serviceId:SwitchPower1"
         DIMMER_TYPE = "urn:schemas-upnp-org:device:DimmableLight:1"
         DIMMER_SID  = "urn:upnp-org:serviceId:Dimming1"
+        DEMVERSION = 20300
         
         STATE_STANDBY = 0
         STATE_IDLE = 1
@@ -43,13 +44,16 @@
             return s
         end
         
-        -- Delete a variable
-        local function deleteVar( name )
+        -- Delete a variable (if we can... read on...)
+        local function deleteVar( name, devid )
+            if (devid == nil) then devid = luup.device end
             -- Interestingly, setting a variable to nil with luup.variable_set does nothing interesting; too bad, it 
             -- could have been used to delete variables, since a later get would yield nil anyway. But it turns out
             -- that using the variableget Luup request with no value WILL delete the variable.
-            local status, result = luup.inet.wget("http://127.0.0.1:3480/data_request?id=variableset&amp;DeviceNum="
-                .. lul_device .. "&amp;serviceId=" .. SID .. "&amp;Variable=" .. name .. "&amp;Value=")
+            local req = "http://127.0.0.1:3480/data_request?id=variableset&amp;DeviceNum=" .. tostring(devid) .. "&amp;serviceId=" .. SID .. "&amp;Variable=" .. name .. "&amp;Value="
+            -- luup.log("DeusExMachinaII::deleteVar(" .. name .. "): req=" .. tostring(req))
+            local status, result = luup.inet.wget(req)
+            -- luup.log("DeusExMachinaII::deleteVar(" .. name .. "): status=" .. tostring(status) .. ", result=" .. tostring(result))
         end
         
         -- Shortcut function to return state of Enabled variable
@@ -199,7 +203,7 @@
                     if (s ~= nil) then
                         local n = tonumber(s,10) / 60000
                         luup.variable_set(SID, "LightsOut", n, lul_device)
-                        deleteVar("LightsOutTime")
+                        deleteVar("LightsOutTime", lul_device)
                     end
                     s = luup.variable_get(oldsid, "controlCount", olddev)
                     if (s ~= nil) then
@@ -214,7 +218,7 @@
                         end
                         s = table.concat(t, ",")
                         luup.variable_set(SID, "Devices", s, lul_device)
-                        deleteVar("controlCount")
+                        deleteVar("controlCount", lul_device)
                     end
                     
                     -- Finally, turn off old Deus
@@ -228,13 +232,14 @@
                 luup.variable_set(SID, "MaxOffDelay", "300", lul_device)
                 luup.variable_set(SID, "LightsOut", 1439, lul_device)
                 luup.variable_set(SID, "Enabled", "0", lul_device)
-                luup.variable_set(SID, "Version", 20300, lul_device)
+                luup.variable_set(SID, "Version", DEMVERSION, lul_device)
             end
 
             -- Consider per-version changes.
             -- v2.3: LightsOutTime (in milliseconds) deprecated, now using LightsOut (in minutes since midnight)
             s = getVarNumeric("Version", 0)
-            if (s &lt; 20300) then
+            if (s &lt; DEMVERSION) then
+                luup.log("DeusExMachinaII::runOnce(): updating config, version " .. tostring(s) .. " &lt; " .. DEMVERSION)
                 s = luup.variable_get(SID, "LightsOut", lul_device)
                 if (s == nil) then
                     s = getVarNumeric("LightsOutTime") -- get pre-2.2 variable
@@ -242,12 +247,12 @@
                         luup.variable_set(SID, "LightsOut", 1439, lul_device) -- default 23:59
                     else
                         luup.variable_set(SID, "LightsOut", tonumber(s,10) / 60000, lul_device) -- conv ms to minutes
-                        deleteVar("LightsOutTime")
                     end
                 end
+                deleteVar("LightsOutTime", lul_device)
                 
                 -- Update version last.
-                luup.variable_set(SID, "Version", 20300, lul_device)
+                luup.variable_set(SID, "Version", DEMVERSION, lul_device)
             end
         end
         
