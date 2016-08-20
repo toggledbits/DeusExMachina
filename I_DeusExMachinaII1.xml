@@ -79,7 +79,7 @@
             local sunset = date['hour'] * 60 + date['min']
             if (testing ~= 0) then 
                 local s = getVarNumeric( "TestSunset", nil )
-                if (s ~= nil) then sunset = tonumber(s, 10) end
+                if (s ~= nil) then sunset = s end
                 luup.log('DeusExMachinaII::isBedtime(): testing mode sunset override time is ' .. tostring(sunset))
             end
             date = os.date('*t')
