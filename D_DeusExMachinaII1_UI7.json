@@ -1,5 +1,5 @@
 {
-    "default_icon": "https://i.imgur.com/qZLXVbE.png",
+    "default_icon": "https://dtabq7xg0g1t1.cloudfront.net/deusII.png",
     "doc_url": {
         "doc_language": 1,
         "doc_manual": 1,
@@ -8,7 +8,7 @@
         "doc_page": "devices"
     },
     "state_icons": [{
-        "img": "https://i.imgur.com/k5gwcN2.png",
+        "img": "https://dtabq7xg0g1t1.cloudfront.net/deus-red.png",
         "conditions": [{
             "service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
             "variable": "Enabled",
@@ -17,7 +17,7 @@
             "subcategory_num": 0
         }]
     }, {
-        "img": "https://i.imgur.com/O3jzrPe.png",
+        "img": "https://dtabq7xg0g1t1.cloudfront.net/deus-green.png",
         "conditions": [{
             "service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
             "variable": "Enabled",
