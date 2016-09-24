@@ -20,6 +20,9 @@ var checkTime;
             case "urn:schemas-upnp-org:device:DimmableLight:1":
                 return true;
                 
+            case "urn:schemas-upnp-org:device:VSwitch:1":
+                return true;
+
             default:
                 return false;
             }
