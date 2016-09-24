@@ -13,6 +13,8 @@
         SWITCH_SID  = "urn:upnp-org:serviceId:SwitchPower1"
         DIMMER_TYPE = "urn:schemas-upnp-org:device:DimmableLight:1"
         DIMMER_SID  = "urn:upnp-org:serviceId:Dimming1"
+        VIRTUAL_TYPE = "urn:schemas-upnp-org:device:VSwitch:1"
+        VIRTUAL_SID = "urn:upnp-org:serviceId:SwitchPower1"
         DEMVERSION = 20300
         
         STATE_STANDBY = 0
@@ -132,6 +134,8 @@
                 val =  luup.variable_get(SWITCH_SID, "Status", devid)
             elseif (t == DIMMER_TYPE) then
                 val = luup.variable_get(DIMMER_SID, "LoadLevelStatus", devid)
+            elseif (t == VIRTUAL_TYPE) then
+                val =  luup.variable_get(VIRTUAL_SID, "Status", devid)
             else
                 luup.log("DeusExMachinaII::isDeviceOn(): device " .. tostring(devid) .. " unknown device_type " .. tostring(t))
             end
@@ -148,6 +152,9 @@
             elseif (t == SWITCH_TYPE) then
                 if (turnOn) then lvl = 1 end
                 luup.call_action(SWITCH_SID, "SetTarget", {newTargetValue=lvl}, devid)
+            elseif (t == VIRTUAL_TYPE) then
+                if (turnOn) then lvl = 1 end
+                luup.call_action(VIRTUAL_SID, "SetTarget", {newTargetValue=lvl}, devid)
             end
         end
 
