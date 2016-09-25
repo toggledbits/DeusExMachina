@@ -13,7 +13,7 @@
         SWITCH_SID  = "urn:upnp-org:serviceId:SwitchPower1"
         DIMMER_TYPE = "urn:schemas-upnp-org:device:DimmableLight:1"
         DIMMER_SID  = "urn:upnp-org:serviceId:Dimming1"
-        DEMVERSION = 20302
+        DEMVERSION = 20400
 
         STATE_STANDBY = 0
         STATE_IDLE = 1
@@ -428,13 +428,13 @@ luup.log("DeusExMachinaII: deviceControl(): handling " .. devid .. " as dimmer, 
             end
 
             -- Consider per-version changes.
-            -- v2.3: LightsOutTime (in milliseconds) deprecated, now using LightsOut (in minutes since midnight)
             s = getVarNumeric("Version", 0)
-            if (s &lt; DEMVERSION) then
-                luup.log("DeusExMachinaII::runOnce(): updating config, version " .. tostring(s) .. " &lt; " .. DEMVERSION)
+            if (s &lt; 20300) then
+                -- v2.3: LightsOutTime (in milliseconds) deprecated, now using LightsOut (in minutes since midnight)
+                luup.log("DeusExMachinaII::runOnce(): updating config, version " .. tostring(s) .. " &lt; 20300")
                 s = luup.variable_get(SID, "LightsOut", lul_device)
                 if (s == nil) then
-                    s = getVarNumeric("LightsOutTime") -- get pre-2.2 variable
+                    s = getVarNumeric("LightsOutTime") -- get pre-2.3 variable
                     if (s == nil) then
                         luup.variable_set(SID, "LightsOut", 1439, lul_device) -- default 23:59
                     else
@@ -442,10 +442,10 @@ luup.log("DeusExMachinaII: deviceControl(): handling " .. devid .. " as dimmer, 
                     end
                 end
                 deleteVar("LightsOutTime", lul_device)
-
-                -- Update version last.
-                luup.variable_set(SID, "Version", DEMVERSION, lul_device)
             end
+
+            -- Update version last.
+            luup.variable_set(SID, "Version", DEMVERSION, lul_device)
         end
 
         -- Enable DEM by setting a new cycle stamp and calling an initial cycle directly.
@@ -469,7 +469,7 @@ luup.log("DeusExMachinaII: deviceControl(): handling " .. devid .. " as dimmer, 
 
         -- Initialize.
         function deusInit(deusDevice)
-            luup.log("DeusExMachinaII::deusInit(): Version 2.3 (2016-08-20), starting up...")
+            luup.log("DeusExMachinaII::deusInit(): Version 2.4RC1 (2016-09-25), starting up...")
 
             -- One-time stuff
             runOnce()
