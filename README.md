@@ -65,6 +65,14 @@ the plug-in is random, any controlled light may be turned on and off several tim
 As of version 2.4, all devices are listed that implement the SwitchPower1 and Dimming1 services. This leads to some oddities,
 like some motion sensors and thermostats being listed. It may not be entirely obvious (or standard) what a thermostat, for example, might do when you try to turn it off and on like a light, so be careful selecting these devices.
 
+Also new for version 2.4 is the ability to run scenes during the random cycling period. Scenes must be specified in pairs, with
+one being the "on" scene and the other being an "off" scene. This not allows more patterned use of lights, but also gives user
+the ability to handle device-specific capabilities that would be difficult to track in DEMII. For example, while DEMII can now
+turn Philips Hue lights on and off (to dimming levels, even), it cannot control their color because there's no UI for that in
+DEMII. But a scene could be used to control that light or a group of lights, with their color.
+
+Finally, 2.4 adds the ability for a "final scene" to run when DEMII is disabled or turns off the last light after the "lights out" time. This could be used for any purpose. I personally use it to make sure a whole-house off is run, but you could use it to ensure your alarm system is armed, or your garage door is closed, etc.
+
 #### Control by Scene ####
 
 As of version 2.0 and on UI7, DeusExMachina can be enabled or disabled like a light switch in scenes, through the regular graphical interface (no Lua required).
