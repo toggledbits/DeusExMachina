@@ -62,6 +62,9 @@ If no modes are chosen, it is the same as choosing all modes (Deus operates in a
 Selecting the lights to be controlled is a simple matter of clicking the check boxes. Lights on dimmers cannot be set to values less than 100% in the current version of the plugin. Because the operating cycle of
 the plug-in is random, any controlled light may be turned on and off several times during the cycling period (between sunset and Lights Out time).
 
+As of version 2.4, all devices are listed that implement the SwitchPower1 and Dimming1 services. This leads to some oddities,
+like some motion sensors and thermostats being listed. It may not be entirely obvious (or standard) what a thermostat, for example, might do when you try to turn it off and on like a light, so be careful selecting these devices.
+
 #### Control by Scene ####
 
 As of version 2.0 and on UI7, DeusExMachina can be enabled or disabled like a light switch in scenes, through the regular graphical interface (no Lua required).
