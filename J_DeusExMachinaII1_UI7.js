@@ -25,15 +25,17 @@ var DeusExMachinaII = (function(api) {
         else return '(' + typeof(obj) + ')' + obj.toString();
     }
     
-    function isLight(device) {
-        switch(device.device_type) {
-            case "urn:schemas-upnp-org:device:BinaryLight:1":
-            case "urn:schemas-upnp-org:device:DimmableLight:1":
-                return true;
-
-            default:
-                return false;
-        }
+	function isDimmer(devid) {
+		var v = api.getDeviceState( devid, "urn:upnp-org:serviceId:Dimming1", "LoadLevelStatus" );
+		if (v === undefined || v === false) return false;
+		return true;
+	}
+	
+    function isControllable(devid) {
+		if (isDimmer(devid)) return true; /* a dimmer is a light */
+		var v = api.getDeviceState( devid, "urn:upnp-org:serviceId:SwitchPower1", "Status" );
+		if (v === undefined || v === false) return false;
+		return true;
     }
 
     function getControlledList() {
@@ -273,7 +275,7 @@ var DeusExMachinaII = (function(api) {
             var noroom = { "id": "0", "name": "No Room", "devices": [] };
             rooms[noroom.id] = noroom;
             for (i=0; i<devices.length; i+=1) {
-                if (isLight(devices[i])) {
+				if (isControllable(devices[i].id)) {
                     roomid = devices[i].room;
                     roomObj = rooms[roomid];
                     if ( roomObj === undefined ) {
@@ -310,7 +312,7 @@ var DeusExMachinaII = (function(api) {
                     html += " />&nbsp;";
                     html += "#" + roomObj.devices[i].id + " ";
                     html += roomObj.devices[i].name;
-                    if (roomObj.devices[i].device_type == "urn:schemas-upnp-org:device:DimmableLight:1") html += '<div class="demslider" id="slider' + roomObj.devices[i].id + '"></div>';
+                    if (isDimmer(roomObj.devices[i].id)) html += '<div class="demslider" id="slider' + roomObj.devices[i].id + '"></div>';
                     html += "<br />\n";
                 }
             }
