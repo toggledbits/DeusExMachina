@@ -528,10 +528,16 @@ luup.log("DeusExMachinaII: deviceControl(): handling " .. devid .. " as dimmer, 
                 luup.log("DeusExMachinaII::deusStep(): in lights out time")
                 inActiveTimePeriod = false
             end
-
+			
             -- Get going...
             local nextCycleDelay = 300 -- a default value to keep us out of hot water
-            if (not isActiveHouseMode()) then
+			if (currentState == STATE_STANDBY and not inActiveTimePeriod) then
+					-- Transition from STATE_STANDBY (i.e. we're enabling) in the inactive period.
+					-- Go to IDLE and delay for next sunset.
+                    luup.log("DeusExMachinaII::deusStep(): transitioning to IDLE from STANDBY, waiting for next sunset...");
+                    nextCycleDelay = sunset - os.time() + getRandomDelay("MinOffDelay", "MaxOffDelay", 60, 300)
+                    luup.variable_set(SID, "State", STATE_IDLE, lul_device)
+			elseif (not isActiveHouseMode()) then
                 -- Not in an active house mode. If we're not STANDBY or IDLE, turn everything back off and go to IDLE.
                 if (currentState ~= STATE_IDLE) then
                     luup.log("DeusExMachinaII::deusStep(): transitioning to IDLE, not in an active house mode.");
