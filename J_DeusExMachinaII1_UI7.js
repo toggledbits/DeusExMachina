@@ -237,6 +237,17 @@ var DeusExMachinaII = (function(api) {
         }
         alert("Time must be in the format HH:MM (i.e. 22:30)");
     }
+    
+    function checkMaxTargets()
+    {
+        var maxt = jQuery("#maxtargets").val();
+        var re = new RegExp("^[0-9]+$");
+        if (re.exec(maxt)) {
+            api.setDeviceStatePersistent(deusDevice, serviceId, "MaxTargetsOn", maxt, 0);
+            return;
+        }
+        alert("Max On Targets must be an integer and >= 0");
+    }
 
     ////////////////////////////
     function configureDeus()
@@ -259,7 +270,9 @@ var DeusExMachinaII = (function(api) {
             html += '.color-red { color: #ff0000; }';
             html += '.color-green { color: #12805b; }';
             html += 'input#deusExTime { text-align: center; }';
+            html += 'input#maxtargets { text-align: center; }';
             html += '</style>';
+            
             html += "<h2>Lights-Out Time</h2><label for=\"deusExTime\">Lights will cycle between sunset and the \"lights-out\" time. Enter the time to begin shutting off lights:</label><br/>";
             html += "<input type=\"text\" size=\"7\" maxlength=\"5\" onChange=\"DeusExMachinaII.checkTime()\" id=\"deusExTime\" />&nbsp;(HH:MM)";
             
@@ -320,16 +333,20 @@ var DeusExMachinaII = (function(api) {
             
             // Handle scene pairs
             html += '<div id="scenes"><h2>Scene Control</h2>';
-            html += 'In addition to controlling individual devices, DeusExMachinaII can also run scenes. Scenes are specified in pairs: a scene to do something (the "on" scene), and a scene to undo it (the "off" scene). To add a scene pair, select an "on" scene and an "off" scene and click the green plus. To remove a configured scene pair, click the red minus next to it.';
+            html += 'In addition to controlling individual devices, DeusExMachinaII can run scenes. Scenes are specified in pairs: a scene to do something (the "on" scene), and a scene to undo it (the "off" scene). To add a scene pair, select an "on" scene and an "off" scene and click the green plus. To remove a configured scene pair, click the red minus next to it.';
             html += '<label>Add Scene Pair: On&nbsp;Scene:<select id="addonscene" onChange="validateScene()"><option value="">--choose--</option>';
             html += '</select> Off&nbsp;Scene:<select id="addoffscene" onChange="validateScene()"><option value="">--choose--</option>';
             html += '</select>';
             html += '&nbsp;<i class="material-icons w3-large color-green cursor-hand" id="addscenebtn" onClick="dosceneadd()">add_circle_outline</i>'
             html += '<ul id="scenepairs"></ul>';
             html += '</div>';
-            
-            // Final scene
-            html += '<div id="demfinalscene"><h2>Final Scene</h2>The final scene, if specified, is run after all other devices have been turned off during a lights-out cycle.<br/><label for="finalscene">Final Scene:</label><select id="finalscene" onChange="DeusExMachinaII.saveFinalScene(this)"><option value="">(none)</option>';
+
+            // Maximum number of targets allowed to be "on" simultaneously
+            html += "<h2>Maximum \"On\" Targets</h2><label for=\"maxtargets\">Maximum number of controlled devices and scenes (targets) that can be \"on\" at once:</label><br/>";
+            html += "<input type=\"text\" size=\"5\" onChange=\"DeusExMachinaII.checkMaxTargets()\" id=\"maxtargets\" />&nbsp;(0=no limit)";
+
+            // Final scene (the scene that is run when everything has been turned off and DEM is going idle).
+            html += '<div id="demfinalscene"><h2>Final Scene</h2>The final scene, if specified, is run after all other targets have been turned off during a lights-out cycle.<br/><label for="finalscene">Final Scene:</label><select id="finalscene" onChange="DeusExMachinaII.saveFinalScene(this)"><option value="">(none)</option>';
             html += '</select></div>';
             
             html += '<h2>More Information</h2>If you need more information about configuring DeusExMachinaII, please see the <a href="https://github.com/toggledbits/DeusExMachina/blob/master/README.md" target="_blank">README</a> in <a href="https://github.com/toggledbits/DeusExMachina" target="_blank"> our GitHub repository</a>.';
@@ -343,6 +360,12 @@ var DeusExMachinaII = (function(api) {
             if (!isNaN(timeMins))
                 time = timeMinsToStr(timeMins);
             jQuery("#deusExTime").val(time);
+
+            // Restore maxtargets
+            var maxt = parseInt(api.getDeviceState(deusDevice, serviceId, "MaxTargetsOn"));
+            if (isNaN(maxt) || maxt < 0)
+                maxt = 0;
+            jQuery("#maxtargets").val(maxt);
             
             // Restore house modes
             var houseModes = parseInt(api.getDeviceState(deusDevice, serviceId, "HouseModes"));
@@ -416,6 +439,7 @@ console.log('found for ' + info.type + ' ' + info.device + ' with value=' + info
         onBeforeCpanelClose: onBeforeCpanelClose,
         changeHouseModeSelector: changeHouseModeSelector,
         checkTime: checkTime,
+        checkMaxTargets: checkMaxTargets,
         updateDeusControl: updateDeusControl,
         configureDeus: configureDeus,
         addScenePair: addScenePair,
