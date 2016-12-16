@@ -67,12 +67,12 @@ As of version 2.4, all devices are listed that implement the SwitchPower1 and Di
 like some motion sensors and thermostats being listed. It may not be entirely obvious (or standard) what a thermostat, for example, might do when you try to turn it off and on like a light, so be careful selecting these devices.
 
 Also new for version 2.4 is the ability to run scenes during the random cycling period. Scenes must be specified in pairs, with
-one being the "on" scene and the other being an "off" scene. This not allows more patterned use of lights, but also gives user
-the ability to handle device-specific capabilities that would be difficult to track in DEMII. For example, while DEMII can now
+one being the "on" scene and the other being an "off" scene. This not only allows more patterned use of lights, but also gives the user
+the ability to handle device-specific capabilities that would be difficult to implement in DEMII. For example, while DEMII can now
 turn Philips Hue lights on and off (to dimming levels, even), it cannot control their color because there's no UI for that in
 DEMII. But a scene could be used to control that light or a group of lights, with their color.
 
-Version 2.4 also adds the ability to limit the number of targets (devices or scenes) that DEMII can have "on" simultaneously.
+Version 2.4 also adds the ability to limit the number of targets (devices or scenes) that DEMII can have "on" simultaneously. If this limit is 0, there is no limit enforced.
 
 Finally, 2.4 adds the ability for a "final scene" to run when DEMII is disabled or turns off the last light after the "lights out" time. This could be used for any purpose. I personally use it to make sure a whole-house off is run, but you could use it to ensure your alarm system is armed, or your garage door is closed, etc.
 
