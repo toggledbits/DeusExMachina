@@ -242,14 +242,14 @@
         local function isDeviceOn(targetid)
             local first = string.upper(string.sub(targetid, 1, 1))
             if (first == "S") then
-luup.log("DeusExMachinaII::isDeviceOn(): handling scene spec " .. targetid)
+                -- luup.log("DeusExMachinaII::isDeviceOn(): handling scene spec " .. targetid)
                 return isSceneOn(targetid)
             end
 
             -- Handle as switch or dimmer
-luup.log("DeusExMachinaII::isDeviceOn(): handling target spec " .. targetid)
+            -- luup.log("DeusExMachinaII::isDeviceOn(): handling target spec " .. targetid)
             local r = tonumber(string.match(targetid, '^%d+'), 10)
-luup.log("DeusExMachinaII::isDeviceOn(): target number seems to be " .. tostring(r))
+            -- luup.log("DeusExMachinaII::isDeviceOn(): target number seems to be " .. tostring(r))
             local val = "0"
             if (luup.devices[r] ~= nil) then
                 local t = luup.variable_get(DIMMER_SID, "LoadLevelStatus", r)
@@ -303,13 +303,13 @@ luup.log("DeusExMachinaII::targetControl(): on scene is " .. tostring(onScene) .
                     lvl = tonumber(lvl, 10)
                 end
                 targetid = tonumber(targetid, 10)
-luup.log("DeusExMachinaII::targetControl(): handling device " .. tostring(targetid) .. ", level " .. tostring(lvl))
+                -- Level for all types is 0 if turning device off
+                if not turnOn then lvl = 0 end
+                -- luup.log("DeusExMachinaII::targetControl(): handling device " .. tostring(targetid) .. ", level " .. tostring(lvl))
                 if luup.devices[targetid] == nil then
                     luup.log("DeusExMachinaII::targetControl(): device " .. tostring(targetid) .. " not found in luup.devices");
                     return
                 end
-                -- Level for all types is 0 if turning device off
-                if not turnOn then lvl = 0 end
                 local t = luup.variable_get(DIMMER_SID, "LoadLevelTarget", targetid)
                 if (t == nil) then
                     t = luup.variable_get(SWITCH_SID, "Status", targetid)
@@ -318,12 +318,12 @@ luup.log("DeusExMachinaII::targetControl(): handling device " .. tostring(target
                     else
                         -- Handle as SwitchPower1
                         if turnOn then lvl = 1 end
-luup.log("DeusExMachinaII: targetControl(): handling " .. targetid .. " as binary light, setting target to " .. lvl)
+                        luup.log("DeusExMachinaII: targetControl(): handling " .. targetid .. " as binary light, setting target to " .. lvl)
                         luup.call_action(SWITCH_SID, "SetTarget", {newTargetValue=lvl}, targetid)
                     end
                 else
                     -- Handle as Dimming1
-luup.log("DeusExMachinaII: targetControl(): handling " .. targetid .. " as dimmer, setting load level to " .. lvl)
+                    luup.log("DeusExMachinaII: targetControl(): handling " .. targetid .. " as dimmer, setting load level to " .. lvl)
                     luup.call_action(DIMMER_SID, "SetLoadLevelTarget", {newLoadlevelTarget=lvl}, targetid) -- note odd case inconsistency
                 end
             end
@@ -349,19 +349,22 @@ luup.log("DeusExMachinaII: targetControl(): handling " .. targetid .. " as dimme
         end
 
         -- Turn off a light, if any is on. Returns 1 if there are more lights to turn off; otherwise 0.
-        local function turnOffLight()
-            local on
+        local function turnOffLight(on)
             local n
-            on, n = getTargetsOn()
+            if on == nil then
+                on, n = getTargetsOn()
+            else
+                n = table.getn(on)
+            end
             if (n &gt; 0) then
                 local i = math.random(1, n)
-                targetControl(on[i], false)
-                luup.log("DeusExMachinaII::turnOffLight(): turned " .. tostring(on[i]) .. " OFF, " .. tostring(n-1) .. " targets still on.")
-                if (n &gt; 1) then
-                    return true -- there are still lights to turn off
-                end
+                local target = on[i]
+                targetControl(target, false)
+                table.remove(on, i)
+                n = n - 1
+                luup.log("DeusExMachinaII::turnOffLight(): turned " .. tostring(target) .. " OFF, " .. tostring(n) .. " targets still on.")
             end
-            return false -- no more lights to turn off
+            return (n &gt; 0), on, n
         end
 
         -- Turn off all lights as fast as we can. Transition through SHUTDOWN state during,
@@ -590,8 +593,8 @@ luup.log("DeusExMachinaII: targetControl(): handling " .. targetid .. " as dimme
                         if (s ~= nil) then
                             if (s) then
                                 -- Turn something off.
+                                luup.log("DeusExMachinaII::deusStep(): turn " .. devspec .. " OFF")
                                 targetControl(devspec, false)
-                                luup.log("DeusExMachinaII::deusStep(): set " .. devspec .. " to OFF")
                             else
                                 -- Turn something on. If we're at the max number of targets we're allowed to turn on,
                                 -- turn targets off first.
@@ -601,12 +604,13 @@ luup.log("DeusExMachinaII: targetControl(): handling " .. targetid .. " as dimme
                                     local on, n
                                     on, n = getTargetsOn()
                                     while ( n &gt;= maxOn ) do
-                                        turnOffLight()
-                                        on, n = getTargetsOn()
+                                        luup.log("DeusExMachinaII:deusStep(): too many targets on, max is " .. tostring(maxOn) 
+                                            .. ", have " .. tostring(n) .. ", let's turn one off.")
+                                        _, on, n = turnOffLight(on)
                                     end
                                 end
+                                luup.log("DeusExMachinaII::deusStep(): turn " .. devspec .. " ON")
                                 targetControl(devspec, true)
-                                luup.log("DeusExMachinaII::deusStep(): set " .. devspec .. " to ON")
                             end
                         end
                     end
