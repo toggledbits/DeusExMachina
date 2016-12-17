@@ -9,12 +9,13 @@
         -- -------------------------------------------------------------------------------------------------------------------------
 
         SID = "urn:toggledbits-com:serviceId:DeusExMachinaII1"
+        DEMVERSION = 20400
+        
         SWITCH_TYPE = "urn:schemas-upnp-org:device:BinaryLight:1"
         SWITCH_SID  = "urn:upnp-org:serviceId:SwitchPower1"
         DIMMER_TYPE = "urn:schemas-upnp-org:device:DimmableLight:1"
         DIMMER_SID  = "urn:upnp-org:serviceId:Dimming1"
-        DEMVERSION = 20400
-
+        
         STATE_STANDBY = 0
         STATE_IDLE = 1
         STATE_CYCLE = 2
@@ -28,7 +29,7 @@
                 luup.variable_set(SID, "UI7Check", "false", lul_device)
                 ui7Check = "false"
             end
-            if( luup.version_branch == 1 and luup.version_major == 7 and ui7Check == "false") then
+            if ( luup.version_branch == 1 and luup.version_major == 7 and ui7Check == "false" ) then
                 luup.variable_set(SID, "UI7Check", "true", lul_device)
                 luup.attr_set("device_json", "D_DeusExMachinaII1_UI7.json", lul_device)
                 luup.reload()
@@ -194,6 +195,18 @@
             until k &gt; string.len(s)
             return t, n
         end
+        
+        local function join(sep, t) 
+            local i
+            if (table.getn(t) &lt; 1) then
+                return ""
+            end
+            local s = tostring(t[1])
+            for i=2,table.getn(t) do
+                s = s .. sep .. tostring(t[i])
+            end
+            return s
+        end
 
         -- Return true if a specified scene has been run (i.e. on the list)
         local function isSceneOn(spec)
@@ -237,6 +250,20 @@
             local s = luup.variable_get(SID, "Devices", lul_device) or ""
             return split(s)
         end
+        
+        -- Remove a target from the target list. Used when the target no longer exists. Linear, poor, but short list and rarely used.
+        local function removeTarget(target, tlist)
+            if tlist == nil then tlist = getTargetList() end
+            local i
+            for i = 1,table.getn(tlist) do
+                if tostring(target) == tlist[i] then
+                    table.remove(tlist, i)
+                    luup.variable_set(SID, "Devices", join(",", tlist), lul_device)
+                    return true
+                end
+            end
+            return false
+        end
 
         -- Light on or off? Returns boolean
         local function isDeviceOn(targetid)
@@ -252,20 +279,14 @@
             -- luup.log("DeusExMachinaII::isDeviceOn(): target number seems to be " .. tostring(r))
             local val = "0"
             if (luup.devices[r] ~= nil) then
-                local t = luup.variable_get(DIMMER_SID, "LoadLevelStatus", r)
-                if (t == nil) then
-                    t = luup.variable_get(SWITCH_SID, "Status", r)
-                    if (t == nil) then
-                        luup.log("DeusExMachinaII::isDeviceOn(): target " .. tostring(targetid) .. " unknown device type")
-                        return nil
-                    else
-                        val =  luup.variable_get(SWITCH_SID, "Status", r)
-                    end
-                else
+                if luup.device_supports_service(DIMMER_SID) then
                     val = luup.variable_get(DIMMER_SID, "LoadLevelStatus", r)
+                elseif luup.device_supports_service(SWITCH_SID) then
+                    val =  luup.variable_get(SWITCH_SID, "Status", r)
                 end
             else
                 luup.log("DeusExMachinaII::isDeviceOn(): target spec " .. tostring(targetid) .. " device " .. tostring(r) .. ", device not found in luup.devices")
+                removeTarget(targetid)
                 return false
             end
             return val ~= "0"
@@ -292,10 +313,11 @@ luup.log("DeusExMachinaII::targetControl(): handling scene spec " .. targetid)
                 end
 luup.log("DeusExMachinaII::targetControl(): on scene is " .. tostring(onScene) .. ", off scene is " .. tostring(offScene))
                 local targetScene
-                if (turnOn) then targetScene = onScene else targetScene = offScene end
+                if turnOn then targetScene = onScene else targetScene = offScene end
                 luup.call_action("urn:micasaverde-com:serviceId:HomeAutomationGateway1", "RunScene", { SceneNum=targetScene }, 0)
                 updateSceneState(targetid, turnOn)
             else
+                -- Parse the level if this is a dimming target spec
                 local lvl = 100
                 local k = string.find(targetid, '=')
                 if k ~= nil then
@@ -307,24 +329,22 @@ luup.log("DeusExMachinaII::targetControl(): on scene is " .. tostring(onScene) .
                 if not turnOn then lvl = 0 end
                 -- luup.log("DeusExMachinaII::targetControl(): handling device " .. tostring(targetid) .. ", level " .. tostring(lvl))
                 if luup.devices[targetid] == nil then
+                    -- Device doesn't exist (user deleted, etc.). PHR??? Should remove from Devices state variable.
                     luup.log("DeusExMachinaII::targetControl(): device " .. tostring(targetid) .. " not found in luup.devices");
+                    removeTarget(targetid)
                     return
                 end
-                local t = luup.variable_get(DIMMER_SID, "LoadLevelTarget", targetid)
-                if (t == nil) then
-                    t = luup.variable_get(SWITCH_SID, "Status", targetid)
-                    if (t == nil) then
-                        luup.log("DeusExMachinaII: targetControl(): can't determine device type of devspec=" .. targetid)
-                    else
-                        -- Handle as SwitchPower1
-                        if turnOn then lvl = 1 end
-                        luup.log("DeusExMachinaII: targetControl(): handling " .. targetid .. " as binary light, setting target to " .. lvl)
-                        luup.call_action(SWITCH_SID, "SetTarget", {newTargetValue=lvl}, targetid)
-                    end
-                else
+                if luup.device_supports_service(DIMMER_SID) then
                     -- Handle as Dimming1
                     luup.log("DeusExMachinaII: targetControl(): handling " .. targetid .. " as dimmer, setting load level to " .. lvl)
                     luup.call_action(DIMMER_SID, "SetLoadLevelTarget", {newLoadlevelTarget=lvl}, targetid) -- note odd case inconsistency
+                elseif luup.device_supports_service(SWITCH_SID) then
+                    -- Handle as SwitchPower1
+                    if turnOn then lvl = 1 end
+                    luup.log("DeusExMachinaII: targetControl(): handling " .. targetid .. " as binary light, setting target to " .. lvl)
+                    luup.call_action(SWITCH_SID, "SetTarget", {newTargetValue=lvl}, targetid)
+                else
+                    luup.log("DeusExMachinaII: targetControl(): don't know how to control target " .. targetid)
                 end
             end
         end
@@ -460,12 +480,12 @@ luup.log("DeusExMachinaII::targetControl(): on scene is " .. tostring(onScene) .
             luup.variable_set(SID, "Version", DEMVERSION, lul_device)
         end
 
-        -- Enable DEM by setting a new cycle stamp and calling an initial cycle directly.
+        -- Enable DEM by setting a new cycle stamp and scheduling our first cycle step.
         function deusEnable()
             luup.log("DeusExMachinaII::deusEnable(): enabling...")
             luup.variable_set(SID, "ScenesRunning", "", lul_device) -- start with a clean slate
             runStamp = os.time()
-            deusStep(runStamp)
+            luup.call_delay("deusStep", 1, runStamp, 1)
         end
 
         -- Disable DEM and go to standby state. If we are currently cycling (as opposed to idle/waiting for sunset),
@@ -486,7 +506,7 @@ luup.log("DeusExMachinaII::targetControl(): on scene is " .. tostring(onScene) .
             -- One-time stuff
             runOnce()
 
-            --check UI version
+            -- Check UI version
             checkVersion()
 
             -- Start up if we're enabled
