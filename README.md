@@ -80,22 +80,23 @@ Finally, 2.4 adds the ability for a "final scene" to run when DEMII is disabled 
 
 As of version 2.0 and on UI7, DeusExMachina can be enabled or disabled like a light switch in scenes, through the regular graphical interface (no Lua required).
 
-A Lua interface is also supported since version 1.1 for both UI5 and UI7, via a luup.call_action() call:
+A Lua interface is also supported since version 1.1 for both UI5 and UI7. All versions of support the SetEnabled action, although for DEMII versions 2.4 and higher, the use of SetTarget in the standard SwitchPower1 service is preferred. Examples (the "0|1" means use either 0 or 1 to disable or enable, respectively):
 
 ```
--- For the new Deus Ex Machina II plugin (v2.0 and higher), do this:
+-- Preferred for DEMII versions 2.4 and higher:
+luup.call_action("urn:upnp-org-serviceId:SwitchPower1", "SetTarget", { newTargetValue = "0|1" }, deviceID)
+
+-- Also works for all versions of DEMII:
 luup.call_action("urn:toggledbits-com:serviceId:DeusExMachinaII1", "SetEnabled", { NewEnabledValue = "0|1" }, deviceID)
 
 -- For the old Deus Ex Machina plugin (v1.1 and earlier) running on UI5 or UI7, do this:
 luup.call_action("urn:futzle-com:serviceId:DeusExMachina1", "SetEnabled", { NewEnabledValue = "0|1" }, deviceID)
 ```
 
-Of course, only one of either "0" or "1" should be specified.
+Note that when disabling Deus Ex Machina from a scene or the user interface, versions 1.1 and 2.x (DEMII) operate differently. Version 1.1 will simply stop cycling lights, leaving on any controlled lights it may have turned on. 
+DEMII, however, will turn off all controlled lights _if it was in the cycling period (between sunset and lights out time) at the time it was disabled_.
 
-Note that when disabling Deus Ex Machina from a scene or the user interface, versions 1.1 and 2.0 operate differently. Version 1.1 will simply stop cycling lights, leaving on any controlled lights it may have turned on. 
-Version 2, however, will turn off all controlled lights _if it was in the cycling period (between sunset and lights out time) at the time it was disabled_.
-
-Version 2.0 also added the ability for a change of DeusExMachina's Enabled state to be used as trigger in scenes and other places where events can be watched (e.g. Program Logic plugins, etc.). This also works on UI7 only.
+DEMII version 2.0 also added the ability for a change of DeusExMachina's operating state to be used as trigger in scenes and other places where events can be watched (e.g. Program Logic plugins, etc.). This also works on UI7 only.
 
 #### Triggers ####
 
@@ -107,17 +108,18 @@ For the "operating mode changes" event, the trigger fires when DEMII's operating
 
 * Standby - DEMII is disabled (this is equivalent to the "device is disabled" state event);
 
-* Ready - DEMII is enabled and waiting for the next sunset;
+* Ready - DEMII is enabled and waiting for the next sunset (and house mode, if applicable);
 
-* Cycling - DEMII is enabled and cycling lights in the active period after sunset and before the "lights out" time;
+* Cycling - DEMII is cycling lights, that is, it is enabled, in the period between sunset and the set "lights out" time, and correct house mode (if applicable);
 
 * Shut-off - DEMII is enabled and shutting off lights, having reached the "lights out" time.
 
-When disabled, DEMII is always in Standby mode. When enabled, DEMII enters the Ready mode, then transitions to Cycling mode at sunset, then Shut-off mode at the "lights out" time, and then when all lights have
-been shut off, returns to the Ready mode waiting for the next day's sunset. The transition between Ready, Cycling, and Shut-off continues until DEMII is disabled (at which point it goes to Standby).
+When disabled, DEMII is always in Standby mode. When enabled, DEMII enters the Ready mode, then transitions to Cycling mode at sunset, then Shut-off mode at the "lights out" time,
+and then when all lights have been shut off, returns to the Ready mode waiting for the next day's sunset. The transition between Ready, Cycling, and Shut-off continues until DEMII 
+is disabled (at which point it goes to Standby).
 
-It should be noted that DEMII can enter Cycling or Shut-off mode immediately, without passing through Ready, if it is enabled after sunset or after the "lights out" time, respectively. 
-DEMII will also transition into or out of Standby mode immediately and from any other mode when disabled or enabled, respectively.
+It should be noted that DEMII can enter Cycling or Shut-off mode immediately, without passing through Ready, if it is enabled after sunset or after the "lights out" time, 
+respectively. DEMII will also transition into or out of Standby mode immediately and from any other mode when disabled or enabled, respectively.
 
 #### Cycle Timing ####
 
