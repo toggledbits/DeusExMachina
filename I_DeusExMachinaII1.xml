@@ -57,9 +57,11 @@
             -- luup.log("DeusExMachinaII::deleteVar(" .. name .. "): status=" .. tostring(status) .. ", result=" .. tostring(result))
         end
 
-        -- Shortcut function to return state of Enabled variable
+        -- Shortcut function to return state of SwitchPower1 Status variable
         local function isEnabled()
-            return ( getVarNumeric("Enabled", 0) ~= 0 )
+            local s = luup.variable_get(SWITCH_SID, "Status", lul_device)
+            if (s == nil or s == "") then return false end
+            return (s ~= "0")
         end
 
         local function isActiveHouseMode()
@@ -196,18 +198,6 @@
             return t, n
         end
         
-        local function join(sep, t) 
-            local i
-            if (table.getn(t) &lt; 1) then
-                return ""
-            end
-            local s = tostring(t[1])
-            for i=2,table.getn(t) do
-                s = s .. sep .. tostring(t[i])
-            end
-            return s
-        end
-
         -- Return true if a specified scene has been run (i.e. on the list)
         local function isSceneOn(spec)
             local stateList = luup.variable_get(SID, "ScenesRunning", lul_device) or ""
@@ -258,7 +248,7 @@
             for i = 1,table.getn(tlist) do
                 if tostring(target) == tlist[i] then
                     table.remove(tlist, i)
-                    luup.variable_set(SID, "Devices", join(",", tlist), lul_device)
+                    luup.variable_set(SID, "Devices", table.concat(tlist, ","), lul_device)
                     return true
                 end
             end
@@ -405,11 +395,12 @@ luup.log("DeusExMachinaII::targetControl(): on scene is " .. tostring(onScene) .
         -- takes place. For us, that means looking to see if an older version of Deus is still
         -- installed, and copying its config into our new config. Then disable the old Deus.
         local function runOnce()
-            local s = luup.variable_get(SID, "Enabled", lul_device)
+            local s = luup.variable_get(SID, "Devices", lul_device)
             if (s == nil) then
-                luup.log("DeusExMachinaII::runOnce(): Enabled variable not found, running...")
+                luup.log("DeusExMachinaII::runOnce(): Devices variable not found, setting up new instance...")
                 -- See if there are variables from older version of DEM
                 -- Start by finding the old Deus device, if there is one...
+                local devList = ""
                 local i, olddev
                 olddev = -1
                 for i,v in pairs(luup.devices) do
@@ -439,14 +430,14 @@ luup.log("DeusExMachinaII::targetControl(): on scene is " .. tostring(onScene) .
                                 table.insert(t, s)
                             end
                         end
-                        s = table.concat(t, ",")
-                        luup.variable_set(SID, "Devices", s, lul_device)
+                        devList = table.concat(t, ",")
                         deleteVar("controlCount", lul_device)
                     end
 
                     -- Finally, turn off old Deus
                     luup.call_action(oldsid, "SetEnabled", { NewEnabledValue = "0" }, olddev)
                 end
+                luup.variable_set(SID, "Devices", devList, lul_device)
 
                 -- Set up some other default config
                 luup.variable_set(SID, "MinCycleDelay", "300", lul_device)
@@ -455,8 +446,10 @@ luup.log("DeusExMachinaII::targetControl(): on scene is " .. tostring(onScene) .
                 luup.variable_set(SID, "MaxOffDelay", "300", lul_device)
                 luup.variable_set(SID, "LightsOut", 1439, lul_device)
                 luup.variable_set(SID, "MaxTargetsOn", 0, lul_device)
-                luup.variable_set(SID, "Enabled", "0", lul_device)
+                luup.variable_set(SID, "Enabled", "0", lul_device, true)
                 luup.variable_set(SID, "Version", DEMVERSION, lul_device)
+                luup.variable_set(SWITCH_SID, "Status", "0", lul_device, true)
+                luup.variable_set(SWITCH_SID, "Target", "0", lul_device, true)
             end
 
             -- Consider per-version changes.
@@ -475,6 +468,12 @@ luup.log("DeusExMachinaII::targetControl(): on scene is " .. tostring(onScene) .
                 end
                 deleteVar("LightsOutTime", lul_device)
             end
+            if (s &lt; 20400) then
+                luup.variable_set(SID, "MaxTargetsOn", 0, lul_device)
+                local e = getVarNumeric("Enabled", 0)
+                luup.variable_set(SWITCH_SID, "Status", e, lul_device, true)
+                luup.variable_set(SWITCH_SID, "Target", e, lul_device, true)
+            end
 
             -- Update version last.
             luup.variable_set(SID, "Version", DEMVERSION, lul_device)
@@ -486,6 +485,8 @@ luup.log("DeusExMachinaII::targetControl(): on scene is " .. tostring(onScene) .
             luup.variable_set(SID, "ScenesRunning", "", lul_device) -- start with a clean slate
             runStamp = os.time()
             luup.call_delay("deusStep", 1, runStamp, 1)
+            luup.variable_set(SID, "Enabled", 1, lul_device)
+            luup.variable_set(SWITCH_SID, "Status", "1", lul_device)
         end
 
         -- Disable DEM and go to standby state. If we are currently cycling (as opposed to idle/waiting for sunset),
@@ -497,11 +498,13 @@ luup.log("DeusExMachinaII::targetControl(): on scene is " .. tostring(onScene) .
                 clearLights()
             end
             luup.variable_set(SID, "State", STATE_STANDBY, lul_device)
+            luup.variable_set(SID, "Enabled", 0, lul_device)
+            luup.variable_set(SWITCH_SID, "Status", "0", lul_device)
         end
 
         -- Initialize.
         function deusInit(deusDevice)
-            luup.log("DeusExMachinaII::deusInit(): Version 2.4RC2 (2016-12-15), starting up...")
+            luup.log("DeusExMachinaII::deusInit(): Version 2.4RC3 (2016-12-17), initializing...")
 
             -- One-time stuff
             runOnce()
@@ -652,15 +655,27 @@ luup.log("DeusExMachinaII::targetControl(): on scene is " .. tostring(onScene) .
     <startup>deusInit</startup>
     <actionList>
         <action>
+            <serviceId>urn:upnp-org:serviceId:SwitchPower1</serviceId>
+            <name>SetTarget</name>
+            <job>
+                local newTargetValue = lul_settings.newTargetValue or "0"
+                luup.variable_set(SWITCH_SID, "Target", newTargetValue, lul_device)
+                if (newTargetValue == "1") then
+                    deusEnable()
+                else
+                    deusDisable()
+                end
+            </job>
+        </action>
+        <action>
             <serviceId>urn:toggledbits-com:serviceId:DeusExMachinaII1</serviceId>
             <name>SetEnabled</name>
             <job>
-                local newEnabledValue = lul_settings.NewEnabledValue
+                local newEnabledValue = lul_settings.NewEnabledValue or "0"
+                luup.variable_set(SWITCH_SID, "Target", newEnabledValue, lul_device)
                 if (newEnabledValue == "1") then
-                    luup.variable_set(SID, "Enabled", 1, lul_device)
                     deusEnable()
                 else
-                    luup.variable_set(SID, "Enabled", 0, lul_device)
                     deusDisable()
                 end
             </job>
