@@ -269,9 +269,9 @@
             -- luup.log("DeusExMachinaII::isDeviceOn(): target number seems to be " .. tostring(r))
             local val = "0"
             if (luup.devices[r] ~= nil) then
-                if luup.device_supports_service(DIMMER_SID) then
+                if luup.device_supports_service(DIMMER_SID, r) then
                     val = luup.variable_get(DIMMER_SID, "LoadLevelStatus", r)
-                elseif luup.device_supports_service(SWITCH_SID) then
+                elseif luup.device_supports_service(SWITCH_SID, r) then
                     val =  luup.variable_get(SWITCH_SID, "Status", r)
                 end
             else
@@ -324,11 +324,11 @@ luup.log("DeusExMachinaII::targetControl(): on scene is " .. tostring(onScene) .
                     removeTarget(targetid)
                     return
                 end
-                if luup.device_supports_service(DIMMER_SID) then
+                if luup.device_supports_service(DIMMER_SID, targetid) then
                     -- Handle as Dimming1
                     luup.log("DeusExMachinaII: targetControl(): handling " .. targetid .. " as dimmer, setting load level to " .. lvl)
                     luup.call_action(DIMMER_SID, "SetLoadLevelTarget", {newLoadlevelTarget=lvl}, targetid) -- note odd case inconsistency
-                elseif luup.device_supports_service(SWITCH_SID) then
+                elseif luup.device_supports_service(SWITCH_SID, targetid) then
                     -- Handle as SwitchPower1
                     if turnOn then lvl = 1 end
                     luup.log("DeusExMachinaII: targetControl(): handling " .. targetid .. " as binary light, setting target to " .. lvl)
