@@ -87,6 +87,8 @@
                 if (bit.band(modebits, currentMode) == 0) then
                     luup.log('DeusExMachinaII::isActiveHouseMode(): Current mode bit ' .. string.format("0x%x", currentMode) .. ' not in set ' .. string.format("0x%x", modebits))
                     return false -- not active in this mode
+                else
+                    luup.log('DeusExMachinaII::isActiveHouseMode(): Current mode bit ' .. string.format("0x%x", currentMode) .. ' SET in ' .. string.format("0x%x", modebits))
                 end
             end
             return true -- default is we're active in the current house mode
@@ -277,7 +279,7 @@
             else
                 luup.log("DeusExMachinaII::isDeviceOn(): target spec " .. tostring(targetid) .. " device " .. tostring(r) .. ", device not found in luup.devices")
                 removeTarget(targetid)
-                return false
+                return nil
             end
             return val ~= "0"
         end
@@ -485,7 +487,7 @@ luup.log("DeusExMachinaII::targetControl(): on scene is " .. tostring(onScene) .
             luup.variable_set(SID, "ScenesRunning", "", lul_device) -- start with a clean slate
             runStamp = os.time()
             luup.call_delay("deusStep", 1, runStamp, 1)
-            luup.variable_set(SID, "Enabled", 1, lul_device)
+            luup.variable_set(SID, "Enabled", "1", lul_device)
             luup.variable_set(SWITCH_SID, "Status", "1", lul_device)
         end
 
@@ -498,7 +500,7 @@ luup.log("DeusExMachinaII::targetControl(): on scene is " .. tostring(onScene) .
                 clearLights()
             end
             luup.variable_set(SID, "State", STATE_STANDBY, lul_device)
-            luup.variable_set(SID, "Enabled", 0, lul_device)
+            luup.variable_set(SID, "Enabled", "0", lul_device)
             luup.variable_set(SWITCH_SID, "Status", "0", lul_device)
         end
 
@@ -570,7 +572,7 @@ luup.log("DeusExMachinaII::targetControl(): on scene is " .. tostring(onScene) .
 					-- Transition from STATE_STANDBY (i.e. we're enabling) in the inactive period.
 					-- Go to IDLE and delay for next sunset.
                     luup.log("DeusExMachinaII::deusStep(): transitioning to IDLE from STANDBY, waiting for next sunset...");
-                    nextCycleDelay = sunset - os.time() + getRandomDelay("MinOffDelay", "MaxOffDelay", 60, 300)
+                    nextCycleDelay = sunset - os.time() + getRandomDelay("MinCycleDelay", "MaxCycleDelay")
                     luup.variable_set(SID, "State", STATE_IDLE, lul_device)
 			elseif (not isActiveHouseMode()) then
                 -- Not in an active house mode. If we're not STANDBY or IDLE, turn everything back off and go to IDLE.
@@ -585,9 +587,9 @@ luup.log("DeusExMachinaII::targetControl(): on scene is " .. tostring(onScene) .
                 -- Figure out how long to delay. If we're lights-out, delay to next sunset. Otherwise, short delay
                 -- to re-check house mode, which could change at any time, so we must deal with it.
                 if (inActiveTimePeriod) then
-                    nextCycleDelay = 300
+                    nextCycleDelay = getRandomDelay("MinCycleDelay", "MaxCycleDelay")
                 else
-                    nextCycleDelay = sunset - os.time() + getRandomDelay("MinOffDelay", "MaxOffDelay", 60, 300)
+                    nextCycleDelay = sunset - os.time() + getRandomDelay("MinCycleDelay", "MaxCycleDelay")
                 end
             elseif (not inActiveTimePeriod) then
                 luup.log("DeusExMachinaII::deusStep(): running off cycle")
@@ -596,7 +598,7 @@ luup.log("DeusExMachinaII::targetControl(): on scene is " .. tostring(onScene) .
                     -- No more lights to turn off
                     runFinalScene()
                     luup.variable_set(SID, "State", STATE_IDLE, lul_device)
-                    nextCycleDelay = sunset - os.time() + getRandomDelay("MinOffDelay", "MaxOffDelay", 60, 300)
+                    nextCycleDelay = sunset - os.time() + getRandomDelay("MinCycleDelay", "MaxCycleDelay")
                     luup.log("DeusExMachina::deusStep(): all lights out; now IDLE, setting delay to restart cycling at next sunset")
                 else
                     nextCycleDelay = getRandomDelay("MinOffDelay", "MaxOffDelay", 60, 300)
@@ -615,7 +617,7 @@ luup.log("DeusExMachinaII::targetControl(): on scene is " .. tostring(onScene) .
                         local s = isDeviceOn(devspec)
                         if (s ~= nil) then
                             if (s) then
-                                -- Turn something off.
+                                -- It's on; turn it off.
                                 luup.log("DeusExMachinaII::deusStep(): turn " .. devspec .. " OFF")
                                 targetControl(devspec, false)
                             else
