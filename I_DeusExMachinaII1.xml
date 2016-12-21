@@ -506,7 +506,7 @@ luup.log("DeusExMachinaII::targetControl(): on scene is " .. tostring(onScene) .
 
         -- Initialize.
         function deusInit(deusDevice)
-            luup.log("DeusExMachinaII::deusInit(): Version 2.4RC3 (2016-12-17), initializing...")
+            luup.log("DeusExMachinaII::deusInit(): Version 2.4RC3 (2016-12-21), initializing...")
 
             -- One-time stuff
             runOnce()
