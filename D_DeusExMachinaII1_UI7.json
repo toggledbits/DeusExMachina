@@ -103,13 +103,28 @@
             "left": "0",
             "Label": {
                 "lang_tag": "dem_about",
-                "text": "DeusExMachina II ver 2.4RC3 2016-12-21<br/>For documentation or to report bugs, please go to the <a target='_blank' href='https://github.com/toggledbits/DeusExMachina'>DeusExMachina Github repository</a><br/>This plugin is offered for use as-is and without warranties of any kind. By using this plugin, you agree to assume all risks in connection with its use without limitation.</a>."
+                "text": "DeusExMachina II ver 2.4RC4 2016-12-23<br/>
+                For documentation or to report bugs, please go to the <a target='_blank' href='https://github.com/toggledbits/DeusExMachina'>DeusExMachina Github repository</a>.<br/>
+                This plugin is offered for use as-is and without warranties of any kind. By using this plugin,<br/>
+                you agree to assume all risks in connection with its use without limitation."
             },
             "Display": {
                 "Top": "80",
                 "Left": "0",
                 "Width": "200",
                 "Height": "24"
+            }
+        }, {
+            "ControlType": "variable",
+            "top": "0",
+            "left": "0",
+            "Display": {
+                "Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
+                "Variable": "Message",
+                "Top": "16",
+                "Left": "120",
+                "Width": "200",
+                "Height": "20"
             }
         }]
     }, {
