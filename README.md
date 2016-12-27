@@ -3,7 +3,10 @@ DeusExMachinaII: The Vacation Plugin
 
 ## Introduction ##
 
-DeusExMachina is a plugin for the MiCasaVerde Vera home automation system. It takes over your house while you're away on vacation by creating a ghost that moves from room to room, turning on and off lights. Simply specify the lights you want to have controlled by the plugin, specify a "Lights Out" time when lights will begin to turn off, and come sundown DeusExMachina will take over.
+DeusExMachina is a plugin for the MiOS home automation operating system used on MiCasaVerde Vera gateway/controllers.
+It takes over your house while you're away on vacation by creating a ghost that moves from room to room, turning on and off lights. 
+Simply specify the lights you want to have controlled by the plugin, specify a "Lights Out" time when lights will begin to 
+turn off, and come sundown DeusExMachina will take over.
 
 There are currently two versions of Deus Ex Machina available:
 
@@ -168,13 +171,13 @@ when the Vera is sitting in front of you, and moreso when dealing with someone e
 		Vera and make sure everything is correct for the Vera's physical location. Remember that in
 		the western hemisphere (North, Central & South America, principally) your longitude will
 		be a negative number. If you are below the equator, latitude will be negative. If you're not
-		sure what your latitude/longitude are, use a site like [MyGeoPosition.com](http://mygeoposition.com).
+		sure what your latitude/longitude are, use a site like <a href="http://mygeoposition.com">MyGeoPosition.com</a>.
 		If you make any changes to your time or location configuration, restart your Vera.</li>
 	<li>You're not waiting long enough. DEMII doesn't instantly jump into action at sunset, it employs its
 		configured cycle delays as well, so cycling will usually begin sometime after sunset, up to the
 		configured maximum cycle delay (30 minutes by default).</li>
 	<li>Your house mode isn't "active." If you've configured DEMII to operate only in certain house modes,
-		make sure you're in one of those modes, otherwise DEMII will sit, even though it's enabled.</li>
+		make sure you're in one of those modes, otherwise DEMII will just sit, even though it's enabled.</li>
 	</ol>
     </dd>
 
@@ -190,19 +193,20 @@ when the Vera is sitting in front of you, and moreso when dealing with someone e
 
     <dt>What's the difference between House Mode and Enabled/Disabled? Can I just use House Mode to enable and disable DEMII?</dt>
     <dd>The enabled/disabled state of DEMII is the "big red button" for its operation. If you configure DEMII to only run in certain
-        house modes, then you can theoretically leave DEMII enabled all the time, as it will operate (cycle lights) only when a
-        selected house mode is active. But, some people don't use the House Modes for various reasons, so having a master switch
+        house modes, then you can theoretically leave DEMII enabled all the time, as it will only operate (cycle lights) when a
+        selected house mode is active. But, some people don't use House Modes for various reasons, so having a master switch
         for DEMII is necessary.</dd>
      
     <dt>I have a feature request. Will you implement it?</dt>
     <dd>Absolutely definitely maybe. I'm willing to listen to what you want to do. But, keep in mind, nobody's getting rich writing Vera
         plugins, and I do other things that put food on my table. And, what seems like a good idea to you may be just that: a good idea for 
-        the way _you_ want to use it. The more generally applicable your request is, the higher the likelihood that I'll entertain it. What
+        the way <em>you</em> want to use it. The more generally applicable your request is, the higher the likelihood that I'll entertain it. What
         I don't want to do is over-complicate this plug-in so it begins to rival PLEG for size and weight (no disrespect intended there at
         all--I'm a huge PLEG fan and use it extensively, but, dang). DEMII really has a simple job: make lights go on and off to cast a serious
         shadow of doubt in the mind of some knucklehead who might be thinking your house is empty and ripe for his picking. In any case,
         the best way to give me feature requests is to open up an issue (if you have a list, one issue per feature, please) in the
-        [GitHub repository](https://github.com/toggledbits/DeusExMachina/issues). Second best is sending me a message via the MCV forums 
-        (I'm user `rigpapa`).
+        <a href="https://github.com/toggledbits/DeusExMachina/issues">GitHub repository</a>. 
+	Second best is sending me a message via the MCV forums (I'm user `rigpapa`).
         </dd>
 </dl>        
+
