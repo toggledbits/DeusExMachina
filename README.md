@@ -131,7 +131,7 @@ When DEMII is in its "lights out" (shut-off) mode, it uses a different set of sh
 
 If you're not sure what DEMII is going, the easiest way to see is to go into the Settings interface for the plugin. 
 There is a text field to the right of the on/off switch in that interface that will tell you what DEMII is currently
-doing (when enabled; it's blank when DEMII is disabled).
+doing when enabled (it's blank when DEMII is disabled).
 
 If DEMII isn't behaving as expected, post a message in the MCV forums 
 [in this thread](http://forum.micasaverde.com/index.php/topic,11333.0.html)
@@ -139,23 +139,25 @@ or open up an issue in the
 [GitHub repository](https://github.com/toggledbits/DeusExMachina/issues).
 
 Please don't just say "DEMII isn't working for me." I can't tell you how long your piece of string is without seeing 
-your piece of string. Give me details of what you are doing, how you are configured, and what behavior you observe.
+_your_ piece of string. Give me details of what you are doing, how you are configured, and what behavior you observe.
 Screen shots help. In many cases, log output may be needed.
 
 #### Test Mode and Log Output ####
 
 If I'm troubleshooting a problem with you, I may ask you to enable test mode, run DEMII a bit, and send me the log output. Here's how you do that:
 
-1. Go into the setting for the DEMII device, and click the "Advanced" tab.
-1. Click on the Variables tab.
-1. Set the TestMode variable to 1 (just change the field and hit the TAB key)
+1. Go into the settings for the DEMII device, and click the "Advanced" tab.
+1. Click on the "Variables" tab.
+1. Set the "TestMode" variable to 1 (just change the field and hit the TAB key). If the variable doesn't exist, you'll need to create it using the "New Service" tab, which requires you to enter the service ID _exactly_ as shown here (use copy/paste if possible): `urn:toggledbits-com:serviceId:DeusExMachinaII1`
 1. If requested, set the TestSunset value to whatever I ask you (this allows the sunset time to be overriden so we don't have to wait for real sunset to see what DEMII is doing).
-1. After operating for a while, I'll ask you to email me the log file (`/etc/cmh/LuaPNP.log` on your Vera). This will require you
+1. After operating for a while, I'll ask you to email me your log file (`/etc/cmh/LuaUPnP.log` on your Vera). This will require you
 to log in to your Vera directly with ssh, or use the Vera's native "write log to USB drive" function, or use one of the many
 log capture scripts that's available.
+1. Don't forget to turn TestMode off (0) when finished.
 
-Above all, I ask that you please be patient. You probably already know that it an be challenging at times to figure out
-what's going on in your Vera's head. It's no different for developers.
+Above all, I ask that you please be patient. You probably already know that it can be frustrating at times to figure out
+what's going on in your Vera's head. It's no different for developers--it can be a challenging development environment
+when the Vera is sitting in front of you, and moreso when dealing with someone else's Vera at a distance.
 
 ## FAQ ##
 
