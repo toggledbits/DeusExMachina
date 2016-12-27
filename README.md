@@ -101,7 +101,7 @@ you simply use the SetTarget action to enable (newTargetValue=1) or disable (new
 The MiOS GUI for devices and scenes takes care of this for you in its code; if scripting in Lua, you simply do this:
 
 ```
-luup.call_action("urn:upnp-org-serviceId:SwitchPower1", "SetTarget", { newTargetValue = "0|1" }, pluginDeviceId)
+luup.call_action("urn:upnp-org:serviceId:SwitchPower1", "SetTarget", { newTargetValue = "0|1" }, pluginDeviceId)
 ```
 
 ### Triggers ###
