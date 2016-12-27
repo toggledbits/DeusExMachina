@@ -1,7 +1,7 @@
-DeusExMachina: The Vacation Plugin
+DeusExMachinaII: The Vacation Plugin
 =============
 
-### Introduction ###
+## Introduction ##
 
 DeusExMachina is a plugin for the MiCasaVerde Vera home automation system. It takes over your house while you're away on vacation by creating a ghost that moves from room to room, turning on and off lights. Simply specify the lights you want to have controlled by the plugin, specify a "Lights Out" time when lights will begin to turn off, and come sundown DeusExMachina will take over.
 
@@ -11,27 +11,27 @@ There are currently two versions of Deus Ex Machina available:
 
 * Deus Ex Machina II -- for UI7 (only). This version was developed and tested on firmware version 1.7.855, but should work for any full release of UI7 provided by MiCasaVerde. The current release is available via both GitHub and the MiCasaVerde plugin library. Advanced builds are also available in the GitHub repository.
 
-### History ###
+## History ##
 
 DeusExMachina was originally written and published in 2012 by Andy Lintner (beowulfe), and maintained by Andy through the 1.x versions. In May 2016, Andy turned the project over to Patrick Rigney (toggledbits here on Github, rigpapa in the MCV/MiOS world) for ongoing support (version 2.0 onward). At this point, the plugin became known as Deus Ex Machina II, or just DEMII.
 
-### How It Works ###
+## How It Works ##
 
 When Deus Ex Machina II (DEMII) is enabled, it first waits until two conditions are satisfied: the current time is at or after sunset, and the "house mode" is one of the selected modes in which DEMII is configured by the user to be active. If both conditions are met, DEMII enters a cycle of turning a set of user-selected lights on and off at random intervals. This continues until the user-configured "lights out" time, at which point DEMII begins its shutdown cycle, in which any of the user-selected lights that are on are turned off at random intervals until all lights are off. DEMII then waits until the next day's sunset.
 
 For more information, see Additional Documentation below.
 
-### Reporting Bugs/Enhancement Requests ###
+## Reporting Bugs/Enhancement Requests ##
 
 Bug reports and enhancement requests are welcome! Please use the "Issues" link for the repository to open a new bug report or make an enhancement request.
 
-### License ###
+## License ##
 
 DeusExMachina is offered under GPL (the GNU Public License).
 
-### Additional Documentation ###
+## Additional Documentation ##
 
-#### Installation ####
+### Installation ###
 
 The plugin is installed in the usual way: go to Apps in the left navigation, and click on "Install Apps". 
 Search for "Deus Ex Machina II" (make sure you include the "II" at the end to get the UI7-compatible version), 
@@ -40,23 +40,23 @@ and wait for the install to complete. A full refresh of the UI is necessary (e.g
 
 Once you have installed the plugin and refreshed the browser, you can proceed to device configuation.
 
-#### Simple Configuration ####
+### Simple Configuration ###
 
 Deus Ex Machina's "Configure" tab gives you a set of simple controls to control the behavior of your vacation haunt.
 
-##### Lights-Out Time #####
+#### Lights-Out Time ####
 
 The "Lights Out" time is a time, expressed in 24-hour HH:MM format, that is the time at which lights should begin 
 shutting off. This time should be after sunset. Keep in mind that sunset is a moving target, and
 at certain times of year in some places can be quite late, so a Lights Out time of 20:15, for example, may not be 
 a good choice for the longest days of summer. The lights out time can be a time after midnight.
 
-##### House Modes #####
+#### House Modes ####
 
 The next group of controls is the House Modes in which DEMII should be active when enabled. If no house mode is selected,
 DEMII will operate in _any_ house mode.
 
-##### Controlled Devices #####
+#### Controlled Devices ####
 
 Next is a set of checkboxes for each of the devices you'd like DEMII to control.
 Selecting the devices to be controlled is a simple matter of clicking the check boxes. Because the operating cycle of
@@ -68,7 +68,7 @@ Non-dimming devices are simply turned on and off (no dimmer slider is shown for 
 > like some motion sensors and thermostats being listed. It may not be entirely obvious (or standard) what a thermostat, for example, 
 > might do when you try to turn it off and on like a light, so be careful selecting these devices.
 
-##### Scene Control #####
+#### Scene Control ####
 
 The next group of settings allows you to use scenes with DEMII. 
 Scenes must be specified in pairs, with
@@ -79,35 +79,32 @@ DEMII. But a scene could be used to control that light or a group of lights, wit
 
 Both scenes and individual devices (from the device list above) can be used simultaneously.
 
-##### Maximum "On" Targets #####
+#### Maximum "On" Targets ####
 
 Version 2.4 also adds the ability to limit the number of targets (devices or scenes) that DEMII can have "on" simultaneously. 
 If this limit is 0, there is no limit enforced. If you have DEMII control a large number of devices, it's probably not a bad idea to 
 set this value to some reasonable limit.
 
-##### Final Scene #####
+#### Final Scene ####
 
 DEMII allows a "final scene" to run when DEMII is disabled or turns off the last light after the "lights out" time. This could be used for any purpose. I personally use it to make sure a whole-house off is run, but you could use it to ensure your alarm system is armed, or your garage door is closed, etc.
 
-#### Control of DEMII by Scenes ####
+### Control of DEMII by Scenes and Lua ###
 
-DeusExMachina can be enabled or disabled like a light switch in scenes, through the regular graphical interface (no Lua required).
-A Lua interface is also supported. All versions of support the SetEnabled action, although for DEMII versions 2.4 and higher, the use of SetTarget in the standard SwitchPower1 service is preferred. Examples (the "0|1" means use either 0 or 1 to disable or enable, respectively):
+DeusExMachina can be enabled or disabled like a light switch in scenes or through the regular graphical interface (no Lua required),
+or by scripting in Lua.
+DEMII implements the SwitchPower1 service, so enabling and disabling is the same as turning a light switch on and off:
+you simply use the SetTarget action to enable (newTargetValue=1) or disable (newTargetValue=0) DEMII. 
+The MiOS GUI for devices and scenes takes care of this for you in its code; if scripting in Lua, you simply do this:
 
 ```
--- Preferred for DEMII versions 2.4 and higher:
-luup.call_action("urn:upnp-org-serviceId:SwitchPower1", "SetTarget", { newTargetValue = "0|1" }, deviceID)
-
--- Also works for all versions of DEMII:
-luup.call_action("urn:toggledbits-com:serviceId:DeusExMachinaII1", "SetEnabled", { NewEnabledValue = "0|1" }, deviceID)
-
--- For the old Deus Ex Machina plugin (v1.1 and earlier) running on UI5 or UI7, do this:
-luup.call_action("urn:futzle-com:serviceId:DeusExMachina1", "SetEnabled", { NewEnabledValue = "0|1" }, deviceID)
+luup.call_action("urn:upnp-org-serviceId:SwitchPower1", "SetTarget", { newTargetValue = "0|1" }, pluginDeviceId)
 ```
 
-#### Triggers ####
+### Triggers ###
 
-DEMII signals changes to its enabled/disabled state, and changes to its internal operating mode. These can be used as triggers for scenes or notifications. DEMII's operating modes are:
+DEMII signals changes to its enabled/disabled state and changes to its internal operating mode. 
+These can be used as triggers for scenes or notifications. DEMII's operating modes are:
 
 * Standby - DEMII is disabled (this is equivalent to the "device is disabled" state event);
 
@@ -124,22 +121,28 @@ is disabled (at which point it goes to Standby).
 It should be noted that DEMII can enter Cycling or Shut-off mode immediately, without passing through Ready, if it is enabled after sunset or after the "lights out" time, 
 respectively. DEMII will also transition into or out of Standby mode immediately and from any other mode when disabled or enabled, respectively.
 
-#### Cycle Timing ####
+### Cycle Timing ###
 
 DEMII's cycle timing is controlled by a set of state variables. By default, DEMII's random cycling of lights occurs at randomly selected intervals between 300 seconds (5 minutes) and 1800 seconds (30 minutes), as determined by the `MinCycleDelay` and `MaxCycleDelay` variables. You may change these values to customize the cycling time for your application.
 
 When DEMII is in its "lights out" (shut-off) mode, it uses a different set of shorter (by default) cycle times, to more closely imitate actual human behavior. The random interval for lights-out is between 60 seconds and 300 seconds (5 minutes), as determined by `MinOffDelay` and `MaxOffDelay`. These intervals could be kept short, particularly if DEMII is controlling a large number of lights.
 
-#### Troubleshooting ####
+### Troubleshooting ###
+
+If you're not sure what DEMII is going, the easiest way to see is to go into the Settings interface for the plugin. 
+There is a text field to the right of the on/off switch in that interface that will tell you what DEMII is currently
+doing (when enabled; it's blank when DEMII is disabled).
 
 If DEMII isn't behaving as expected, post a message in the MCV forums 
 [in this thread](http://forum.micasaverde.com/index.php/topic,11333.0.html)
 or open up an issue in the 
 [GitHub repository](https://github.com/toggledbits/DeusExMachina/issues).
 
-Please don't just say "DEMII isn't working for me." I can't tell you how long a piece of string is without seeing the piece of string. Give me details of what you are doing, how you are configured, and what behavior you observe.
+Please don't just say "DEMII isn't working for me." I can't tell you how long your piece of string is without seeing 
+your piece of string. Give me details of what you are doing, how you are configured, and what behavior you observe.
+Screen shots help. In many cases, log output may be needed.
 
-##### Test Mode and Log Output #####
+#### Test Mode and Log Output ####
 
 If I'm troubleshooting a problem with you, I may ask you to enable test mode, run DEMII a bit, and send me the log output. Here's how you do that:
 
@@ -147,13 +150,41 @@ If I'm troubleshooting a problem with you, I may ask you to enable test mode, ru
 1. Click on the Variables tab.
 1. Set the TestMode variable to 1 (just change the field and hit the TAB key)
 1. If requested, set the TestSunset value to whatever I ask you (this allows the sunset time to be overriden so we don't have to wait for real sunset to see what DEMII is doing).
+1. After operating for a while, I'll ask you to email me the log file (`/etc/cmh/LuaPNP.log` on your Vera). This will require you
+to log in to your Vera directly with ssh, or use the Vera's native "write log to USB drive" function, or use one of the many
+log capture scripts that's available.
 
-### FAQ ###
+Above all, I ask that you please be patient. You probably already know that it an be challenging at times to figure out
+what's going on in your Vera's head. It's no different for developers.
+
+## FAQ ##
 
 <dl>
+    <dt>My lights aren't cycling at sunset. Why?</dt>
+    <dd>The most common reasons that lights don't start cycling at midnight are: <ol>
+	<li>The time and location on your Vera are not set correctly. Go into Settings > Location on your
+		Vera and make sure everything is correct for the Vera's physical location. Remember that in
+		the western hemisphere (North, Central & South America, principally) your longitude will
+		be a negative number. If you are below the equator, latitude will be negative. If you're not
+		sure what your latitude/longitude are, use a site like [MyGeoPosition.com](http://mygeoposition.com).
+		If you make any changes to your time or location configuration, restart your Vera.</li>
+	<li>You're not waiting long enough. DEMII doesn't instantly jump into action at sunset, it employs its
+		configured cycle delays as well, so cycling will usually begin sometime after sunset, up to the
+		configured maximum cycle delay (30 minutes by default).</li>
+	<li>Your house mode isn't "active." If you've configured DEMII to operate only in certain house modes,
+		make sure you're in one of those modes, otherwise DEMII will sit, even though it's enabled.</li>
+	</ol>
+    </dd>
+
+    <dt>I made configuration changes, but when I go back into configuration, they seem to be back to the old
+        settings.</dt>
+    <dd>Refresh your browser or flush your browser cache. On most browsers, you do this by using the F5 key, or
+        Ctrl-F5, or Command + R or Option + R on Macs.</dd>
+
     <dt>What happens if DEMII is enabled afer sunset? Does it wait until the next day to start running?</dt>
     <dd>No. If DEMII is enabled during its active period (between sunset and the configured "lights out" time,
-        it will begin cycling the configured devices and scenes.</dd>
+        it will begin cycling the configured devices and scenes. If you enable DEMII after "lights-out," it will
+        wait until the next sunset.</dd>
 
     <dt>What's the difference between House Mode and Enabled/Disabled? Can I just use House Mode to enable and disable DEMII?</dt>
     <dd>The enabled/disabled state of DEMII is the "big red button" for its operation. If you configure DEMII to only run in certain
