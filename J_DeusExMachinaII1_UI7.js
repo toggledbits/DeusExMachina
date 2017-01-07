@@ -19,12 +19,6 @@ var DeusExMachinaII = (function(api) {
         api.registerEventHandler('on_ui_cpanel_before_close', myModule, 'onBeforeCpanelClose');
     }
 
-    function safe(obj) {
-        if (obj === undefined) return "undefined"
-        else if (obj instanceof jQuery || obj.constructor.prototype.jquery) return "jQuery[" + obj.length + "]";
-        else return '(' + typeof(obj) + ')' + obj.toString();
-    }
-    
 	function isDimmer(devid) {
 		var v = api.getDeviceState( devid, "urn:upnp-org:serviceId:Dimming1", "LoadLevelStatus" );
 		if (v === undefined || v === false) return false;
