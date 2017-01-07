@@ -19,7 +19,7 @@
         <action>
             <serviceId>urn:upnp-org:serviceId:SwitchPower1</serviceId>
             <name>SetTarget</name>
-            <job>
+            <run>
                 local newTargetValue = lul_settings.newTargetValue or "0"
                 luup.variable_set("urn:upnp-org:serviceId:SwitchPower1", "Target", newTargetValue, lul_device)
                 if (newTargetValue == "1") then
@@ -27,12 +27,26 @@
                 else
                     demII.deusDisable()
                 end
-            </job>
+            </run>
+        </action>
+        <action>
+            <serviceId>urn:upnp-org:serviceId:SwitchPower1</serviceId>
+            <name>GetTarget</name>
+            <run>
+                luup.variable_get("urn:upnp-org:serviceId:SwitchPower1", "Target", lul_device)
+            </run>
+        </action>
+        <action>
+            <serviceId>urn:upnp-org:serviceId:SwitchPower1</serviceId>
+            <name>GetStatus</name>
+            <run>
+                luup.variable_get("urn:upnp-org:serviceId:SwitchPower1", "Status", lul_device)
+            </run>
         </action>
         <action>
             <serviceId>urn:toggledbits-com:serviceId:DeusExMachinaII1</serviceId>
             <name>SetEnabled</name>
-            <job>
+            <run>
                 local newEnabledValue = lul_settings.NewEnabledValue or "0"
                 luup.variable_set("urn:upnp-org:serviceId:SwitchPower1", "Target", newEnabledValue, lul_device)
                 if (newEnabledValue == "1") then
@@ -40,7 +54,18 @@
                 else
                     demII.deusDisable()
                 end
-            </job>
+            </run>
+        </action>
+        <action>
+            <serviceId>urn:toggledbits-com:serviceId:DeusExMachinaII1</serviceId>
+            <name>GetPluginVersion</name>
+            <run>
+                -- Ugly hack. Luup seems to only be able to return values from related state variables (see S_), so use a temp
+                -- one to store the result we want to pass back. Blech. C'mon guys. Amateur hour. Add an extra return argument
+                -- for a table of return values or something, please?
+                luup.variable_set("urn:toggledbits-com:serviceId:DeusExMachinaII1", "TempStorage", demII.getVersion(), lul_device)
+                return true
+            </run>
         </action>
     </actionList>
 </implementation>
