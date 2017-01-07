@@ -12,7 +12,7 @@ var DeusExMachinaII = (function(api) {
     var sceneNamesById = [];
 
     function onBeforeCpanelClose(args) {
-        console.log('handler for before cpanel close');
+        // console.log('handler for before cpanel close');
     }
 
     function init() {
@@ -54,12 +54,12 @@ var DeusExMachinaII = (function(api) {
         });
         jQuery('.controlled-scenes').each( function( ix, obj ) {
             var devid = jQuery(obj).attr('id');
-            console.log('updateControlledList: handling scene pair ' + devid);
+            // console.log('updateControlledList: handling scene pair ' + devid);
             controlled.push(devid);
         });
                 
         var s = controlled.join(',');
-        console.log('Updating controlled list to ' + s);
+        // console.log('Updating controlled list to ' + s);
         api.setDeviceStatePersistent(deusDevice, serviceId, "Devices", s, 0);
     }
     
@@ -347,7 +347,7 @@ var DeusExMachinaII = (function(api) {
 
             // Push generated HTML to page
             api.setCpanelContent(html);
-            
+          
             // Restore time field
             var time = "23:59";
             var timeMins = parseInt(api.getDeviceState(deusDevice, serviceId, "LightsOut"));
@@ -381,13 +381,11 @@ var DeusExMachinaII = (function(api) {
                 var id = jQuery(obj).attr('id');
                 id = id.substr(6);
                 jQuery('input#device'+id+':checked').each( function() {
-console.log('input#device'+id+' is checked, enabling slider...');
                     // Corresponding checked checkbox, enable slider.
                     jQuery(obj).slider("option", "disabled", false);
                     var ix = DeusExMachinaII.findControlledDevice(id);
                     if (ix >= 0) {
                         var info = DeusExMachinaII.getControlled(ix);
-console.log('found for ' + info.type + ' ' + info.device + ' with value=' + info.value + ', raw=' + info.raw + ", restoring slider value...");                      
                         jQuery(obj).slider("option", "value", info.type == "device" ? info.value : 100);
                     }
                 });
