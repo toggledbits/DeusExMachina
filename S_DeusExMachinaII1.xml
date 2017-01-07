@@ -47,5 +47,15 @@
                 </argument>
             </argumentList>
         </action>
+        <action>
+            <name>GetPluginVersion</name>
+            <argumentList>
+                <argument>
+                    <name>ResultVersion</name>
+                    <direction>out</direction>
+                    <relatedStateVariable>TempStorage</relatedStateVariable>
+                </argument>
+            </argumentList>
+        </action>
     </actionList>
 </scpd>
