@@ -40,9 +40,11 @@
         <action>
             <name>SetEnabled</name>
             <argumentList>
-                <name>NewEnabledValue</name>
-                <relatedStateVariable>Enabled</relatedStateVariable>
-                <direction>in</direction>
+                <argument>
+                    <name>NewEnabledValue</name>
+                    <relatedStateVariable>Enabled</relatedStateVariable>
+                    <direction>in</direction>
+                </argument>
             </argumentList>
         </action>
     </actionList>
