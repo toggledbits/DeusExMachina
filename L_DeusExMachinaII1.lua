@@ -1,7 +1,9 @@
 module("L_DeusExMachinaII1", package.seeall)
 
-local SID = "urn:toggledbits-com:serviceId:DeusExMachinaII1"
+local _VERSION = "2.4RC4"
 local DEMVERSION = 20400
+
+local SID = "urn:toggledbits-com:serviceId:DeusExMachinaII1"
 
 local SWITCH_TYPE = "urn:schemas-upnp-org:device:BinaryLight:1"
 local SWITCH_SID  = "urn:upnp-org:serviceId:SwitchPower1"
@@ -503,6 +505,11 @@ local function runOnce()
     luup.variable_set(SID, "Version", DEMVERSION, lul_device)
 end
 
+-- Return the plugin version string
+function getVersion()
+    return _VERSION
+end
+
 -- Enable DEM by setting a new cycle stamp and scheduling our first cycle step.
 function deusEnable()
     setMessage("Enabling...")
@@ -532,7 +539,7 @@ end
 -- Initialize.
 function deusInit(deusDevice)
     setMessage("Initializing...")
-    luup.log("DeusExMachinaII:deusInit(): Version 2.4RC4 (2016-12-23), initializing...")
+    luup.log("DeusExMachinaII:deusInit(): Version " .. _VERSION .. ", initializing...")
 
     -- One-time stuff
     runOnce()
