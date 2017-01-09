@@ -1,258 +1,291 @@
-{
-    "default_icon": "https://dtabq7xg0g1t1.cloudfront.net/deusII.png",
-    "doc_url": {
-        "doc_language": 1,
-        "doc_manual": 1,
-        "doc_version": 1,
-        "doc_platform": 0,
-        "doc_page": "devices"
-    },
-    "state_icons": [{
-        "img": "https://dtabq7xg0g1t1.cloudfront.net/deus-red.png",
-        "conditions": [{
-            "service": "urn:upnp-org:serviceId:SwitchPower1",
-            "variable": "Status",
-            "operator": "==",
-            "value": 0,
-            "subcategory_num": 0
-        }]
-    }, {
-        "img": "https://dtabq7xg0g1t1.cloudfront.net/deus-green.png",
-        "conditions": [{
-            "service": "urn:upnp-org:serviceId:SwitchPower1",
-            "variable": "Status",
-            "operator": "==",
-            "value": 1,
-            "subcategory_num": 0
-        }]
-    }],
-    "x": "2",
-    "y": "4",
-    "inScene": "1",
-    "ToggleButton": "1",
-    "Tabs": [{
-        "Label": {
-            "lang_tag": "ui7_tabname_control",
-            "text": "Control"
-        },
-        "Position": "0",
-        "TabType": "flash",
-        "top_navigation_tab": 1,
-        "ControlGroup": [{
-            "id": "1",
-            "isSingle": "1",
-            "scenegroup": "1"
-        }],
-        "SceneGroup": [{
-            "id": "1",
-            "top": "2",
-            "left": "0",
-            "x": "2",
-            "y": "1"
-        }],
-        "Control": [{
-            "ControlGroup": "1",
-            "ControlType": "multi_state_button",
-            "top": "0",
-            "left": "1",
-            "states": [{
-                "Label": {
-                    "lang_tag": "ui7_cmd_on",
-                    "text": "On"
-                },
-                "ControlGroup": 1,
-                "Display": {
-                    "Service": "urn:upnp-org:serviceId:SwitchPower1",
-                    "Variable": "Status",
-                    "Value": "1"
-                },
-                "Command": {
-                    "Service": "urn:upnp-org:serviceId:SwitchPower1",
-                    "Action": "SetTarget",
-                    "Parameters": [{
-                        "Name": "newTargetValue",
-                        "Value": "1"
-                    }]
-                },
-                "ControlCode": "power_on"
-            }, {
-                "Label": {
-                    "lang_tag": "ui7_cmd_off",
-                    "text": "Off"
-                },
-                "ControlGroup": 1,
-                "Display": {
-                    "Service": "urn:upnp-org:serviceId:SwitchPower1",
-                    "Variable": "Status",
-                    "Value": "0"
-                },
-                "Command": {
-                    "Service": "urn:upnp-org:serviceId:SwitchPower1",
-                    "Action": "SetTarget",
-                    "Parameters": [{
-                        "Name": "newTargetValue",
-                        "Value": "0"
-                    }]
-                },
-                "ControlCode": "power_off"
-            }],
-            "ControlCode": "dem_statecontrol"
-        }, {
-            "ControlType": "label",
-            "top": "0",
-            "left": "0",
-            "Label": {
-                "lang_tag": "dem_about",
-                "text": "DeusExMachina II ver 2.4 2017-01-07<br/>
-                For documentation or to report bugs, please go to the <a target='_blank' href='https://github.com/toggledbits/DeusExMachina'>DeusExMachina Github repository</a>.<br/>
-                This plugin is offered for use as-is and without warranties of any kind. By using this plugin,<br/>
-                you agree to assume all risks in connection with its use without limitation."
-            },
-            "Display": {
-                "Top": "80",
-                "Left": "0",
-                "Width": "200",
-                "Height": "24"
+{  
+   "default_icon":"https://dtabq7xg0g1t1.cloudfront.net/deusII.png",
+   "state_icons":[  
+      {  
+         "img":"https://dtabq7xg0g1t1.cloudfront.net/deus-red.png",
+         "conditions":[  
+            {  
+               "service":"urn:upnp-org:serviceId:SwitchPower1",
+               "variable":"Status",
+               "operator":"==",
+               "value":0,
+               "subcategory_num":0
             }
-        }, {
-            "ControlType": "variable",
-            "top": "0",
-            "left": "0",
-            "Display": {
-                "Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
-                "Variable": "Message",
-                "Top": "16",
-                "Left": "120",
-                "Width": "200",
-                "Height": "20"
+         ]
+      },
+      {  
+         "img":"https://dtabq7xg0g1t1.cloudfront.net/deus-green.png",
+         "conditions":[  
+            {  
+               "service":"urn:upnp-org:serviceId:SwitchPower1",
+               "variable":"Status",
+               "operator":"==",
+               "value":1,
+               "subcategory_num":0
             }
-        }]
-    }, {
-        "Label": {
-            "lang_tag": "configure",
-            "text": "Configure"
-        },
-        "Position": "1",
-        "TabType": "javascript",
-        "ScriptName": "J_DeusExMachinaII1_UI7.js",
-        "Function": "DeusExMachinaII.configureDeus"
-    }, {
-        "Label": {
-            "lang_tag": "ui7_advanced",
-            "text": "Advanced"
-        },
-        "Position": "2",
-        "TabType": "javascript",
-        "ScriptName": "shared.js",
-        "Function": "advanced_device"
-    }],
-    "sceneList": {
-        "group_1": {
-            "cmd_1": {
-                "label": "ON",
-                "serviceId": "urn:upnp-org:serviceId:SwitchPower1",
-                "action": "SetTarget",
-                "arguments": {
-                    "newTargetValue": "1"
-                },
-                "display": {
-                    "service": "urn:upnp-org:serviceId:SwitchPower1",
-                    "variable": "Status",
-                    "value": "1"
-                }
-            },
-            "cmd_2": {
-                "label": "OFF",
-                "serviceId": "urn:upnp-org:serviceId:SwitchPower1",
-                "action": "SetTarget",
-                "arguments": {
-                    "newTargetValue": "0"
-                },
-                "display": {
-                    "service": "urn:upnp-org:serviceId:SwitchPower1",
-                    "variable": "Status",
-                    "value": "0"
-                }
+         ]
+      }
+   ],
+   "x":"2",
+   "y":"4",
+   "inScene":"1",
+   "ToggleButton":"1",
+   "Tabs":[  
+      {  
+         "Label":{  
+            "lang_tag":"ui7_tabname_control",
+            "text":"Control"
+         },
+         "Position":"0",
+         "TabType":"flash",
+         "top_navigation_tab":1,
+         "ControlGroup":[  
+            {  
+               "id":"1",
+               "isSingle":"1",
+               "scenegroup":"1"
             }
-        }
-    },
-    "eventList2": [{
-        "id": 1,
-        "label": {
-            "lang_tag": "dem_enabledisable",
-            "text": "Is enabled or disabled"
-        },
-        "serviceId": "urn:upnp-org:serviceId:SwitchPower1",
-        "argumentList": [{
-            "id": 1,
-            "dataType": "boolean",
-            "defaultValue": "0",
-            "allowedValueList": [{
-                "Disabled": "0",
-                "HumanFriendlyText": {
-                    "lang_tag": "dem_disabled",
-                    "text": "_DEVICE_NAME_ is disabled"
-                }
-            }, {
-                "Enabled": "1",
-                "HumanFriendlyText": {
-                    "lang_tag": "dem_enabled",
-                    "text": "_DEVICE_NAME_ is enabled"
-                }
-            }],
-            "name": "Status",
-            "comparisson": "=",
-            "prefix": {
-                "lang_tag": "dem_when",
-                "text": "When"
+         ],
+         "SceneGroup":[  
+            {  
+               "id":"1",
+               "top":"2",
+               "left":"0",
+               "x":"2",
+               "y":"1"
+            }
+         ],
+         "Control":[  
+            {  
+               "ControlGroup":"1",
+               "ControlType":"multi_state_button",
+               "top":"0",
+               "left":"1",
+               "states":[  
+                  {  
+                     "Label":{  
+                        "lang_tag":"ui7_cmd_on",
+                        "text":"On"
+                     },
+                     "ControlGroup":1,
+                     "Display":{  
+                        "Service":"urn:upnp-org:serviceId:SwitchPower1",
+                        "Variable":"Status",
+                        "Value":"1"
+                     },
+                     "Command":{  
+                        "Service":"urn:upnp-org:serviceId:SwitchPower1",
+                        "Action":"SetTarget",
+                        "Parameters":[  
+                           {  
+                              "Name":"newTargetValue",
+                              "Value":"1"
+                           }
+                        ]
+                     },
+                     "ControlCode":"power_on"
+                  },
+                  {  
+                     "Label":{  
+                        "lang_tag":"ui7_cmd_off",
+                        "text":"Off"
+                     },
+                     "ControlGroup":1,
+                     "Display":{  
+                        "Service":"urn:upnp-org:serviceId:SwitchPower1",
+                        "Variable":"Status",
+                        "Value":"0"
+                     },
+                     "Command":{  
+                        "Service":"urn:upnp-org:serviceId:SwitchPower1",
+                        "Action":"SetTarget",
+                        "Parameters":[  
+                           {  
+                              "Name":"newTargetValue",
+                              "Value":"0"
+                           }
+                        ]
+                     },
+                     "ControlCode":"power_off"
+                  }
+               ]
             },
-            "suffix": {}
-        }]
-    }, {
-        "id": 2,
-        "label": {
-            "lang_tag": "dem_opstate",
-            "text": "The operating mode changes"
-        },
-        "serviceId": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
-        "argumentList": [{
-            "id": 1,
-            "dataType": "ui1",
-            "defaultValue": "0",
-            "allowedValueList": [{
-                "value": "0",
-                "HumanFriendlyText": {
-                    "lang_tag": "dem_standby",
-                    "text": "Standby"
-                }
-            }, {
-                "value": "1",
-                "HumanFriendlyText": {
-                    "lang_tag": "dem_ready",
-                    "text": "Ready"
-                }
-            }, {
-                "value": "2",
-                "HumanFriendlyText": {
-                    "lang_tag": "dem_cycle",
-                    "text": "Cycling"
-                }
-            }, {
-                "value": "3",
-                "HumanFriendlyText": {
-                    "lang_tag": "dem_shutoff",
-                    "text": "Shut-off"
-                }
-            }],
-            "name": "State",
-            "comparisson": "=",
-            "prefix": {
-                "lang_tag": "dem_when",
-                "text": "to"
+            {  
+               "ControlType":"label",
+               "top":"0",
+               "left":"0",
+               "Label":{  
+                  "lang_tag":"dem_about",
+                  "text":"DeusExMachina II ver 2.4 2017-01-07<br/>For documentation or to report bugs, please go to the <a target='_blank' href='https://github.com/toggledbits/DeusExMachina'>DeusExMachina Github repository</a>.<br/>This plugin is offered for use as-is and without warranties of any kind. By using this plugin,<br/>you agree to assume all risks in connection with its use without limitation."
+               },
+               "Display":{  
+                  "Top":"80",
+                  "Left":"0",
+                  "Width":"200",
+                  "Height":"24"
+               }
             },
-            "suffix": {}
-        }]
-    }],
-    "DeviceType": "urn:schemas-toggledbits-com:device:DeusExMachinaII:1",
-    "device_type": "urn:schemas-toggledbits-com:device:DeusExMachinaII:1"
+            {  
+               "ControlType":"variable",
+               "top":"0",
+               "left":"0",
+               "Display":{  
+                  "Service":"urn:toggledbits-com:serviceId:DeusExMachinaII1",
+                  "Variable":"Message",
+                  "Top":"16",
+                  "Left":"120",
+                  "Width":"200",
+                  "Height":"20"
+               }
+            }
+         ]
+      },
+      {  
+         "Label":{  
+            "lang_tag":"configure",
+            "text":"Configure"
+         },
+         "Position":"1",
+         "TabType":"javascript",
+         "ScriptName":"J_DeusExMachinaII1_UI7.js",
+         "Function":"DeusExMachinaII.configureDeus"
+      },
+      {  
+         "Label":{  
+            "lang_tag":"ui7_advanced",
+            "text":"Advanced"
+         },
+         "Position":"2",
+         "TabType":"javascript",
+         "ScriptName":"shared.js",
+         "Function":"advanced_device"
+      }
+   ],
+   "sceneList":{  
+      "group_1":{  
+         "cmd_1":{  
+            "label":"ON",
+            "serviceId":"urn:upnp-org:serviceId:SwitchPower1",
+            "action":"SetTarget",
+            "arguments":{  
+               "newTargetValue":"1"
+            },
+            "display":{  
+               "service":"urn:upnp-org:serviceId:SwitchPower1",
+               "variable":"Status",
+               "value":"1"
+            }
+         },
+         "cmd_2":{  
+            "label":"OFF",
+            "serviceId":"urn:upnp-org:serviceId:SwitchPower1",
+            "action":"SetTarget",
+            "arguments":{  
+               "newTargetValue":"0"
+            },
+            "display":{  
+               "service":"urn:upnp-org:serviceId:SwitchPower1",
+               "variable":"Status",
+               "value":"0"
+            }
+         }
+      }
+   },
+   "eventList2":[  
+      {  
+         "id":1,
+         "label":{  
+            "lang_tag":"dem_enabledisable",
+            "text":"Is enabled or disabled"
+         },
+         "serviceId":"urn:upnp-org:serviceId:SwitchPower1",
+         "argumentList":[  
+            {  
+               "id":1,
+               "dataType":"boolean",
+               "defaultValue":"0",
+               "allowedValueList":[  
+                  {  
+                     "Disabled":"0",
+                     "HumanFriendlyText":{  
+                        "lang_tag":"dem_disabled",
+                        "text":"_DEVICE_NAME_ is disabled"
+                     }
+                  },
+                  {  
+                     "Enabled":"1",
+                     "HumanFriendlyText":{  
+                        "lang_tag":"dem_enabled",
+                        "text":"_DEVICE_NAME_ is enabled"
+                     }
+                  }
+               ],
+               "name":"Status",
+               "comparisson":"=",
+               "prefix":{  
+                  "lang_tag":"dem_when",
+                  "text":"When"
+               },
+               "suffix":{  
+
+               }
+            }
+         ]
+      },
+      {  
+         "id":2,
+         "label":{  
+            "lang_tag":"dem_opstate",
+            "text":"The operating mode changes"
+         },
+         "serviceId":"urn:toggledbits-com:serviceId:DeusExMachinaII1",
+         "argumentList":[  
+            {  
+               "id":1,
+               "dataType":"ui1",
+               "defaultValue":"0",
+               "allowedValueList":[  
+                  {  
+                     "value":"0",
+                     "HumanFriendlyText":{  
+                        "lang_tag":"dem_standby",
+                        "text":"Standby"
+                     }
+                  },
+                  {  
+                     "value":"1",
+                     "HumanFriendlyText":{  
+                        "lang_tag":"dem_ready",
+                        "text":"Ready"
+                     }
+                  },
+                  {  
+                     "value":"2",
+                     "HumanFriendlyText":{  
+                        "lang_tag":"dem_cycle",
+                        "text":"Cycling"
+                     }
+                  },
+                  {  
+                     "value":"3",
+                     "HumanFriendlyText":{  
+                        "lang_tag":"dem_shutoff",
+                        "text":"Shut-off"
+                     }
+                  }
+               ],
+               "name":"State",
+               "comparisson":"=",
+               "prefix":{  
+                  "lang_tag":"dem_when",
+                  "text":"to"
+               },
+               "suffix":{  
+
+               }
+            }
+         ]
+      }
+   ],
+   "device_type":"urn:schemas-toggledbits-com:device:DeusExMachinaII:1"
 }
