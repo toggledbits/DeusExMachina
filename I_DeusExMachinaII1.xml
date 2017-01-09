@@ -7,11 +7,11 @@
         -- Original code and releases 1.x by Andy Lintner (beowulfe) Version 2.0 and beyond by Patrick Rigney (rigpapa/toggledbits).
         -- A big thanks to Andy for passing the torch so that this great plug-in can live on.
         -- -------------------------------------------------------------------------------------------------------------------------
-        function startupDeusExMachinaII1()
+        function startupDeusExMachinaII1(deusDevice)
             luup.log("DeusExMachinaII STARTUP!")
             demII = require("L_DeusExMachinaII1")
             deusStep = demII.deusStep
-            demII.deusInit()
+            demII.deusInit(deusDevice)
         end
     </functions>
     <startup>startupDeusExMachinaII1</startup>
@@ -21,11 +21,10 @@
             <name>SetTarget</name>
             <run>
                 local newTargetValue = lul_settings.newTargetValue or "0"
-                luup.variable_set("urn:upnp-org:serviceId:SwitchPower1", "Target", newTargetValue, lul_device)
                 if (newTargetValue == "1") then
-                    demII.deusEnable()
+                    demII.deusEnable(lul_device)
                 else
-                    demII.deusDisable()
+                    demII.deusDisable(lul_device)
                 end
             </run>
         </action>
@@ -50,9 +49,9 @@
                 local newEnabledValue = lul_settings.NewEnabledValue or "0"
                 luup.variable_set("urn:upnp-org:serviceId:SwitchPower1", "Target", newEnabledValue, lul_device)
                 if (newEnabledValue == "1") then
-                    demII.deusEnable()
+                    demII.deusEnable(lul_device)
                 else
-                    demII.deusDisable()
+                    demII.deusDisable(lul_device)
                 end
             </run>
         </action>
