@@ -345,19 +345,19 @@ local function targetControl(targetid, turnOn)
         -- Level for all types is 0 if turning device off
         if not turnOn then lvl = 0 end
         if luup.devices[targetid] == nil then
-            -- Device doesn't exist (user deleted, etc.). PHR??? Should remove from Devices state variable.
+            -- Device doesn't exist (user deleted, etc.). Remove from Devices state variable.
             luup.log("DeusExMachinaII:targetControl(): device " .. tostring(targetid) .. " not found in luup.devices")
             removeTarget(targetid)
             return
         end
         if luup.device_supports_service(DIMMER_SID, targetid) then
             -- Handle as Dimming1
-            debug("targetControl(): handling %1 as dimmmer, set load level to %2", targetid, lvl)
+            debug("targetControl(): handling %1 (%3) as dimmmer, set load level to %2", targetid, lvl, luup.devices[targetid].description)
             luup.call_action(DIMMER_SID, "SetLoadLevelTarget", {newLoadlevelTarget=lvl}, targetid) -- note odd case inconsistency
         elseif luup.device_supports_service(SWITCH_SID, targetid) then
             -- Handle as SwitchPower1
             if turnOn then lvl = 1 end
-            debug("targetControl(): handling %1 as switch, setting target to %2", targetid, lvl)
+            debug("targetControl(): handling %1 (%3) as switch, set target to %2", targetid, lvl, luup.devices[targetid].description)
             luup.call_action(SWITCH_SID, "SetTarget", {newTargetValue=lvl}, targetid)
         else
             luup.log("DeusExMachinaII:targetControl(): don't know how to control target " .. tostring(targetid))
