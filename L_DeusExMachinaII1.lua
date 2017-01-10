@@ -163,7 +163,7 @@ end
 -- if the current time is between sunset and off; otherwise 1. Note that all times are reduced
 -- to minutes-since-midnight units.
 local function isBedtime()
-    local testing = getVarNumeric("TestMode", 0, luup.device)
+    local testing = getVarNumeric("TestMode", 0)
     if (testing ~= 0) then 
         luup.log('DeusExMachinaII:isBedtime(): TestMode is on') 
         debugMode = true
@@ -326,6 +326,7 @@ local function targetControl(targetid, turnOn)
         if luup.scenes[onScene] == nil or luup.scenes[offScene] == nil then
             -- Both on scene and off scene must exist (defensive).
             luup.log("DeusExMachinaII:targetControl(): one or both of the scenes in " .. tostring(targetid) .. " not found in luup.scenes!")
+            removeTarget(targetid)
             return
         end
         debug("targetControl(): on scene is %1, off scene is %2", onScene, offScene)
@@ -538,7 +539,7 @@ function deusDisable()
 
     setMessage("Disabling...")
 
-    local s = getVarNumeric("State", STATE_STANDBY, luup.device)
+    local s = getVarNumeric("State", STATE_STANDBY)
     if ( s == STATE_CYCLE or s == STATE_SHUTDOWN ) then
         clearLights()
     end
