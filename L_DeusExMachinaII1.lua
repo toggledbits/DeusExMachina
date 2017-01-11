@@ -538,12 +538,14 @@ function deusDisable()
     luup.variable_set(SWITCH_SID, "Target", "0", luup.device)
 
     setMessage("Disabling...")
+    
+    -- Destroy runStamp so any thread running while we shut down just exits.
+    runStamp = 0
 
     local s = getVarNumeric("State", STATE_STANDBY)
     if ( s == STATE_CYCLE or s == STATE_SHUTDOWN ) then
         clearLights()
     end
-    runStamp = 0
 
     luup.variable_set(SID, "ScenesRunning", "", luup.device) -- start with a clean slate next time
     luup.variable_set(SID, "State", STATE_STANDBY, luup.device)
