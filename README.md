@@ -92,6 +92,19 @@ set this value to some reasonable limit.
 
 DEMII allows a "final scene" to run when DEMII is disabled or turns off the last light after the "lights out" time. This could be used for any purpose. I personally use it to make sure a whole-house off is run, but you could use it to ensure your alarm system is armed, or your garage door is closed, etc.
 
+The scene can differentiate between DEMII being disabled and DEMII just going to sleep by checking the `Target` variable in service `urn:upnp-org:serviceId:SwitchPower1`. If the value is "0", then DEMII is being disabled. Otherwise, DEMII is going to sleep. The following code snippet, added as scene Lua, will allow the scene to only run when DEMII is being disabled:
+
+```
+local val = luup.variable_get("urn:upnp-org:serviceId:SwitchPower1", "Target", pluginDeviceId)
+if val == "0" then
+    -- Disabling, so return true (scene execution continues).
+    return true
+else
+    -- Not disabling, just going to sleep. Returning false stops scene execution.
+    return false
+end
+```
+
 ### Control of DEMII by Scenes and Lua ###
 
 DeusExMachina can be enabled or disabled like a light switch in scenes or through the regular graphical interface (no Lua required),
