@@ -84,8 +84,8 @@ Both scenes and individual devices (from the device list above) can be used simu
 
 #### Maximum "On" Targets ####
 
-Version 2.4 also adds the ability to limit the number of targets (devices or scenes) that DEMII can have "on" simultaneously. 
-If this limit is 0, there is no limit enforced. If you have DEMII control a large number of devices, it's probably not a bad idea to 
+This value sets the limit on the number of targets (devices or scenes) that DEMII can have "on" simultaneously. 
+If 0, there is no limit. If you have DEMII controlling a large number of devices, it's probably not a bad idea to 
 set this value to some reasonable limit.
 
 #### Final Scene ####
