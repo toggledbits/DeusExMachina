@@ -1,6 +1,6 @@
 module("L_DeusExMachinaII1", package.seeall)
 
-local _VERSION = "2.4RC5"
+local _VERSION = "2.4"
 local DEMVERSION = 20400
 
 local SID = "urn:toggledbits-com:serviceId:DeusExMachinaII1"
