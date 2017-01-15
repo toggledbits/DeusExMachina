@@ -62,7 +62,8 @@
                 -- Ugly hack. Luup seems to only be able to return values from related state variables (see S_), so use a temp
                 -- one to store the result we want to pass back. Blech. C'mon guys. Amateur hour. Add an extra return argument
                 -- for a table of return values or something, please?
-                luup.variable_set("urn:toggledbits-com:serviceId:DeusExMachinaII1", "TempStorage", demII.getVersion(), lul_device)
+                local vs, vn = demII.getVersion()
+                luup.variable_set("urn:toggledbits-com:serviceId:DeusExMachinaII1", "TempStorage", vs, lul_device)
                 return true
             </run>
         </action>
