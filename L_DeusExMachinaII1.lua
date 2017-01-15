@@ -16,7 +16,7 @@ local STATE_CYCLE = 2
 local STATE_SHUTDOWN = 3
 
 local runStamp = 0
-local debugMode = true
+local debugMode = false
 
 local function debug(...)
     if debugMode then
