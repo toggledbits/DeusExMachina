@@ -16,12 +16,11 @@ local STATE_CYCLE = 2
 local STATE_SHUTDOWN = 3
 
 local runStamp = 0
-
 local debugMode = false
 
 local function debug(...)
     if debugMode then
-        local str = "DeusExMachinaII1:" .. arg[1]
+        local str = "DeusExMachinaII1(dbg):" .. arg[1]
         local ipos = 1
         while true do
             local i, j, n
@@ -42,21 +41,22 @@ local function debug(...)
 end
 
 local function checkVersion()
-    local ui7Check = luup.variable_get(SID, "UI7Check", lul_device) or ""
+    local ui7Check = luup.variable_get(SID, "UI7Check", luup.device) or ""
     if ui7Check == "" then
-        luup.variable_set(SID, "UI7Check", "false", lul_device)
+        luup.variable_set(SID, "UI7Check", "false", luup.device)
         ui7Check = "false"
     end
     if ( luup.version_branch == 1 and luup.version_major == 7 and ui7Check == "false" ) then
-        luup.variable_set(SID, "UI7Check", "true", lul_device)
-        luup.attr_set("device_json", "D_DeusExMachinaII1_UI7.json", lul_device)
+        luup.variable_set(SID, "UI7Check", "true", luup.device)
+        luup.attr_set("device_json", "D_DeusExMachinaII1_UI7.json", luup.device)
         luup.reload()
     end
 end
 
 -- Get numeric variable, or return default value if not set or blank
-local function getVarNumeric( name, dflt )
-    local s = luup.variable_get(SID, name, lul_device)
+local function getVarNumeric( name, dflt, dev )
+    if dev == nil then dev = luup.device end
+    local s = luup.variable_get(SID, name, dev)
     if (s == nil or s == "") then return dflt end
     s = tonumber(s, 10)
     if (s == nil) then return dflt end
@@ -86,12 +86,12 @@ local function timeToString(t)
 end
 
 local function setMessage(s)
-    luup.variable_set(SID, "Message", s or "", lul_device)
+    luup.variable_set(SID, "Message", s or "", luup.device)
 end
 
 -- Shortcut function to return state of SwitchPower1 Status variable
 local function isEnabled()
-    local s = luup.variable_get(SWITCH_SID, "Status", lul_device)
+    local s = luup.variable_get(SWITCH_SID, "Target", luup.device)
     if (s == nil or s == "") then return false end
     return (s ~= "0")
 end
@@ -171,7 +171,7 @@ local function isBedtime()
 
     -- Establish the lights-out time
     local bedtime = 1439 -- that's 23:59 in minutes since midnight (default)
-    local bedtime_tmp = luup.variable_get(SID, "LightsOut", lul_device)
+    local bedtime_tmp = luup.variable_get(SID, "LightsOut", luup.device)
     if (bedtime_tmp ~= nil) then
         bedtime_tmp = tonumber(bedtime_tmp,10)
         if (bedtime_tmp >= 0 and bedtime_tmp < 1440) then bedtime = bedtime_tmp end
@@ -228,7 +228,7 @@ end
 
 -- Return true if a specified scene has been run (i.e. on the list)
 local function isSceneOn(spec)
-    local stateList = luup.variable_get(SID, "ScenesRunning", lul_device) or ""
+    local stateList = luup.variable_get(SID, "ScenesRunning", luup.device) or ""
     for i in string.gfind(stateList, "[^,]+") do
         if (i == spec) then return true end
     end
@@ -237,7 +237,7 @@ end
 
 -- Mark or unmark a scene as having been run
 local function updateSceneState(spec, isOn)
-    local stateList = luup.variable_get(SID, "ScenesRunning", lul_device) or ""
+    local stateList = luup.variable_get(SID, "ScenesRunning", luup.device) or ""
     local i
     local t = {}
     for i in string.gfind(stateList, "[^,]+") do
@@ -250,7 +250,7 @@ local function updateSceneState(spec, isOn)
     end
     stateList = ""
     for i in pairs(t) do stateList = stateList .. "," .. tostring(i) end
-    luup.variable_set(SID, "ScenesRunning", string.sub(stateList, 2, -1), lul_device)
+    luup.variable_set(SID, "ScenesRunning", string.sub(stateList, 2, -1), luup.device)
 end
 
 -- Run "final" scene, if defined. This scene is run after all other targets have been
@@ -265,7 +265,7 @@ end
 
 -- Get the list of targets from our device state, parse to table of targets.
 local function getTargetList()
-    local s = luup.variable_get(SID, "Devices", lul_device) or ""
+    local s = luup.variable_get(SID, "Devices", luup.device) or ""
     return split(s)
 end
 
@@ -276,7 +276,7 @@ local function removeTarget(target, tlist)
     for i = 1,table.getn(tlist) do
         if tostring(target) == tlist[i] then
             table.remove(tlist, i)
-            luup.variable_set(SID, "Devices", table.concat(tlist, ","), lul_device)
+            luup.variable_set(SID, "Devices", table.concat(tlist, ","), deusDevuce)
             return true
         end
     end
@@ -326,6 +326,7 @@ local function targetControl(targetid, turnOn)
         if luup.scenes[onScene] == nil or luup.scenes[offScene] == nil then
             -- Both on scene and off scene must exist (defensive).
             luup.log("DeusExMachinaII:targetControl(): one or both of the scenes in " .. tostring(targetid) .. " not found in luup.scenes!")
+            removeTarget(targetid)
             return
         end
         debug("targetControl(): on scene is %1, off scene is %2", onScene, offScene)
@@ -345,19 +346,19 @@ local function targetControl(targetid, turnOn)
         -- Level for all types is 0 if turning device off
         if not turnOn then lvl = 0 end
         if luup.devices[targetid] == nil then
-            -- Device doesn't exist (user deleted, etc.). PHR??? Should remove from Devices state variable.
+            -- Device doesn't exist (user deleted, etc.). Remove from Devices state variable.
             luup.log("DeusExMachinaII:targetControl(): device " .. tostring(targetid) .. " not found in luup.devices")
             removeTarget(targetid)
             return
         end
         if luup.device_supports_service(DIMMER_SID, targetid) then
             -- Handle as Dimming1
-            debug("targetControl(): handling %1 as dimmmer, set load level to %2", targetid, lvl)
+            debug("targetControl(): handling %1 (%3) as dimmmer, set load level to %2", targetid, lvl, luup.devices[targetid].description)
             luup.call_action(DIMMER_SID, "SetLoadLevelTarget", {newLoadlevelTarget=lvl}, targetid) -- note odd case inconsistency
         elseif luup.device_supports_service(SWITCH_SID, targetid) then
             -- Handle as SwitchPower1
             if turnOn then lvl = 1 end
-            debug("targetControl(): handling %1 as switch, setting target to %2", targetid, lvl)
+            debug("targetControl(): handling %1 (%3) as switch, set target to %2", targetid, lvl, luup.devices[targetid].description)
             luup.call_action(SWITCH_SID, "SetTarget", {newTargetValue=lvl}, targetid)
         else
             luup.log("DeusExMachinaII:targetControl(): don't know how to control target " .. tostring(targetid))
@@ -409,7 +410,7 @@ end
 local function clearLights()
     local devs, count
     devs, count = getTargetList()
-    luup.variable_set(SID, "State", STATE_SHUTDOWN, lul_device)
+    luup.variable_set(SID, "State", STATE_SHUTDOWN, luup.device)
     while count > 0 do
         targetControl(devs[count], false)
         count = count - 1
@@ -421,7 +422,7 @@ end
 -- takes place. For us, that means looking to see if an older version of Deus is still
 -- installed, and copying its config into our new config. Then disable the old Deus.
 local function runOnce()
-    local s = luup.variable_get(SID, "Devices", lul_device)
+    local s = luup.variable_get(SID, "Devices", luup.device)
     if (s == nil) then
         luup.log("DeusExMachinaII:runOnce(): Devices variable not found, setting up new instance...")
         -- See if there are variables from older version of DEM
@@ -442,8 +443,8 @@ local function runOnce()
             s = luup.variable_get(oldsid, "LightsOutTime", olddev)
             if (s ~= nil) then
                 local n = tonumber(s,10) / 60000
-                luup.variable_set(SID, "LightsOut", n, lul_device)
-                deleteVar("LightsOutTime", lul_device)
+                luup.variable_set(SID, "LightsOut", n, luup.device)
+                deleteVar("LightsOutTime", luup.device)
             end
             s = luup.variable_get(oldsid, "controlCount", olddev)
             if (s ~= nil) then
@@ -457,25 +458,25 @@ local function runOnce()
                     end
                 end
                 devList = table.concat(t, ",")
-                deleteVar("controlCount", lul_device)
+                deleteVar("controlCount", luup.device)
             end
 
             -- Finally, turn off old Deus
             luup.call_action(oldsid, "SetEnabled", { NewEnabledValue = "0" }, olddev)
         end
-        luup.variable_set(SID, "Devices", devList, lul_device)
+        luup.variable_set(SID, "Devices", devList, luup.device)
 
         -- Set up some other default config
-        luup.variable_set(SID, "MinCycleDelay", "300", lul_device)
-        luup.variable_set(SID, "MaxCycleDelay", "1800", lul_device)
-        luup.variable_set(SID, "MinOffDelay", "60", lul_device)
-        luup.variable_set(SID, "MaxOffDelay", "300", lul_device)
-        luup.variable_set(SID, "LightsOut", 1439, lul_device)
-        luup.variable_set(SID, "MaxTargetsOn", 0, lul_device)
-        luup.variable_set(SID, "Enabled", "0", lul_device, true)
-        luup.variable_set(SID, "Version", DEMVERSION, lul_device)
-        luup.variable_set(SWITCH_SID, "Status", "0", lul_device, true)
-        luup.variable_set(SWITCH_SID, "Target", "0", lul_device, true)
+        luup.variable_set(SID, "MinCycleDelay", "300", luup.device)
+        luup.variable_set(SID, "MaxCycleDelay", "1800", luup.device)
+        luup.variable_set(SID, "MinOffDelay", "60", luup.device)
+        luup.variable_set(SID, "MaxOffDelay", "300", luup.device)
+        luup.variable_set(SID, "LightsOut", 1439, luup.device)
+        luup.variable_set(SID, "MaxTargetsOn", 0, luup.device)
+        luup.variable_set(SID, "Enabled", "0", luup.device)
+        luup.variable_set(SID, "Version", DEMVERSION, luup.device)
+        luup.variable_set(SWITCH_SID, "Status", "0", luup.device)
+        luup.variable_set(SWITCH_SID, "Target", "0", luup.device)
     end
 
     -- Consider per-version changes.
@@ -483,63 +484,103 @@ local function runOnce()
     if (s < 20300) then
         -- v2.3: LightsOutTime (in milliseconds) deprecated, now using LightsOut (in minutes since midnight)
         luup.log("DeusExMachinaII:runOnce(): updating config, version " .. tostring(s) .. " < 20300")
-        s = luup.variable_get(SID, "LightsOut", lul_device)
+        s = luup.variable_get(SID, "LightsOut", luup.device)
         if (s == nil) then
             s = getVarNumeric("LightsOutTime") -- get pre-2.3 variable
             if (s == nil) then
-                luup.variable_set(SID, "LightsOut", 1439, lul_device) -- default 23:59
+                luup.variable_set(SID, "LightsOut", 1439, luup.device) -- default 23:59
             else
-                luup.variable_set(SID, "LightsOut", tonumber(s,10) / 60000, lul_device) -- conv ms to minutes
+                luup.variable_set(SID, "LightsOut", tonumber(s,10) / 60000, luup.device) -- conv ms to minutes
             end
         end
-        deleteVar("LightsOutTime", lul_device)
+        deleteVar("LightsOutTime", luup.device)
     end
     if (s < 20400) then
-        luup.variable_set(SID, "MaxTargetsOn", 0, lul_device)
+        -- v2.4: SwitchPower1 variables added. Follow previous plugin state in case of auto-update.
+        luup.log("DeusExMachinaII:runOnce(): updating config, version " .. tostring(s) .. " < 20400")
+        luup.variable_set(SID, "MaxTargetsOn", 0, luup.device)
         local e = getVarNumeric("Enabled", 0)
-        luup.variable_set(SWITCH_SID, "Status", e, lul_device, true)
-        luup.variable_set(SWITCH_SID, "Target", e, lul_device, true)
+        luup.variable_set(SWITCH_SID, "Target", e, luup.device)
+        luup.variable_set(SWITCH_SID, "Status", 0, luup.device)
     end
 
-    -- Update version last.
-    luup.variable_set(SID, "Version", DEMVERSION, lul_device)
+    -- Update version state last.
+    if (s ~= DEMVERSION) then
+        luup.variable_set(SID, "Version", DEMVERSION, luup.device)
+    end
 end
 
 -- Return the plugin version string
 function getVersion()
-    return _VERSION
+    return _VERSION, DEMVERSION
+end
+
+-- Start stepper running. Note that we don't change state here. The intention is that Deus continues
+-- in its saved operating state. 
+local function deusStart()
+    -- Immediately set a new timestamp
+    runStamp = os.time()
+
+    luup.call_delay("deusStep", 1, runStamp)
+    debug("deusStart(): scheduled first step, done")
 end
 
 -- Enable DEM by setting a new cycle stamp and scheduling our first cycle step.
 function deusEnable()
+    luup.log("DeusExMachinaII:deusEnable(): enabling, luup.device=" .. tostring(luup.device))
+    luup.variable_set(SWITCH_SID, "Target", "1", luup.device)
+
     setMessage("Enabling...")
-    luup.log("DeusExMachinaII:deusEnable(): enabling...")
-    luup.variable_set(SID, "ScenesRunning", "", lul_device) -- start with a clean slate
-    runStamp = os.time()
-    luup.call_delay("deusStep", 1, runStamp, 1)
-    luup.variable_set(SID, "Enabled", "1", lul_device)
-    luup.variable_set(SWITCH_SID, "Status", "1", lul_device)
+
+    -- Old Enabled variable follows SwitchPower1's Target
+    luup.variable_set(SID, "Enabled", "1", luup.device)
+    luup.variable_set(SID, "State", STATE_IDLE, luup.device)
+
+    -- Launch the stepper. It will figure everything else out.
+    deusStart()
+
+    -- SwitchPower1 status now on, we are running.
+    luup.variable_set(SWITCH_SID, "Status", "1", luup.device)
 end
 
 -- Disable DEM and go to standby state. If we are currently cycling (as opposed to idle/waiting for sunset),
 -- turn off any controlled lights that are on.
 function deusDisable()
+    luup.log("DeusExMachinaII:deusDisable(): disabling, luup.device=" .. tostring(luup.device))
+    luup.variable_set(SWITCH_SID, "Target", "0", luup.device)
+
     setMessage("Disabling...")
+    
+    -- Destroy runStamp so any running stepper exits when triggered (delay expires).
+    runStamp = 0
+
+    -- If current state is cycling or shutting down, rush that function (turn everything off)
     local s = getVarNumeric("State", STATE_STANDBY)
-    luup.log("DeusExMachinaII:deusDisable(): disabling...")
     if ( s == STATE_CYCLE or s == STATE_SHUTDOWN ) then
         clearLights()
     end
-    luup.variable_set(SID, "State", STATE_STANDBY, lul_device)
-    luup.variable_set(SID, "Enabled", "0", lul_device)
-    luup.variable_set(SWITCH_SID, "Status", "0", lul_device)
+
+    luup.variable_set(SID, "ScenesRunning", "", luup.device) -- start with a clean slate next time
+    luup.variable_set(SID, "State", STATE_STANDBY, luup.device)
+    luup.variable_set(SID, "Enabled", "0", luup.device)
+    luup.variable_set(SWITCH_SID, "Status", "0", luup.device)
+
     setMessage("")
 end
 
 -- Initialize.
-function deusInit(deusDevice)
+function deusInit(pdev)
+    luup.log("DeusExMachinaII:deusInit(" .. tostring(pdev) .. "): Version " .. _VERSION .. ", initializing, luup.device=" .. tostring(luup.device))
+
+    runStamp = 0
+    
     setMessage("Initializing...")
-    luup.log("DeusExMachinaII:deusInit(): Version " .. _VERSION .. ", initializing...")
+    
+    if debugMode or true then
+        local status, body, httpStatus
+        status, body, httpStatus = luup.inet.wget("http://127.0.0.1:3480/data_request?id=status&DeviceNum=" .. tostring(luup.device) .. "&output_format=json")
+        debug("deusInit(): status %2, startup state is %1", body, status)
+    end
 
     -- One-time stuff
     runOnce()
@@ -548,11 +589,7 @@ function deusInit(deusDevice)
     checkVersion()
 
     -- Start up if we're enabled
-    if (isEnabled()) then
-        deusEnable()
-    else
-        deusDisable()
-    end
+    deusStart()
 end
 
 -- Run a cycle. If we're in "bedtime" (i.e. not between our cycle period between sunset and stop),
@@ -562,23 +599,25 @@ end
 -- delays, so the lights going off looks more "natural" (i.e. not all at once just slamming off).
 function deusStep(stepStampCheck)
     local stepStamp = tonumber(stepStampCheck)
-    luup.log("DeusExMachinaII:deusStep(): wakeup, stamp " .. stepStampCheck)
+    luup.log("DeusExMachinaII:deusStep(): wakeup, stamp " .. tostring(stepStampCheck) .. ", luup.device=" .. tostring(luup.device))
     if (stepStamp ~= runStamp) then
         luup.log("DeusExMachinaII:deusStep(): stamp mismatch, another thread running. Bye!")
         return
     end
-    if (not isEnabled()) then
+    if not isEnabled() then
+        -- Not enabled, so force standby and stop what we're doing.
         luup.log("DeusExMachinaII:deusStep(): not enabled, no more work for this thread...")
+        luup.variable_set(SID, "State", STATE_STANDBY, luup.device)
         return
     end
 
     -- Get next sunset as seconds since midnight (approx)
     local sunset = getSunset()
 
-    local currentState = getVarNumeric("State", 0)
+    local currentState = getVarNumeric("State", STATE_STANDBY)
     if (currentState == STATE_STANDBY or currentState == STATE_IDLE) then
         debug("deusStep(): step in state %1, lightsout=%2, sunset=%3, os.time=%4", currentState,
-            luup.variable_get(SID, "LightsOut", lul_device), sunset, os.time())
+            luup.variable_get(SID, "LightsOut", luup.device), sunset, os.time())
         debug("deusStep(): luup variables longitude=%1, latitude=%2, timezone=%3, city=%4, sunset=%5, version=%6",
             luup.longitude, luup.latitude, luup.timezone, luup.city, luup.sunset(), luup.version)
     end
@@ -591,49 +630,52 @@ function deusStep(stepStampCheck)
     
     -- Get going...
     local nextCycleDelay = 300 -- a default value to keep us out of hot water
-    if (currentState == STATE_STANDBY and not inActiveTimePeriod) then
-            -- Transition from STATE_STANDBY (i.e. we're enabling) in the inactive period.
-            -- Go to IDLE and delay for next sunset.
-            luup.log("DeusExMachinaII:deusStep(): transitioning to IDLE from STANDBY, waiting for next sunset...")
-            nextCycleDelay = sunset - os.time() + getRandomDelay("MinCycleDelay", "MaxCycleDelay")
-            luup.variable_set(SID, "State", STATE_IDLE, lul_device)
-            setMessage("Waiting for sunset " .. timeToString(os.date("*t", os.time() + nextCycleDelay)))
-    elseif (not isActiveHouseMode()) then
+    if currentState == STATE_IDLE and not inActiveTimePeriod then
+        -- IDLE and not in active time period, probably a Luup restart. Wait for active period.
+        luup.log("DeusExMachinaII:deusStep(): IDLE and waiting for next sunset...")
+        nextCycleDelay = sunset - os.time() + getRandomDelay("MinCycleDelay", "MaxCycleDelay")
+        luup.variable_set(SID, "State", STATE_IDLE, luup.device)
+        setMessage("Waiting for sunset " .. timeToString(os.date("*t", os.time() + nextCycleDelay)))
+    elseif not isActiveHouseMode() then
         -- Not in an active house mode. If we're not STANDBY or IDLE, turn everything back off and go to IDLE.
-        if (currentState ~= STATE_IDLE) then
-            luup.log("DeusExMachinaII:deusStep(): transitioning to IDLE, not in an active house mode.")
-            if (currentState ~= STATE_STANDBY) then clearLights() end -- turn off lights quickly unless transitioning from STANDBY
-            luup.variable_set(SID, "State", STATE_IDLE, lul_device)
+        if currentState == STATE_IDLE then
+            luup.log("DeusExMachinaII:deusStep(): IDLE in active period but inactive house mode; waiting for mode change.")
         else
-            luup.log("DeusExMachinaII:deusStep(): IDLE in an inactive house mode; waiting for mode change.")
+            luup.log("DeusExMachinaII:deusStep(): transitioning to IDLE, not in an active house mode.")
+            if currentState ~= STATE_STANDBY then 
+                clearLights()
+                luup.variable_set(SID, "State", STATE_IDLE, luup.device)
+            end
         end
 
         -- Figure out how long to delay. If we're lights-out, delay to next sunset. Otherwise, short delay
         -- to re-check house mode, which could change at any time, so we must deal with it.
         if (inActiveTimePeriod) then
             nextCycleDelay = getRandomDelay("MinCycleDelay", "MaxCycleDelay")
+            setMessage("Waiting for active house mode")
         else
             nextCycleDelay = sunset - os.time() + getRandomDelay("MinCycleDelay", "MaxCycleDelay")
+            setMessage("Idle until " .. timeToString(os.date("*t", os.time() + nextCycleDelay)))
         end
-        setMessage("Waiting for active house mode")
-    elseif (not inActiveTimePeriod) then
-        luup.log("DeusExMachinaII:deusStep(): running off cycle")
-        luup.variable_set(SID, "State", STATE_SHUTDOWN, lul_device)
+    elseif not inActiveTimePeriod then
+        -- Not in active period, but in active house mode and running state; shut things off...
+        luup.log("DeusExMachinaII:deusStep(): running off cycle, state=" .. tostring(currentState))
+        luup.variable_set(SID, "State", STATE_SHUTDOWN, luup.device)
         if (not turnOffLight()) then
             -- No more lights to turn off
             runFinalScene()
-            luup.variable_set(SID, "State", STATE_IDLE, lul_device)
+            luup.variable_set(SID, "State", STATE_IDLE, luup.device)
             nextCycleDelay = sunset - os.time() + getRandomDelay("MinCycleDelay", "MaxCycleDelay")
             luup.log("DeusExMachina:deusStep(): all lights out; now IDLE, setting delay to restart cycling at next sunset")
-            setMessage("Waiting for sunset " .. timeToString(os.date("*t", os.time() + nextCycleDelay)))
+            setMessage("Lights-out complete; waiting for sunset " .. timeToString(os.date("*t", os.time() + nextCycleDelay)))
         else
             nextCycleDelay = getRandomDelay("MinOffDelay", "MaxOffDelay", 60, 300)
             setMessage("Shut-off cycle, next " .. timeToString(os.date("*t", os.time() + nextCycleDelay)))
         end
     else
         -- Fully active. Find a random target to control and control it.
-        luup.log("DeusExMachinaII:deusStep(): running toggle cycle")
-        luup.variable_set(SID, "State", STATE_CYCLE, lul_device)
+        luup.log("DeusExMachinaII:deusStep(): running toggle cycle, state=" .. tostring(currentState))
+        luup.variable_set(SID, "State", STATE_CYCLE, luup.device)
         nextCycleDelay = getRandomDelay("MinCycleDelay", "MaxCycleDelay")
         local devs, max
         devs, max = getTargetList()
@@ -676,7 +718,7 @@ function deusStep(stepStampCheck)
     if nextCycleDelay ~= nil then
         luup.log("DeusExMachinaII:deusStep(): cycle finished, next in " .. nextCycleDelay .. " seconds")
         if nextCycleDelay < 1 then nextCycleDelay = 60 end
-        luup.call_delay("deusStep", nextCycleDelay, stepStamp, 1)
+        luup.call_delay("deusStep", nextCycleDelay, stepStamp)
     else
         luup.log("DeusExMachinaII:deusStep(): nil nextCycleDelay, next cycle not scheduled!")
     end
