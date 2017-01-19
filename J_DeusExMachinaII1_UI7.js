@@ -26,8 +26,10 @@ var DeusExMachinaII = (function(api) {
 	}
 	
     function isControllable(devid) {
+        var v = api.getDeviceState( devid, "urn:toggledbits-com:serviceId:DeusExMachinaII1", "LightsOut" );
+        if (!(v === undefined || v === false)) return false;
 		if (isDimmer(devid)) return true; /* a dimmer is a light */
-		var v = api.getDeviceState( devid, "urn:upnp-org:serviceId:SwitchPower1", "Status" );
+		v = api.getDeviceState( devid, "urn:upnp-org:serviceId:SwitchPower1", "Status" );
 		if (v === undefined || v === false) return false;
 		return true;
     }
