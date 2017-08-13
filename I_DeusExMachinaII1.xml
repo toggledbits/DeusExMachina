@@ -32,14 +32,14 @@
             <serviceId>urn:upnp-org:serviceId:SwitchPower1</serviceId>
             <name>GetTarget</name>
             <run>
-                luup.variable_get("urn:upnp-org:serviceId:SwitchPower1", "Target", lul_device)
+                -- nothing required
             </run>
         </action>
         <action>
             <serviceId>urn:upnp-org:serviceId:SwitchPower1</serviceId>
             <name>GetStatus</name>
             <run>
-                luup.variable_get("urn:upnp-org:serviceId:SwitchPower1", "Status", lul_device)
+                -- nothing required
             </run>
         </action>
         <action>

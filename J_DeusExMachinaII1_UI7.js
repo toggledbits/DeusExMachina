@@ -7,7 +7,6 @@ var DeusExMachinaII = (function(api) {
 
     var myModule = {};
 
-    var deusDevice = api.getCpanelDeviceId();
     var controlled = [];
     var sceneNamesById = [];
 
@@ -35,8 +34,9 @@ var DeusExMachinaII = (function(api) {
     }
 
     function getControlledList() {
-        var list = get_device_state(deusDevice, serviceId, "Devices", 0);
-        if (typeof(list) == "undefined" || list.match(/^\s*$/)) {
+        var deusDevice = api.getCpanelDeviceId();
+        var list = api.getDeviceState(deusDevice, serviceId, "Devices"); // ???
+        if ( !list || list.match(/^\s*$/)) {
             return [];
         }
         return list.split(',');
@@ -62,6 +62,7 @@ var DeusExMachinaII = (function(api) {
                 
         var s = controlled.join(',');
         // console.log('Updating controlled list to ' + s);
+        var deusDevice = api.getCpanelDeviceId();
         api.setDeviceStatePersistent(deusDevice, serviceId, "Devices", s, 0);
     }
     
@@ -128,6 +129,7 @@ var DeusExMachinaII = (function(api) {
 
     function updateTime(timeMins)
     {
+        var deusDevice = api.getCpanelDeviceId();
         api.setDeviceStatePersistent(deusDevice, serviceId, "LightsOut", timeMins, 0);
     }
     
@@ -136,6 +138,7 @@ var DeusExMachinaII = (function(api) {
         var scene = "";
         if (uiObj.selectedIndex > 0) 
             scene = uiObj.options[uiObj.selectedIndex].value;
+        var deusDevice = api.getCpanelDeviceId();
         api.setDeviceStatePersistent(deusDevice, serviceId, "FinalScene", scene, 0);
     }
     
@@ -215,6 +218,7 @@ var DeusExMachinaII = (function(api) {
         jQuery(".hmselect:checked").each( function( i, e ) {
             mask |= 1 << jQuery(e).val();
         });
+        var deusDevice = api.getCpanelDeviceId();
         api.setDeviceStatePersistent(deusDevice, serviceId, "HouseModes", mask, 0);
     }
 
@@ -239,6 +243,7 @@ var DeusExMachinaII = (function(api) {
         var maxt = jQuery("#maxtargets").val();
         var re = new RegExp("^[0-9]+$");
         if (re.exec(maxt)) {
+            var deusDevice = api.getCpanelDeviceId();
             api.setDeviceStatePersistent(deusDevice, serviceId, "MaxTargetsOn", maxt, 0);
             return;
         }
@@ -350,6 +355,8 @@ var DeusExMachinaII = (function(api) {
             // Push generated HTML to page
             api.setCpanelContent(html);
           
+            var deusDevice = api.getCpanelDeviceId();
+
             // Restore time field
             var time = "23:59";
             var timeMins = parseInt(api.getDeviceState(deusDevice, serviceId, "LightsOut"));
