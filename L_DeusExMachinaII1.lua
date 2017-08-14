@@ -184,10 +184,9 @@ local function isActiveHouseMode()
 
         -- Check to see if house mode bits are non-zero, and if so, apply current mode as mask.
         -- If bit is set (current mode is in the bitset), we can run, otherwise skip.
-        local bit = require("bit")
-        -- Get the current house mode (1=Home,2=Away,3=Night,4=Vacation)
+        -- Get the current house mode (1=Home,2=Away,3=Night,4=Vacation) and mode into bit position.
         currentMode = math.pow(2, tonumber(currentMode,10))
-        if (bit.band(modebits, currentMode) == 0) then
+        if (math.floor(modebits / currentMode) % 2) == 0 then
             D('DeusExMachinaII:isActiveHouseMode(): Current mode bit %1 not set in %2', string.format("0x%x", currentMode), string.format("0x%x", modebits))
             return false -- not active in this mode
         else
@@ -235,6 +234,26 @@ end
 local function getSunsetMSM()
     local t = os.date('*t', getSunset())
     return t['hour']*60 + t['min']
+end
+
+-- Return start time in seconds. Could be configured, could be sunset.
+local function startTime(dev)
+    local st = luup.variable_get(SID, "StartTime", dev)
+    D("startTime() start time=%1",st)
+    if st == nil or string.match(st, "^%s*$") then 
+        st = getSunset()
+        local tt = os.date("*t", st)
+        return st, string.format("sunset (%02d:%02d)", tt.hour, tt.min)
+    else
+        local tt = os.date("*t")
+        tt.hour = math.floor(st/60)
+        tt.min = st % 60
+        tt.sec = 0
+        local ts = os.time(tt)
+        D("tt=%1, ts=%2",tt, ts)
+        if ts < os.time() then ts = ts + 86400 end
+        return ts, string.format("%02d:%02d", tt.hour, tt.min)
+    end
 end
 
 -- DEM cycles lights between start and lights-out. This function returns 0 if 
@@ -487,6 +506,7 @@ end
 -- in case user has any triggers connected to that state. The caller must immediately
 -- set the next state when this function returns (expected would be STANDBY or IDLE).
 local function clearLights()
+    D("clearLights()")
     local devs, count
     devs, count = getTargetList()
     luup.variable_set(SID, "State", STATE_SHUTDOWN, myDevice)
@@ -503,24 +523,6 @@ local function checkLocation(dev)
         error("Invalid lat/long/location data in system configuration.")
     end
 end    
-
--- Return start time in seconds. Could be configured, could be sunset.
-local function startTime(dev)
-    local st = luup.variable_get(SID, "StartTime", dev)
-    if st == nil or string.match(st, "^%s*$") then 
-        st = getSunset()
-        local tt = os.date("*t", st)
-        return st, string.format("sunset (%02d:%02d)" tt.hour, tt.min)
-    else
-        local tt = os.date("*t")
-        tt.hour = math.floor(st/60)
-        tt.min = st % 60
-        tt.sec = 0
-        local ts = os.time(tt)
-        if ts < os.time() then ts += 86400 end
-        return something, string.format("%02d:%02d", tt.hour, tt.min)
-    end
-end
 
 -- runOnce() looks to see if a core state variable exists; if not, a one-time initialization
 -- takes place. For us, that means looking to see if an older version of Deus is still
@@ -743,7 +745,7 @@ function deusStep(stepStampCheck)
     -- Get next sunset as seconds since midnight (approx), and true start time (configured or sunset)
     local sunset = getSunset()
     local nextStart, startWord 
-    nextStartTime, startWord = startTime( myDevice )
+    nextStart, startWord = startTime( myDevice )
     
     local currentState = getVarNumeric("State", STATE_STANDBY)
     if (currentState == STATE_STANDBY or currentState == STATE_IDLE) then
