@@ -449,7 +449,12 @@ local function targetControl(targetid, turnOn)
             removeTarget(targetid)
             return
         end
-        if luup.device_supports_service(DIMMER_SID, targetid) then
+        if luup.device_supports_service("urn:upnp-org:serviceId:VSwitch1", targetid) then
+            -- PHR 2017-08-14 pass newTargetValue as string for compat w/VSwitch (uses string comparisons in its implementation--needs an update)
+            if turnOn then lvl = 1 end
+            D("targetControl(): handling %1 (%3) as switch, set target to %2", targetid, lvl, luup.devices[targetid].description)
+            luup.call_action("urn:upnp-org:serviceId:VSwitch1", "SetTarget", {newTargetValue=tostring(lvl)}, targetid)
+        elseif luup.device_supports_service(DIMMER_SID, targetid) then
             -- Handle as Dimming1
             D("targetControl(): handling %1 (%3) as dimmmer, set load level to %2", targetid, lvl, luup.devices[targetid].description)
             luup.call_action(DIMMER_SID, "SetLoadLevelTarget", {newLoadlevelTarget=lvl}, targetid) -- note odd case inconsistency
