@@ -765,6 +765,7 @@ function deusStep(stepStampCheck)
         -- Not enabled, so force standby and stop what we're doing.
         L("deusStep(): not enabled, no more work for this thread...")
         luup.variable_set(SID, "State", STATE_STANDBY, myDevice)
+        setMessage("")
         return
     end
 
