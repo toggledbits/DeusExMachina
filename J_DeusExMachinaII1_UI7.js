@@ -1,3 +1,6 @@
+//# sourceURL=J_DeusExMachinaII1_UI7.js
+"use strict";
+
 var DeusExMachinaII = (function(api) {
 
     // unique identifier for this plugin...
@@ -281,7 +284,7 @@ var DeusExMachinaII = (function(api) {
         var deusDevice = api.getCpanelDeviceId();
         api.setDeviceStatePersistent(deusDevice, serviceId, "LeaveLightsOn", sel, 0);
     }
-
+    
     ////////////////////////////
     function configureDeus()
     {
