@@ -7,6 +7,12 @@
     <device>
         <deviceType>urn:schemas-toggledbits-com:device:DeusExMachinaII:1</deviceType>
         <staticJson>D_DeusExMachinaII1_UI7.json</staticJson>
+        <friendlyName>DeusExMachinaII</friendlyName>
+        <manufacturer>rigpapa</manufacturer>
+        <manufacturerURL>http://www.toggledbits.com/</manufacturerURL>
+        <modelDescription>DeusExMachinaII</modelDescription>
+        <modelName>DeusExMachinaII</modelName>
+        <handleChildren>0</handleChildren>
         <Category_Num>1</Category_Num>
         <serviceList>
           <service>
@@ -25,5 +31,8 @@
             <SCPDURL>S_HaDevice1.xml</SCPDURL>
           </service>
         </serviceList>
+        <implementationList>
+          <implementationFile>I_DeusExMachinaII1.xml</implementationFile>
+        </implementationList>
     </device>
 </root>
