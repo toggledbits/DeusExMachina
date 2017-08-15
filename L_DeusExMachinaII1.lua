@@ -4,6 +4,7 @@ local _VERSION = "2.5dev"
 local DEMVERSION = 20500
 
 local SID = "urn:toggledbits-com:serviceId:DeusExMachinaII1"
+local DEUS_TYPE = "urn:schemas-toggledbits-com:device:DeusExMachinaII:1"
 
 local SWITCH_TYPE = "urn:schemas-upnp-org:device:BinaryLight:1"
 local SWITCH_SID  = "urn:upnp-org:serviceId:SwitchPower1"
@@ -17,6 +18,9 @@ local STATE_SHUTDOWN = 3
 
 local myDevice = 0
 local runStamp = 0
+local isALTUI = false
+local isOpenLuup = false
+
 local debugMode = true
 local traceMode = false
 
@@ -113,7 +117,7 @@ end
 
 local function checkVersion(dev)
     local ui7Check = luup.variable_get(SID, "UI7Check", dev) or ""
-    if ( luup.version_branch == 1 and luup.version_major >= 7 ) then
+    if isOpenLuup or ( luup.version_branch == 1 and luup.version_major >= 7 ) then
         if ui7Check == "" then
             -- One-time init for UI7 or better
             luup.variable_set(SID, "UI7Check", "true", dev)
@@ -718,11 +722,28 @@ function deusInit(pdev)
         D("deusInit(): status %2, startup state is %1", body, status)
     end
 
-    -- One-time stuff
-    runOnce(pdev)
+    -- Check for ALTUI and OpenLuup
+    local k,v
+    for k,v in pairs(luup.devices) do
+        if v.device_type == "urn:schemas-upnp-org:device:altui:1" then
+            local rc,rs,jj,ra
+            D("deusInit() detected ALTUI at %1", k)
+            isALTUI = true
+            rc,rs,jj,ra = luup.call_action("urn:upnp-org:serviceId:altui1", "RegisterPlugin", 
+                { newDeviceType=DEUS_TYPE, newScriptFile="J_DeusExMachinaII1_ALTUI.js", newDeviceDrawFunc="DeusExMachina_ALTUI.DeviceDraw" }, 
+                k )
+            D("deusInit() ALTUI's RegisterPlugin action returned resultCode=%1, resultString=%2, job=%3, returnArguments=%4", rc,rs,jj,ra)
+        elseif v.device_type == "openLuup" then
+            D("deusInit() detected openLuup")
+            isOpenLuup = true
+        end
+    end
 
     -- Check UI version
     checkVersion(pdev)
+    
+    -- One-time stuff
+    runOnce(pdev)
 
     -- Start up if we're enabled
     deusStart(pdev)
