@@ -310,6 +310,11 @@ local function isBedtime()
         if (tNow >= start and tNow < bedtime) then
             ret = 0
         end
+    elseif bedtime == start then
+        -- Case 3: explicitly handle case of start/lightsout being equal: DEMII always runs.
+        -- This facilitates scene-based control of DEMII via enable/disable, making sensor
+        -- triggering (GitHub issue 21) and multiple cycle periods (GitHub issue 18) possible.
+        ret = 0
     else
         -- Case 2: bedtime is after midnight
         if (tNow >= start or tNow < bedtime) then
