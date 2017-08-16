@@ -1,5 +1,13 @@
 //# sourceURL=J_DeusExMachinaII1_UI7.js
-//"use strict";
+/** 
+ * J_DeusExMachinaII1_UI7.js
+ * Configuration interface for DeusExMachinaII
+ *
+ * Copyright 2016,2017 Patrick H. Rigney, All Rights Reserved.
+ * This file is part of DeusExMachinaII. For license information, see LICENSE at https://github.com/toggledbits/DeusExMachina
+ */
+
+//"use strict"; // fails on UI7, works fine with ALTUI
 
 var DeusExMachinaII = (function(api) {
 

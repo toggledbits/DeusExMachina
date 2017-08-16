@@ -1,3 +1,7 @@
+-- L_DeusExMachinaII1.lua - Core module for DeusExMachinaII
+-- Copyright 2016,2017 Patrick H. Rigney, All Rights Reserved.
+-- This file is part of DeusExMachinaII. For license information, see LICENSE at https://github.com/toggledbits/DeusExMachina
+
 module("L_DeusExMachinaII1", package.seeall)
 
 local _NAME = "DeusExMachinaII"

@@ -1,3 +1,11 @@
+//# sourceURL=J_DeusExMachinaII1_UI7.js
+/** 
+ * J_DeusExMachinaII1.js
+ * Configuration interface for DeusExMachinaII on pre-UI7 firmware.
+ *
+ * Copyright 2016,2017 Patrick H. Rigney, All Rights Reserved.
+ * This file is part of DeusExMachinaII. For license information, see LICENSE at https://github.com/toggledbits/DeusExMachina
+ */
 var configureDeus;
 var updateDeusControl;
 var checkTime;

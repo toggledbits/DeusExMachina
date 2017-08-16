@@ -1,4 +1,12 @@
 //# sourceURL=J_DeusExMachinaII1_ALTUI.js
+/** 
+ * J_DeusExMachinaII1_ALTUI.js
+ * Special presentation for ALTUI for DeusExMachinaII
+ *
+ * Copyright 2016,2017 Patrick H. Rigney, All Rights Reserved.
+ * This file is part of DeusExMachinaII. For license information, see LICENSE at https://github.com/toggledbits/DeusExMachina
+ */
+
 "use strict";
 
 var DeusExMachina_ALTUI = ( function( window, undefined ) {
