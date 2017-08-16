@@ -1,7 +1,8 @@
 module("L_DeusExMachinaII1", package.seeall)
 
-local _VERSION = "2.5dev"
-local DEMVERSION = 20500
+local _NAME = "DeusExMachinaII"
+local _VERSION = "2.5"
+local _CONFIGVERSION = 20500
 
 local SID = "urn:toggledbits-com:serviceId:DeusExMachinaII1"
 local DEUS_TYPE = "urn:schemas-toggledbits-com:device:DeusExMachinaII:1"
@@ -20,16 +21,21 @@ local myDevice = 0
 local runStamp = 0
 local isALTUI = false
 local isOpenLuup = false
+local devState = {}
 
 local debugMode = true
 local traceMode = false
 
 local function trace( typ, msg )
+    local dkjson = require("dkjson")
+    local http = require("socket.http")
+    local ltn12 = require("ltn12")
+
     local ts = os.time()
     local r
     local t = {
         ["type"]=typ,
-        plugin="SiteSensor",
+        plugin=_NAME or "unknown",
         pluginVersion=_CONFIGVERSION,
         serial=luup.pk_accesspoint,
         systime=ts,
@@ -38,6 +44,8 @@ local function trace( typ, msg )
         latitude=luup.latitude,
         timezone=luup.timezone,
         city=luup.city,
+        isALTUI=isALTUI,
+        isOpenLuup=isOpenLuup,
         message=msg
     }
 
@@ -59,6 +67,9 @@ local function trace( typ, msg )
     }
     if httpStatus == 401 or httpStatus == 404 then
         traceMode = false
+    end
+    if httpStatus == 404 then
+        luup.variable_set(SID, "TraceMode", 0, myDevice)
     end
 end
 
@@ -89,7 +100,7 @@ local function L(msg, ...)
     if type(msg) == "table" then
         str = msg["prefix"] .. msg["msg"]
     else
-        str = "DeusExMachinaII: " .. msg
+        str = _NAME .. ": " .. msg
     end
     str = string.gsub(str, "%%(%d+)", function( n )
             n = tonumber(n, 10)
@@ -105,13 +116,14 @@ local function L(msg, ...)
     )
     luup.log(str)
     if traceMode then
-        pcall( trace, "log", str )
+        local status, err
+        status,err = pcall( trace, "log", str )
     end
 end
 
 local function D(msg, ...)
     if debugMode then
-        L({msg=msg,prefix="DeusExMachinaII(debug)::"}, unpack(arg))
+        L( { msg=msg,prefix=(_NAME .. "::") }, unpack(arg) )
     end
 end
 
@@ -149,8 +161,8 @@ local function deleteVar( name, devid )
     if devid == nil then devid = myDevice end
     -- Interestingly, setting a variable to nil with luup.variable_set does nothing interesting; too bad, it
     -- could have been used to delete variables, since a later get would yield nil anyway. But it turns out
-    -- that using the variableget Luup request with no value WILL delete the variable.
-    local req = "http://127.0.0.1:3480/data_request?id=variableset&amp;DeviceNum=" .. tostring(devid) .. "&amp;serviceId=" .. SID .. "&amp;Variable=" .. name .. "&amp;Value="
+    -- that using the variableset Luup request with no value WILL delete the variable.
+    local req = "http://127.0.0.1:3480/data_request?id=variableset&DeviceNum=" .. tostring(devid) .. "&serviceId=" .. SID .. "&Variable=" .. name .. "&Value="
     D("deleteVar(%1,%2) wget %3", name, devid, req)
     local status, result = luup.inet.wget(req)
     D("deleteVar(%1,%2) status=%3, result=%4", name, devid, status, result)
@@ -191,10 +203,10 @@ local function isActiveHouseMode()
         -- Get the current house mode (1=Home,2=Away,3=Night,4=Vacation) and mode into bit position.
         currentMode = math.pow(2, tonumber(currentMode,10))
         if (math.floor(modebits / currentMode) % 2) == 0 then
-            D('DeusExMachinaII:isActiveHouseMode(): Current mode bit %1 not set in %2', string.format("0x%x", currentMode), string.format("0x%x", modebits))
+            D('isActiveHouseMode(): Current mode bit %1 not set in %2', string.format("0x%x", currentMode), string.format("0x%x", modebits))
             return false -- not active in this mode
         else
-            D('DeusExMachinaII:isActiveHouseMode(): Current mode bit %1 SET in %2', string.format("0x%x", currentMode), string.format("0x%x", modebits))
+            D('isActiveHouseMode(): Current mode bit %1 SET in %2', string.format("0x%x", currentMode), string.format("0x%x", modebits))
         end
     end
     return true -- default is we're active in the current house mode
@@ -266,7 +278,7 @@ end
 local function isBedtime()
     local testing = getVarNumeric("TestMode", 0)
     if (testing ~= 0) then 
-        L('DeusExMachinaII:isBedtime(): TestMode is on') 
+        L('isBedtime(): TestMode is on') 
         debugMode = true
     end
 
@@ -328,6 +340,14 @@ local function split(s, sep)
     return t, n
 end
 
+local function updateDeviceState( devid, isOn, whenOff )
+    if isOn then
+        devState[devid] = { id=devid, offTime=whenOff }
+    else
+        devState[devid] = nil
+    end
+end
+
 -- Return true if a specified scene has been run (i.e. on the list)
 local function isSceneOn(spec)
     local stateList = luup.variable_get(SID, "ScenesRunning", myDevice) or ""
@@ -374,9 +394,13 @@ end
 -- Remove a target from the target list. Used when the target no longer exists. Linear, poor, but short list and rarely used.
 local function removeTarget(target, tlist)
     if tlist == nil then tlist = getTargetList() end
-    local i
-    for i = 1,table.getn(tlist) do
-        if tostring(target) == tlist[i] then
+    target = tostring(target)
+    local i, d
+    for i,d in ipairs(tlist) do
+        local l = string.find(d, '[=<]')
+        local devid = d
+        if l ~= nil then devid = devid:sub(1,l-1) end
+        if devid == target then
             table.remove(tlist, i)
             luup.variable_set(SID, "Devices", table.concat(tlist, ","), myDevice)
             return true
@@ -439,6 +463,12 @@ local function targetControl(targetid, turnOn)
     else
         -- Parse the level if this is a dimming target spec
         local lvl = 100
+        local maxOnTime = nil
+        local m = string.find(targetid, '<')
+        if m ~= nil then 
+            maxOnTime = string.sub(targetid, m+1)
+            targetid = string.sub(targetid, 1, m-1)
+        end
         local k = string.find(targetid, '=')
         if k ~= nil then
             _, _, targetid, lvl = string.find(targetid, "(%d+)=(%d+)")
@@ -456,20 +486,25 @@ local function targetControl(targetid, turnOn)
         if luup.device_supports_service("urn:upnp-org:serviceId:VSwitch1", targetid) then
             -- PHR 2017-08-14 pass newTargetValue as string for compat w/VSwitch (uses string comparisons in its implementation--needs an update)
             if turnOn then lvl = 1 end
-            D("targetControl(): handling %1 (%3) as switch, set target to %2", targetid, lvl, luup.devices[targetid].description)
+            D("targetControl(): handling %1 (%3) as VSwitch, set target to %2", targetid, lvl, luup.devices[targetid].description)
             luup.call_action("urn:upnp-org:serviceId:VSwitch1", "SetTarget", {newTargetValue=tostring(lvl)}, targetid)
         elseif luup.device_supports_service(DIMMER_SID, targetid) then
             -- Handle as Dimming1
-            D("targetControl(): handling %1 (%3) as dimmmer, set load level to %2", targetid, lvl, luup.devices[targetid].description)
+            D("targetControl(): handling %1 (%3) as generic dimmmer, set load level to %2", targetid, lvl, luup.devices[targetid].description)
             luup.call_action(DIMMER_SID, "SetLoadLevelTarget", {newLoadlevelTarget=lvl}, targetid) -- note odd case inconsistency
         elseif luup.device_supports_service(SWITCH_SID, targetid) then
             -- Handle as SwitchPower1
             if turnOn then lvl = 1 end
-            D("targetControl(): handling %1 (%3) as switch, set target to %2", targetid, lvl, luup.devices[targetid].description)
+            D("targetControl(): handling %1 (%3) as generic switch, set target to %2", targetid, lvl, luup.devices[targetid].description)
             luup.call_action(SWITCH_SID, "SetTarget", {newTargetValue=lvl}, targetid)
         else
             L("targetControl(): don't know how to control target " .. tostring(targetid))
+            removeTarget(targetid)
+            return
         end
+        local offTime = nil
+        if maxOnTime ~= nil then offTime = os.time() + tonumber(maxOnTime,10)*60 end
+        updateDeviceState(targetid, turnOn, offTime)
     end
 end
 
@@ -509,6 +544,19 @@ local function turnOffLight(on)
         D("turnOffLight(): turned %1 OFF, still %2 targets on", target, n)
     end
     return (n > 0), on, n
+end
+
+-- See if there's a limited-time device that needs to be turned off.
+local function turnOffLimited()
+    local dev
+    for _,dev in pairs(devState) do
+        if dev.offTime ~= nil and dev.offTime <= os.time() then
+            D("deusStep(): turning off time-limited device %1 (expired %2 ago)", dev.id, os.time()-dev.offTime)
+            targetControl(dev.id, false)
+            return true
+        end
+    end
+    return false
 end
 
 -- Turn off all lights as fast as we can. Transition through SHUTDOWN state during,
@@ -591,7 +639,7 @@ local function runOnce()
         luup.variable_set(SID, "MaxTargetsOn", 0, myDevice)
         luup.variable_set(SID, "LeaveLightsOn", 0, myDevice)
         luup.variable_set(SID, "Enabled", "0", myDevice)
-        luup.variable_set(SID, "Version", DEMVERSION, myDevice)
+        luup.variable_set(SID, "Version", _CONFIGVERSION, myDevice)
         luup.variable_set(SWITCH_SID, "Status", "0", myDevice)
         luup.variable_set(SWITCH_SID, "Target", "0", myDevice)
     end
@@ -628,14 +676,14 @@ local function runOnce()
     end
     
     -- Update version state last.
-    if (s ~= DEMVERSION) then
-        luup.variable_set(SID, "Version", DEMVERSION, myDevice)
+    if (s ~= _CONFIGVERSION) then
+        luup.variable_set(SID, "Version", _CONFIGVERSION, myDevice)
     end
 end
 
 -- Return the plugin version string
 function getVersion()
-    return _VERSION, DEMVERSION
+    return _VERSION, _CONFIGVERSION
 end
 
 -- Start stepper running. Note that we don't change state here. The intention is that Deus continues
@@ -700,6 +748,17 @@ function deusDisable(dev)
     setMessage("Disabled")
 end
 
+function setTrace(dev, newTraceState)
+    L("setTrace(%1,%2)", dev, newTraceState)
+    traceMode = newTraceState
+    debugMode = newTraceState
+    local n
+    if newTraceState then n=1 else n=0 end
+    luup.variable_set(SID, "DebugMode", n, dev)
+    luup.variable_set(SID, "TraceMode", n, dev)
+    L("setTrace() set state to %1 by action", newTraceState)
+end
+
 -- Initialize.
 function deusInit(pdev)
     L("deusInit(%1) version %2", pdev, _VERSION)
@@ -744,6 +803,23 @@ function deusInit(pdev)
     
     -- One-time stuff
     runOnce(pdev)
+    
+    -- Other initialization
+    v = luup.variable_get(SID, "DebugMode", pdev)
+    if v ~= nil then
+        k = tonumber(v,10)
+        if k ~= nil then debugMode = k ~= 0 
+        else debugMode = string.len(k) > 0 
+        end
+    end
+    v = luup.variable_get(SID, "TraceMode", pdev)
+    if v ~= nil then
+        k = tonumber(v,10)
+        if k ~= nil then traceMode = k ~= 0
+        else traceMode = string.len(k) > 0
+        end
+        L("deusInit() trace mode explicitly set to %1 by state", traceMode)
+    end
 
     -- Start up if we're enabled
     deusStart(pdev)
@@ -824,7 +900,10 @@ function deusStep(stepStampCheck)
         -- Not in active period, but in active house mode and running state; shut things off...
         L("deusStep(): running off cycle, state=" .. tostring(currentState))
         luup.variable_set(SID, "State", STATE_SHUTDOWN, myDevice)
-        if (not turnOffLight()) then
+        if turnOffLimited() then
+            nextCycleDelay = getVarNumeric("MinOffDelay", 60)
+            setMessage("Shut-off cycle, next " .. timeToString(os.date("*t", os.time() + nextCycleDelay)))
+        elseif not turnOffLight() then
             -- No more lights to turn off
             runFinalScene()
             luup.variable_set(SID, "State", STATE_IDLE, myDevice)
@@ -840,41 +919,59 @@ function deusStep(stepStampCheck)
         L("deusStep(): running toggle cycle, state=" .. tostring(currentState))
         luup.variable_set(SID, "State", STATE_CYCLE, myDevice)
         nextCycleDelay = getRandomDelay("MinCycleDelay", "MaxCycleDelay")
-        local devs, max
-        devs, max = getTargetList()
-        if (max > 0) then
-            local change = math.random(1, max)
-            local devspec = devs[change]
-            if (devspec ~= nil) then
-                local s = isDeviceOn(devspec)
-                if (s ~= nil) then
-                    if (s) then
-                        -- It's on; turn it off.
-                        D("deusStep(): turn %1 OFF", devspec)
-                        targetControl(devspec, false)
-                    else
-                        -- Turn something on. If we're at the max number of targets we're allowed to turn on,
-                        -- turn targets off first.
-                        local maxOn = getVarNumeric("MaxTargetsOn")
-                        if (maxOn == nil) then maxOn = 0 else maxOn = tonumber(maxOn,10) end
-                        if (maxOn > 0) then
-                            local on, n
-                            on, n = getTargetsOn()
-                            while ( n >= maxOn ) do
-                                D("deusStep(): too many targets on, max is %1, have %2, turning one off", maxOn, n)
-                                _, on, n = turnOffLight(on)
+        
+        if not turnOffLimited() then
+            local devs, max
+            devs, max = getTargetList()
+            if (max > 0) then
+                local change = math.random(1, max)
+                local devspec = devs[change]
+                if (devspec ~= nil) then
+                    local s = isDeviceOn(devspec)
+                    if (s ~= nil) then
+                        if (s) then
+                            -- It's on; turn it off.
+                            D("deusStep(): turn %1 OFF", devspec)
+                            targetControl(devspec, false)
+                        else
+                            -- Turn something on. If we're at the max number of targets we're allowed to turn on,
+                            -- turn targets off first.
+                            local maxOn = getVarNumeric("MaxTargetsOn")
+                            if (maxOn == nil) then maxOn = 0 else maxOn = tonumber(maxOn,10) end
+                            if (maxOn > 0) then
+                                local on, n
+                                on, n = getTargetsOn()
+                                while ( n >= maxOn ) do
+                                    D("deusStep(): too many targets on, max is %1, have %2, turning one off", maxOn, n)
+                                    _, on, n = turnOffLight(on)
+                                end
                             end
+                            D("deusStep(): turn %1 ON", devspec)
+                            targetControl(devspec, true)
                         end
-                        D("deusStep(): turn %1 ON", devspec)
-                        targetControl(devspec, true)
                     end
                 end
             end
-            setMessage("Cycling; next " .. timeToString(os.date("*t", os.time() + nextCycleDelay)))
-        else
-            setMessage("Nothing to do")
-            L("deusStep(): no targets to control")
         end
+
+        -- If any devices are on limited on-time, we may need to adjust the cycle delay
+        -- down so we don't miss its expiration. 
+        local dev
+        local minOff = nil
+        for _,dev in pairs(devState) do
+            if dev.offTime ~= nil and (minOff == nil or dev.offTime < minOff) then
+                minOff = dev.offTime
+            end
+        end
+        if minOff ~= nil then
+            local nextOff = minOff - os.time()
+            if nextOff < 15 then nextOff = 15 end
+            if nextOff < nextCycleDelay then
+                D("deusStep() adjusting next cycle for time-limited device pending in %1", nextOff)
+                nextCycleDelay = nextOff
+            end
+        end
+        setMessage("Cycling; next " .. timeToString(os.date("*t", os.time() + nextCycleDelay)))
     end
 
     -- Arm for next cycle
