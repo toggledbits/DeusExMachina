@@ -25,7 +25,6 @@ local myDevice = 0
 local runStamp = 0
 local isALTUI = false
 local isOpenLuup = false
-local devState = {}
 
 local debugMode = true
 local traceMode = false
@@ -349,12 +348,65 @@ local function split(s, sep)
     return t, n
 end
 
-local function updateDeviceState( devid, isOn, whenOff )
-    if isOn then
-        devState[devid] = { id=devid, offTime=whenOff }
+-- Quick and dirty serialization of our simple data structure
+local function save(name, value, sep)
+    if sep == nil then sep = "" end
+    local str = sep .. name .. "="
+    if type(value) == "table" then
+        str = str .. "{"   -- create a new table
+        sep = ""
+        for k,v in pairs(value) do      -- save its fields
+            str = str .. save(string.format("[%q]", k), v, sep)
+            sep = ","
+        end
+        str = str .. "}"
+    elseif type(value) == "string" then
+        str = string.format("%s%q", str, value)
     else
-        devState[devid] = nil
+        str = str .. tostring(value)
     end
+    return str
+end
+
+local function getDeviceState()
+    local devState = {}
+    local d = luup.variable_get(SID, "DeviceState", myDevice) or ""
+    if not d:match("^%s*$") then
+        local f, msg
+        D("Loading device state string %1", d)
+        f, msg = loadstring("local " .. d .. " return ds")
+        if f == nil then
+            L("getDeviceState() error loading DeviceState (%1): %2", msg, d)
+            devState = {}
+        else
+            devState = f()
+        end
+    end
+    return devState
+end
+
+local function clearDeviceState()
+    D("clearDeviceState()")
+    luup.variable_set(SID, "DeviceState", "", myDevice)
+end
+
+local function updateDeviceState( devid, isOn, expire )
+    D("updateDeviceState(%1,%2,%3)", devid, isOn, expire )
+    local devState = getDeviceState()
+    devid = tostring(devid)
+    if devState[devid] == nil then devState[devid] = {} end
+    if isOn then
+        devState[devid].state = 1
+        devState[devid].onTime = os.time()
+        devState[devid].expire = expire
+    else
+        devState[devid].state = 0
+        devState[devid].offTime = os.time()
+        devState[devid].expire = nil
+    end
+    local json = require("dkjson")
+    luup.variable_set(SID, "DeviceState", save("ds", devState), myDevice)
+    return devState
 end
 
 -- Return true if a specified scene has been run (i.e. on the list)
@@ -364,6 +416,11 @@ local function isSceneOn(spec)
         if (i == spec) then return true end
     end
     return false
+end
+
+local function clearSceneState()
+    D("clearSceneState()")
+    luup.variable_set(SID, "ScenesRunning", "", myDevice)
 end
 
 -- Mark or unmark a scene as having been run
@@ -511,9 +568,9 @@ local function targetControl(targetid, turnOn)
             removeTarget(targetid)
             return
         end
-        local offTime = nil
-        if maxOnTime ~= nil then offTime = os.time() + tonumber(maxOnTime,10)*60 end
-        updateDeviceState(targetid, turnOn, offTime)
+        local expire = nil
+        if maxOnTime ~= nil then expire = os.time() + tonumber(maxOnTime,10)*60 end
+        updateDeviceState(targetid, turnOn, expire)
     end
 end
 
@@ -557,11 +614,12 @@ end
 
 -- See if there's a limited-time device that needs to be turned off.
 local function turnOffLimited()
-    local dev
-    for _,dev in pairs(devState) do
-        if dev.offTime ~= nil and dev.offTime <= os.time() then
-            D("deusStep(): turning off time-limited device %1 (expired %2 ago)", dev.id, os.time()-dev.offTime)
-            targetControl(dev.id, false)
+    local dev,info
+    local devState = getDeviceState()
+    for dev,info in pairs(devState) do
+        if info.expire ~= nil and info.expire <= os.time() then
+            D("deusStep(): turning off time-limited device %1 (expired %2 ago)", dev, os.time()-info.expire)
+            targetControl(dev, false)
             return true
         end
     end
@@ -580,6 +638,7 @@ local function clearLights()
         targetControl(devs[count], false)
         count = count - 1
     end
+    clearDeviceState()
     runFinalScene()
 end
 
@@ -749,7 +808,9 @@ function deusDisable(dev)
         end
     end
 
-    luup.variable_set(SID, "ScenesRunning", "", dev) -- start with a clean slate next time
+    -- start with a clean slate next time
+    clearDeviceState()
+    clearSceneState()
     luup.variable_set(SID, "State", STATE_STANDBY, dev)
     luup.variable_set(SID, "Enabled", "0", dev)
     luup.variable_set(SWITCH_SID, "Status", "0", dev)
@@ -965,11 +1026,12 @@ function deusStep(stepStampCheck)
 
         -- If any devices are on limited on-time, we may need to adjust the cycle delay
         -- down so we don't miss its expiration. 
-        local dev
+        local info
         local minOff = nil
-        for _,dev in pairs(devState) do
-            if dev.offTime ~= nil and (minOff == nil or dev.offTime < minOff) then
-                minOff = dev.offTime
+        local devState = getDeviceState()
+        for _,info in pairs(devState) do
+            if info.expire ~= nil and (minOff == nil or info.expire < minOff) then
+                minOff = info.expire
             end
         end
         if minOff ~= nil then
