@@ -47,12 +47,22 @@ Once you have installed the plugin and refreshed the browser, you can proceed to
 
 Deus Ex Machina's "Configure" tab gives you a set of simple controls to control the behavior of your vacation haunt.
 
+#### Start Time ####
+
+By default (when the "Start Time" field is blank), DEMII will start cycling lights at sunset plus a random delay. If you
+want DEMII to start cycling at a specific time (plus a random delay), provide that time in 24-hour format (e.g. 18:30 for 6:30pm).
+
 #### Lights-Out Time ####
 
 The "Lights Out" time is a time, expressed in 24-hour HH:MM format, that is the time at which lights should begin 
-shutting off. This time should be after sunset. Keep in mind that sunset is a moving target, and
+shutting off. This time should be after sunset/start time. When using sunset (Start Time is blank), keep in mind that sunset 
+is a different time every day, and
 at certain times of year in some places can be quite late, so a Lights Out time of 20:15, for example, may not be 
 a good choice for the longest days of summer. The lights out time can be a time after midnight.
+
+There is a special case for when "Start Time" and "Lights-Out" are equal: DEMII will just run, always, when enabled
+and in an active house mode. This helps scene scripting of DEMII's operation by removing potential interference/conflict
+with DEMII's scheduling.
 
 #### House Modes ####
 
@@ -70,6 +80,11 @@ Non-dimming devices are simply turned on and off (no dimmer slider is shown for 
 > Note: all devices are listed that implement the SwitchPower1 and Dimming1 services. This leads to some oddities,
 > like some motion sensors and thermostats being listed. It may not be entirely obvious (or standard) what a thermostat, for example, 
 > might do when you try to turn it off and on like a light, so be careful selecting these devices.
+
+The "Max On Time" field can be used (optionally) to control the maximum time a light should be turned on. For example, 
+it may not appear natural for DEMII to leave a bathroom/WC or hallway light on for 30 minutes, which it could easily do
+with its default behavior and schedule. Setting a maximum time on will cause DEMII to manage those lights to a shorter
+schedule explicitly.
 
 #### Scene Control ####
 
@@ -107,15 +122,19 @@ end
 
 ### Control of DEMII by Scenes and Lua ###
 
-DeusExMachina can be enabled or disabled like a light switch in scenes or through the regular graphical interface (no Lua required),
+For scenes, DeusExMachina can be enabled or disabled like a light switch in scenes or through the regular graphical interface (no Lua required),
 or by scripting in Lua.
-DEMII implements the SwitchPower1 service, so enabling and disabling is the same as turning a light switch on and off:
+
+For Lua, DEMII implements the SwitchPower1 service, so enabling and disabling is the same as turning a light switch on and off:
 you simply use the SetTarget action to enable (newTargetValue=1) or disable (newTargetValue=0) DEMII. 
 The MiOS GUI for devices and scenes takes care of this for you in its code; if scripting in Lua, you simply do this:
 
 ```
 luup.call_action("urn:upnp-org:serviceId:SwitchPower1", "SetTarget", { newTargetValue = "0|1" }, pluginDeviceId)
 ```
+
+When controlling DEMII using your own scenes or Lua, you may want to bypass DEMII's internal scheduling, so it runs exactly when your scene or Lua directs it to. This is done by setting the "Start Time" and "Lights-Out" equal. Then, whenever DEMII
+is enabled by your scene/Lua, it will cycle lights. House mode is still respected in this case.
 
 ### Triggers ###
 
