@@ -639,6 +639,7 @@ local function clearLights()
         count = count - 1
     end
     clearDeviceState()
+    clearSceneState()
     runFinalScene()
 end
 
