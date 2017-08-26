@@ -37,7 +37,7 @@ var DeusExMachinaII = (function(api) {
 
     function isControllable(devid) {
         var v = api.getDeviceState( devid, "urn:toggledbits-com:serviceId:DeusExMachinaII1", "LightsOut" );
-        if (!(v === undefined || v === false)) return false;
+        if (!(v === undefined || v === false)) return false; /* exclude self */
         if (isDimmer(devid)) return true; /* a dimmer is a light */
         v = api.getDeviceState( devid, "urn:upnp-org:serviceId:SwitchPower1", "Status" );
         if (v === undefined || v === false) return false;
@@ -338,7 +338,7 @@ var DeusExMachinaII = (function(api) {
         try {
             init();
 
-            var i, j, roomObj, roomid, html = "";
+            var i, j, html = "";
 
             html += '<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">';
             html += '<style>.material-icons { vertical-align: -20%; }';
@@ -405,8 +405,8 @@ var DeusExMachinaII = (function(api) {
             rooms[noroom.id] = noroom;
             for (i=0; i<devices.length; i+=1) {
                 if (isControllable(devices[i].id)) {
-                    roomid = devices[i].room;
-                    roomObj = rooms[roomid];
+                    var roomid = devices[i].room || "0";
+                    var roomObj = rooms[roomid];
                     if ( roomObj === undefined ) {
                         roomObj = api.cloneObject(api.getRoomObject(roomid));
                         roomObj.devices = [];
