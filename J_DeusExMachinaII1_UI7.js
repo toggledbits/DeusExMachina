@@ -435,7 +435,7 @@ var DeusExMachinaII = (function(api) {
             html += '<tr><th>Device</th><th>Max "On" Time</th><th>Level</th></tr>';
             html += '</thead><tbody>';
             r.forEach( function( roomObj ) {
-                if ( roomObj.device && roomObj.devices.length ) {
+                if ( roomObj.devices && roomObj.devices.length ) {
                     html += '<tr class="success"><td colspan="3">' + roomObj.name + '</td></tr>';
                     for (i=0; i<roomObj.devices.length; i+=1) {
                         html += '<tr>'; // row-like
