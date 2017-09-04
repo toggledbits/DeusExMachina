@@ -37,7 +37,7 @@ var DeusExMachinaII = (function(api) {
 
     function isControllable(devid) {
         var v = api.getDeviceState( devid, "urn:toggledbits-com:serviceId:DeusExMachinaII1", "LightsOut" );
-        if (!(v === undefined || v === false)) return false;
+        if (!(v === undefined || v === false)) return false; /* exclude self */
         if (isDimmer(devid)) return true; /* a dimmer is a light */
         v = api.getDeviceState( devid, "urn:upnp-org:serviceId:SwitchPower1", "Status" );
         if (v === undefined || v === false) return false;
@@ -338,7 +338,7 @@ var DeusExMachinaII = (function(api) {
         try {
             init();
 
-            var i, j, roomObj, roomid, html = "";
+            var i, j, html = "";
 
             html += '<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">';
             html += '<style>.material-icons { vertical-align: -20%; }';
@@ -405,8 +405,8 @@ var DeusExMachinaII = (function(api) {
             rooms[noroom.id] = noroom;
             for (i=0; i<devices.length; i+=1) {
                 if (isControllable(devices[i].id)) {
-                    roomid = devices[i].room;
-                    roomObj = rooms[roomid];
+                    var roomid = devices[i].room || "0";
+                    var roomObj = rooms[roomid];
                     if ( roomObj === undefined ) {
                         roomObj = api.cloneObject(api.getRoomObject(roomid));
                         roomObj.devices = [];
@@ -434,30 +434,29 @@ var DeusExMachinaII = (function(api) {
             html += '<thead>';
             html += '<tr><th>Device</th><th>Max "On" Time</th><th>Level</th></tr>';
             html += '</thead><tbody>';
-            for (j=0; j<r.length; j+=1) {
-                roomObj = r[j];
-                if (roomObj === undefined || roomObj.devices.length == 0) continue; // skip gaps in our sparse list, and rooms with no devices
-                roomid = roomObj.id;
-                html += '<tr class="success"><td colspan="3">' + roomObj.name + '</td></tr>';
-                for (i=0; i<roomObj.devices.length; i+=1) {
-                    html += '<tr>'; // row-like
-                        html += '<td class="col-xs-3">';
-                        html += '<input class="controlled-device" id="device' + roomObj.devices[i].id + '" type="checkbox"';
-                        if (DeusExMachinaII.findControlledDevice(roomObj.devices[i].id) >= 0)
-                            html += ' checked="true"';
-                        html += ">";
-                        html += "&nbsp;#" + roomObj.devices[i].id + " ";
-                        html += roomObj.devices[i].name;
-                        html += "</td>";
-                        html += '<td class="col-xs-2">';
-                        html += '<input class="ontime" id="ontime' + roomObj.devices[i].id + '">';
-                        html += '</td>';
-                        html += '<td>';
-                        if (isDimmer(roomObj.devices[i].id)) html += '<div class="demslider" id="slider' + roomObj.devices[i].id + '"></div>';
-                        html += '</td>';
-                    html += "</tr>\n"; // row-like
+            r.forEach( function( roomObj ) {
+                if ( roomObj.devices && roomObj.devices.length ) {
+                    html += '<tr class="success"><td colspan="3">' + roomObj.name + '</td></tr>';
+                    for (i=0; i<roomObj.devices.length; i+=1) {
+                        html += '<tr>'; // row-like
+                            html += '<td class="col-xs-3">';
+                            html += '<input class="controlled-device" id="device' + roomObj.devices[i].id + '" type="checkbox"';
+                            if (DeusExMachinaII.findControlledDevice(roomObj.devices[i].id) >= 0)
+                                html += ' checked="true"';
+                            html += ">";
+                            html += "&nbsp;#" + roomObj.devices[i].id + " ";
+                            html += roomObj.devices[i].name;
+                            html += "</td>";
+                            html += '<td class="col-xs-2">';
+                            html += '<input class="ontime" id="ontime' + roomObj.devices[i].id + '">';
+                            html += '</td>';
+                            html += '<td>';
+                            if (isDimmer(roomObj.devices[i].id)) html += '<div class="demslider" id="slider' + roomObj.devices[i].id + '"></div>';
+                            html += '</td>';
+                        html += "</tr>\n"; // row-like
+                    }
                 }
-            }
+            });
             html += "</tbody></table>";
             html += "</div>";   // devs
 
