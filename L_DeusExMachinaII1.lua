@@ -26,7 +26,7 @@ local runStamp = 0
 local isALTUI = false
 local isOpenLuup = false
 
-local debugMode = true
+local debugMode = false
 
 local function dump(t)
     if t == nil then return "nil" end
@@ -74,7 +74,7 @@ end
 
 local function D(msg, ...)
     if debugMode then
-        L( { msg=msg,prefix=(_PLUGIN_NAME .. "::") }, unpack(arg) )
+        L( { msg=msg,prefix=(_PLUGIN_NAME .. "(debug)::") }, ... )
     end
 end
 
@@ -779,7 +779,8 @@ end
 
 -- Initialize.
 function deusInit(pdev)
-    L("deusInit(%1) version %2", pdev, _PLUGIN_VERSION)
+    D("deusInit(%1)", pdev)
+    L("starting plugin version %2 device %1", pdev, _PLUGIN_VERSION)
 
     if myDevice ~= 0 then
         setMessage("Another Deus is running!", pdev)
@@ -833,6 +834,8 @@ function deusInit(pdev)
 
     -- Start up if we're enabled
     deusStart(pdev)
+    
+    return true, "OK", _PLUGIN_NAME
 end
 
 -- Run a cycle. If we're in "bedtime" (i.e. not between our cycle period between sunset and stop),
