@@ -321,7 +321,10 @@ var DeusExMachinaII = (function(api) {
     {
         var s1 = document.getElementById("addonscene");
         var s2 = document.getElementById("addoffscene");
-        document.getElementById("addscenebtn").disabled = !(s1.selectedIndex > 0 && s2.selectedIndex > 0);
+        if (s1.selectedIndex > 0 && s2.selectedIndex > 0)
+            jQuery("#addscenebtn").removeClass( "color-gray" ).addClass( "color-green cursor-hand" );
+        else
+            jQuery("#addscenebtn").removeClass( "color-green cursor-hand" ).addClass( "color-gray" );
     }
 
     function doSceneAdd()
@@ -342,7 +345,7 @@ var DeusExMachinaII = (function(api) {
 
             html += '<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">';
             html += '<style>.material-icons { vertical-align: -20%; }';
-            html += 'div.demcgroup { width: 320px; padding: 0px 32px 8px 0px; }';
+            html += 'div.demcgroup { width: 286px; padding: 0px 24px 8px 0px; }';
             html += 'div.devicelist { }';
             html += 'div.scenecontrol { }';
             html += '.demslider { display: inline-block; width: 200px; height: 1em; border-radius: 8px; }';
@@ -352,6 +355,7 @@ var DeusExMachinaII = (function(api) {
             html += '.cursor-hand { cursor: pointer; }';
             html += '.color-red { color: #ff0000; }';
             html += '.color-green { color: #12805b; }';
+            html += '.color-gray { color: #999999; }';
             html += 'input#startTime { text-align: center; }';
             html += 'input#deusExTime { text-align: center; }';
             html += 'input#maxtargets { text-align: center; }';
@@ -361,20 +365,20 @@ var DeusExMachinaII = (function(api) {
             // Start Time
             html += '<div class="demcgroup pull-left">';
             html += "<h2>Start Time</h2>";
-            html += '<label for="startTime">When to start cycling lights (HH:MM). Leave blank for sunset.</label><br/>';
+            html += 'When to start cycling lights (HH:MM). Leave blank for sunset.<br/>';
             html += '<input type="text" size="7" maxlength="5" onChange="DeusExMachinaII.checkStartTime(this)" id="startTime">&nbsp;(HH:MM)';
             html += '</div>';
 
             // Lights Out
             html += '<div class="demcgroup pull-left">';
-            html += "<h2>Lights-Out Time</h2><label for=\"deusExTime\">Lights will cycle between the start time and the \"lights-out\" time. Enter the time to begin shutting off lights:</label><br/>";
+            html += "<h2>Lights-Out Time</h2>Lights will cycle between the start time and the \"lights-out\" time. Enter the time to begin shutting off lights:<br/>";
             html += "<input type=\"text\" size=\"7\" maxlength=\"5\" onChange=\"DeusExMachinaII.checkLightsOut(this)\" id=\"deusExTime\" />&nbsp;(HH:MM)";
             html += '</div>';
 
             // House Modes
             html += '<div class="demcgroup pull-left">';
             html += "<h2>House Modes</h2>";
-            html += "<label for=\"houseMode\">When enabled, lights cycle <i>only</i> in these House Modes (if all unchecked, runs in any mode):</label><br/>";
+            html += "When enabled, lights cycle <i>only</i> in these House Modes (if all unchecked, runs in any mode):<br/>";
             html += '<input type="checkbox" id="mode1" class="hmselect" name="houseMode" value="1" onChange="DeusExMachinaII.changeHouseModeSelector(this);">&nbsp;Home</input>';
             html += '&nbsp;&nbsp;<input type="checkbox" id="mode2" class="hmselect" name="houseMode" value="2" onChange="DeusExMachinaII.changeHouseModeSelector(this);">&nbsp;Away</input>';
             html += '&nbsp;&nbsp;<input type="checkbox" id="mode3" class="hmselect" name="houseMode" value="3" onChange="DeusExMachinaII.changeHouseModeSelector(this);">&nbsp;Night</input>';
@@ -383,12 +387,12 @@ var DeusExMachinaII = (function(api) {
 
             // Maximum number of targets allowed to be "on" simultaneously
             html += '<div class="demcgroup pull-left">';
-            html += "<h2>Maximum \"On\" Targets</h2><label for=\"maxtargets\">Maximum number of controlled devices and scenes (targets) that can be \"on\" at once:</label><br/>";
+            html += "<h2>Maximum \"On\" Targets</h2>Maximum number of controlled devices and scenes (targets) that can be \"on\" at once:<br/>";
             html += "<input type=\"text\" size=\"5\" onChange=\"DeusExMachinaII.checkMaxTargets(this)\" id=\"maxtargets\" />&nbsp;(0=no limit)";
             html += '</div>';
 
             // Final scene (the scene that is run when everything has been turned off and DEM is going idle).
-            html += '<div id="demfinalscene" class="demcgroup pull-left"><h2>Final Scene</h2>The final scene, if specified, is run after all other targets have been turned off during a lights-out cycle.<br/><label for="finalscene">Final Scene:</label><select id="finalscene" onChange="DeusExMachinaII.saveFinalScene(this)"><option value="">(none)</option>';
+            html += '<div id="demfinalscene" class="demcgroup pull-left"><h2>Final Scene</h2>If specified, this scene is run after all other targets have been turned off during a lights-out cycle:<br/><select id="finalscene" onChange="DeusExMachinaII.saveFinalScene(this)"><option value="">(none)</option>';
             html += '</select></div>';
 
             // Final scene (the scene that is run when everything has been turned off and DEM is going idle).
@@ -427,7 +431,7 @@ var DeusExMachinaII = (function(api) {
             );
 
             html += '<div id="devicelist">';
-            html += '<h2>Controlled Devices</h2><label>Select the devices to be controlled. If the "Max On Time" is set, the device will not be allowed to be on for more than that many consecutive minutes; blank (default) means no limit. You can set level for dimmable devices.</label>';
+            html += '<h2>Controlled Devices</h2>Select the devices to be controlled. If the "Max On Time" is set, the device will not be allowed to be on for more than that many consecutive minutes; blank (default) means no limit. You can set level for dimmable devices.';
             html += '<div id="devs" class="table-responsive">';
             controlled = getControlledList();
             html += "<table class='table'>";
@@ -462,11 +466,11 @@ var DeusExMachinaII = (function(api) {
 
             // Scene Control
             html += '<div id="scenecontrol"><h2>Scene Control</h2>';
-            html += 'In addition to controlling individual devices, DeusExMachinaII can run scenes. Scenes are specified in pairs: a scene to do something (the "on" scene), and a scene to undo it (the "off" scene). To add a scene pair, select an "on" scene and an "off" scene and click the green plus. To remove a configured scene pair, click the red minus next to it.';
-            html += '<label>Add Scene Pair: On&nbsp;Scene:<select id="addonscene" onChange="validateScene()"><option value="">--choose--</option>';
-            html += '</select> Off&nbsp;Scene:<select id="addoffscene" onChange="validateScene()"><option value="">--choose--</option>';
+            html += 'In addition to controlling individual devices, DeusExMachinaII can run scenes. Scenes are specified in pairs: a scene to do something (the "on" scene), and a scene to undo it (the "off" scene). To add a scene pair, select an "on" scene and an "off" scene and click the green plus. To remove a configured scene pair, click the red minus next to it.<br/>';
+            html += '<label>Add Scene Pair:</label> "On"&nbsp;Scene:<select id="addonscene" onChange="DeusExMachinaII.validateScene()"><option value="">--choose--</option>';
+            html += '</select> "Off"&nbsp;Scene:<select id="addoffscene" onChange="DeusExMachinaII.validateScene()"><option value="">--choose--</option>';
             html += '</select>';
-            html += '&nbsp;<i class="material-icons w3-large color-green cursor-hand" id="addscenebtn" onClick="doSceneAdd()">add_circle_outline</i>';
+            html += '&nbsp;<i class="material-icons w3-large color-gray" id="addscenebtn" onClick="DeusExMachinaII.doSceneAdd()">add_circle_outline</i>';
             html += '<ul id="scenepairs"></ul>';
             html += '</div>';
 

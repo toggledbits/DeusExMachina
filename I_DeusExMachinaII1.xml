@@ -12,7 +12,7 @@
             luup.log("DeusExMachinaII STARTUP!")
             demII = require("L_DeusExMachinaII1")
             deusStep = demII.deusStep
-            demII.deusInit(deusDevice)
+            return demII.deusInit(deusDevice)
         end
     </functions>
     <startup>startupDeusExMachinaII1</startup>

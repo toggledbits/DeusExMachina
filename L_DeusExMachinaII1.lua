@@ -2,10 +2,12 @@
 -- Copyright 2016,2017 Patrick H. Rigney, All Rights Reserved.
 -- This file is part of DeusExMachinaII. For license information, see LICENSE at https://github.com/toggledbits/DeusExMachina
 
+-- TO-DO: different "final" scenes based on house mode.
+
 module("L_DeusExMachinaII1", package.seeall)
 
 local _PLUGIN_NAME = "DeusExMachinaII"
-local _PLUGIN_VERSION = "2.5"
+local _PLUGIN_VERSION = "2.6"
 local _CONFIGVERSION = 20500
 
 local MYSID = "urn:toggledbits-com:serviceId:DeusExMachinaII1"
@@ -26,7 +28,7 @@ local runStamp = 0
 local isALTUI = false
 local isOpenLuup = false
 
-local debugMode = true
+local debugMode = false
 
 local function dump(t)
     if t == nil then return "nil" end
@@ -74,7 +76,7 @@ end
 
 local function D(msg, ...)
     if debugMode then
-        L( { msg=msg,prefix=(_PLUGIN_NAME .. "::") }, unpack(arg) )
+        L( { msg=msg,prefix=(_PLUGIN_NAME .. "(debug)::") }, ... )
     end
 end
 
@@ -502,10 +504,11 @@ local function targetControl(targetid, turnOn)
             if turnOn then lvl = 1 end
             D("targetControl(): handling %1 (%3) as VSwitch, set target to %2", targetid, lvl, luup.devices[targetid].description)
             luup.call_action("urn:upnp-org:serviceId:VSwitch1", "SetTarget", {newTargetValue=tostring(lvl)}, targetid)
-        elseif luup.device_supports_service(DIMMER_SID, targetid) then
-            -- Handle as Dimming1
+        elseif turnOn and luup.device_supports_service(DIMMER_SID, targetid) then
+            -- Handle as Dimming1 for power on only. Set both load level and target (this is more standard, apparently, and required by some devices e.g. Fibaro and Qubino dimmers)
             D("targetControl(): handling %1 (%3) as generic dimmmer, set load level to %2", targetid, lvl, luup.devices[targetid].description)
-            luup.call_action(DIMMER_SID, "SetLoadLevelTarget", {newLoadlevelTarget=lvl}, targetid) -- note odd case inconsistency
+            luup.call_action(DIMMER_SID, "SetLoadLevelTarget", {newLoadlevelTarget=lvl}, targetid) -- note odd case inconsistency in word "level"
+            luup.call_action(SWITCH_SID, "SetTarget", {newTargetValue=1}, targetid)
         elseif luup.device_supports_service(SWITCH_SID, targetid) then
             -- Handle as SwitchPower1
             if turnOn then lvl = 1 end
@@ -779,7 +782,8 @@ end
 
 -- Initialize.
 function deusInit(pdev)
-    L("deusInit(%1) version %2", pdev, _PLUGIN_VERSION)
+    D("deusInit(%1)", pdev)
+    L("starting plugin version %2 device %1", pdev, _PLUGIN_VERSION)
 
     if myDevice ~= 0 then
         setMessage("Another Deus is running!", pdev)
@@ -833,6 +837,8 @@ function deusInit(pdev)
 
     -- Start up if we're enabled
     deusStart(pdev)
+    
+    return true, "OK", _PLUGIN_NAME
 end
 
 -- Run a cycle. If we're in "bedtime" (i.e. not between our cycle period between sunset and stop),
