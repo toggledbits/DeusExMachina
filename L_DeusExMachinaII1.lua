@@ -2,7 +2,7 @@
 -- Copyright 2016,2017 Patrick H. Rigney, All Rights Reserved.
 -- This file is part of DeusExMachinaII. For license information, see LICENSE at https://github.com/toggledbits/DeusExMachina
 
-TO-DO: different "final" scenes based on house mode.
+-- TO-DO: different "final" scenes based on house mode.
 
 module("L_DeusExMachinaII1", package.seeall)
 
