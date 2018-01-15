@@ -4,8 +4,8 @@ DeusExMachinaII: The Vacation Plugin
 ## Introduction ##
 
 DeusExMachina is a plugin for the MiOS home automation operating system used on MiCasaVerde Vera gateway/controllers.
-It takes over your house while you're away on vacation by creating a ghost that moves from room to room, turning on and off lights. 
-Simply specify the lights you want to have controlled by the plugin, specify a "Lights Out" time when lights will begin to 
+It takes over your house while you're away on vacation by creating a ghost that moves from room to room, turning on and off lights.
+Simply specify the lights you want to have controlled by the plugin, specify a "Lights Out" time when lights will begin to
 turn off, and come sundown DeusExMachina will take over.
 
 There are currently two versions of Deus Ex Machina available:
@@ -36,9 +36,9 @@ DeusExMachina is offered under GPL (the GNU Public License).
 
 ### Installation ###
 
-The plugin is installed in the usual way: go to Apps in the left navigation, and click on "Install Apps". 
-Search for "Deus Ex Machina II" (make sure you include the "II" at the end to get the UI7-compatible version), 
-and then click the "Details" button in its listing of the search results. From here, simply click "Install" 
+The plugin is installed in the usual way: go to Apps in the left navigation, and click on "Install Apps".
+Search for "Deus Ex Machina II" (make sure you include the "II" at the end to get the UI7-compatible version),
+and then click the "Details" button in its listing of the search results. From here, simply click "Install"
 and wait for the install to complete. A full refresh of the UI is necessary (e.g. Ctrl-F5 on Windows) after installation.
 
 Once you have installed the plugin and refreshed the browser, you can proceed to device configuation.
@@ -54,10 +54,10 @@ want DEMII to start cycling at a specific time (plus a random delay), provide th
 
 #### Lights-Out Time ####
 
-The "Lights Out" time is a time, expressed in 24-hour HH:MM format, that is the time at which lights should begin 
-shutting off. This time should be after sunset/start time. When using sunset (Start Time is blank), keep in mind that sunset 
+The "Lights Out" time is a time, expressed in 24-hour HH:MM format, that is the time at which lights should begin
+shutting off. This time should be after sunset/start time. When using sunset (Start Time is blank), keep in mind that sunset
 is a different time every day, and
-at certain times of year in some places can be quite late, so a Lights Out time of 20:15, for example, may not be 
+at certain times of year in some places can be quite late, so a Lights Out time of 20:15, for example, may not be
 a good choice for the longest days of summer. The lights out time can be a time after midnight.
 
 There is a special case for when "Start Time" and "Lights-Out" are equal: DEMII will just run, always, when enabled
@@ -74,21 +74,21 @@ DEMII will operate in _any_ house mode.
 Next is a set of checkboxes for each of the devices you'd like DEMII to control.
 Selecting the devices to be controlled is a simple matter of clicking the check boxes. Because the operating cycle of
 the plug-in is random, any controlled device may be turned on and off several times during the cycling period (between sunset and Lights Out time).
-Dimming devices can be set to any level by setting the slider that appears to the right of the device name. 
+Dimming devices can be set to any level by setting the slider that appears to the right of the device name.
 Non-dimming devices are simply turned on and off (no dimmer slider is shown for these devices).
 
 > Note: all devices are listed that implement the SwitchPower1 and Dimming1 services. This leads to some oddities,
-> like some motion sensors and thermostats being listed. It may not be entirely obvious (or standard) what a thermostat, for example, 
+> like some motion sensors and thermostats being listed. It may not be entirely obvious (or standard) what a thermostat, for example,
 > might do when you try to turn it off and on like a light, so be careful selecting these devices.
 
-The "Max On Time" field can be used (optionally) to control the maximum time a light should be turned on. For example, 
+The "Max On Time" field can be used (optionally) to control the maximum time a light should be turned on. For example,
 it may not appear natural for DEMII to leave a bathroom/WC or hallway light on for 30 minutes, which it could easily do
 with its default behavior and schedule. Setting a maximum time on will cause DEMII to manage those lights to a shorter
 schedule explicitly.
 
 #### Scene Control ####
 
-The next group of settings allows you to use scenes with DEMII. 
+The next group of settings allows you to use scenes with DEMII.
 Scenes must be specified in pairs, with
 one being the "on" scene and the other being an "off" scene. This not only allows more patterned use of lights, but also gives the user
 the ability to handle device-specific capabilities that would be difficult to implement in DEMII. For example, while DEMII can
@@ -99,8 +99,8 @@ Both scenes and individual devices (from the device list above) can be used simu
 
 #### Maximum "On" Targets ####
 
-This value sets the limit on the number of targets (devices or scenes) that DEMII can have "on" simultaneously. 
-If 0, there is no limit. If you have DEMII controlling a large number of devices, it's probably not a bad idea to 
+This value sets the limit on the number of targets (devices or scenes) that DEMII can have "on" simultaneously.
+If 0, there is no limit. If you have DEMII controlling a large number of devices, it's probably not a bad idea to
 set this value to some reasonable limit.
 
 #### Final Scene ####
@@ -126,7 +126,7 @@ For scenes, DeusExMachina can be enabled or disabled like a light switch in scen
 or by scripting in Lua.
 
 For Lua, DEMII implements the SwitchPower1 service, so enabling and disabling is the same as turning a light switch on and off:
-you simply use the SetTarget action to enable (newTargetValue=1) or disable (newTargetValue=0) DEMII. 
+you simply use the SetTarget action to enable (newTargetValue=1) or disable (newTargetValue=0) DEMII.
 The MiOS GUI for devices and scenes takes care of this for you in its code; if scripting in Lua, you simply do this:
 
 ```
@@ -138,7 +138,7 @@ is enabled by your scene/Lua, it will cycle lights. House mode is still respecte
 
 ### Triggers ###
 
-DEMII signals changes to its enabled/disabled state and changes to its internal operating mode. 
+DEMII signals changes to its enabled/disabled state and changes to its internal operating mode.
 These can be used as triggers for scenes or notifications. DEMII's operating modes are:
 
 * Standby - DEMII is disabled (this is equivalent to the "device is disabled" state event);
@@ -150,10 +150,10 @@ These can be used as triggers for scenes or notifications. DEMII's operating mod
 * Shut-off - DEMII is enabled and shutting off lights, having reached the "lights out" time.
 
 When disabled, DEMII is always in Standby mode. When enabled, DEMII enters the Ready mode, then transitions to Cycling mode at sunset, then Shut-off mode at the "lights out" time,
-and then when all lights have been shut off, returns to the Ready mode waiting for the next day's sunset. The transition between Ready, Cycling, and Shut-off continues until DEMII 
+and then when all lights have been shut off, returns to the Ready mode waiting for the next day's sunset. The transition between Ready, Cycling, and Shut-off continues until DEMII
 is disabled (at which point it goes to Standby).
 
-It should be noted that DEMII can enter Cycling or Shut-off mode immediately, without passing through Ready, if it is enabled after sunset or after the "lights out" time, 
+It should be noted that DEMII can enter Cycling or Shut-off mode immediately, without passing through Ready, if it is enabled after sunset or after the "lights out" time,
 respectively. DEMII will also transition into or out of Standby mode immediately and from any other mode when disabled or enabled, respectively.
 
 ### Cycle Timing ###
@@ -164,16 +164,16 @@ When DEMII is in its "lights out" (shut-off) mode, it uses a different set of sh
 
 ### Troubleshooting ###
 
-If you're not sure what DEMII is going, the easiest way to see is to go into the Settings interface for the plugin. 
+If you're not sure what DEMII is going, the easiest way to see is to go into the Settings interface for the plugin.
 There is a text field to the right of the on/off switch in that interface that will tell you what DEMII is currently
 doing when enabled (it's blank when DEMII is disabled).
 
-If DEMII isn't behaving as expected, post a message in the MCV forums 
+If DEMII isn't behaving as expected, post a message in the MCV forums
 [in this thread](http://forum.micasaverde.com/index.php/topic,11333.0.html)
-or open up an issue in the 
+or open up an issue in the
 [GitHub repository](https://github.com/toggledbits/DeusExMachina/issues).
 
-Please don't just say "DEMII isn't working for me." I can't tell you how long your piece of string is without seeing 
+Please don't just say "DEMII isn't working for me." I can't tell you how long your piece of string is without seeing
 _your_ piece of string. Give me details of what you are doing, how you are configured, and what behavior you observe.
 Screen shots help. In many cases, log output may be needed.
 
@@ -198,19 +198,20 @@ when the Vera is sitting in front of you, and moreso when dealing with someone e
 
 <dl>
     <dt>My lights aren't cycling at sunset. Why?</dt>
-    <dd>The most common reasons that lights don't start cycling at midnight are: <ol>
-	<li>The time and location on your Vera are not set correctly. Go into Settings > Location on your
-		Vera and make sure everything is correct for the Vera's physical location. Remember that in
-		the western hemisphere (North, Central & South America, principally) your longitude will
-		be a negative number. If you are below the equator, latitude will be negative. If you're not
-		sure what your latitude/longitude are, use a site like <a href="http://mygeoposition.com">MyGeoPosition.com</a>.
-		If you make any changes to your time or location configuration, restart your Vera.</li>
-	<li>You're not waiting long enough. DEMII doesn't instantly jump into action at sunset, it employs its
-		configured cycle delays as well, so cycling will usually begin sometime after sunset, up to the
-		configured maximum cycle delay (30 minutes by default).</li>
-	<li>Your house mode isn't "active." If you've configured DEMII to operate only in certain house modes,
-		make sure you're in one of those modes, otherwise DEMII will just sit, even though it's enabled.</li>
-	</ol>
+    <dd>The most common reasons that lights don't start cycling at midnight are:
+        <ol>
+            <li>The time and location on your Vera are not set correctly. Go into Settings > Location on your
+                Vera and make sure everything is correct for the Vera's physical location. Remember that in
+                the western hemisphere (North, Central & South America, principally) your longitude will
+                be a negative number. If you are below the equator, latitude will be negative. If you're not
+                sure what your latitude/longitude are, use a site like <a href="http://mygeoposition.com">MyGeoPosition.com</a>.
+                If you make any changes to your time or location configuration, restart your Vera.</li>
+            <li>You're not waiting long enough. DEMII doesn't instantly jump into action at sunset, it employs its
+                configured cycle delays as well, so cycling will usually begin sometime after sunset, up to the
+                configured maximum cycle delay (30 minutes by default).</li>
+            <li>Your house mode isn't "active." If you've configured DEMII to operate only in certain house modes,
+                make sure you're in one of those modes, otherwise DEMII will just sit, even though it's enabled.</li>
+        </ol>
     </dd>
 
     <dt>I made configuration changes, but when I go back into configuration, they seem to be back to the old
@@ -228,17 +229,15 @@ when the Vera is sitting in front of you, and moreso when dealing with someone e
         house modes, then you can theoretically leave DEMII enabled all the time, as it will only operate (cycle lights) when a
         selected house mode is active. But, some people don't use House Modes for various reasons, so having a master switch
         for DEMII is necessary.</dd>
-     
+
     <dt>I have a feature request. Will you implement it?</dt>
     <dd>Absolutely definitely maybe. I'm willing to listen to what you want to do. But, keep in mind, nobody's getting rich writing Vera
-        plugins, and I do other things that put food on my table. And, what seems like a good idea to you may be just that: a good idea for 
+        plugins, and I do other things that put food on my table. And, what seems like a good idea to you may be just that: a good idea for
         the way <em>you</em> want to use it. The more generally applicable your request is, the higher the likelihood that I'll entertain it. What
         I don't want to do is over-complicate this plug-in so it begins to rival PLEG for size and weight (no disrespect intended there at
         all--I'm a huge PLEG fan and use it extensively, but, dang). DEMII really has a simple job: make lights go on and off to cast a serious
         shadow of doubt in the mind of some knucklehead who might be thinking your house is empty and ripe for his picking. In any case,
         the best way to give me feature requests is to open up an issue (if you have a list, one issue per feature, please) in the
-        <a href="https://github.com/toggledbits/DeusExMachina/issues">GitHub repository</a>. 
-	Second best is sending me a message via the MCV forums (I'm user `rigpapa`).
-        </dd>
-</dl>        
-
+        <a href="https://github.com/toggledbits/DeusExMachina/issues">GitHub repository</a>.
+        Second best is sending me a message via the MCV forums (I'm user `rigpapa`).</dd>
+</dl>
