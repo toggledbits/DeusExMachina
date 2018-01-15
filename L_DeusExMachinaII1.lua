@@ -7,7 +7,7 @@
 module("L_DeusExMachinaII1", package.seeall)
 
 local _PLUGIN_NAME = "DeusExMachinaII"
-local _PLUGIN_VERSION = "2.6"
+local _PLUGIN_VERSION = "2.7"
 local _CONFIGVERSION = 20500
 
 local MYSID = "urn:toggledbits-com:serviceId:DeusExMachinaII1"
@@ -505,10 +505,9 @@ local function targetControl(targetid, turnOn)
             D("targetControl(): handling %1 (%3) as VSwitch, set target to %2", targetid, lvl, luup.devices[targetid].description)
             luup.call_action("urn:upnp-org:serviceId:VSwitch1", "SetTarget", {newTargetValue=tostring(lvl)}, targetid)
         elseif turnOn and luup.device_supports_service(DIMMER_SID, targetid) then
-            -- Handle as Dimming1 for power on only. Set both load level and target (this is more standard, apparently, and required by some devices e.g. Fibaro and Qubino dimmers)
+            -- Handle as Dimming1 for power on only.
             D("targetControl(): handling %1 (%3) as generic dimmmer, set load level to %2", targetid, lvl, luup.devices[targetid].description)
             luup.call_action(DIMMER_SID, "SetLoadLevelTarget", {newLoadlevelTarget=lvl}, targetid) -- note odd case inconsistency in word "level"
-            luup.call_action(SWITCH_SID, "SetTarget", {newTargetValue=1}, targetid)
         elseif luup.device_supports_service(SWITCH_SID, targetid) then
             -- Handle as SwitchPower1
             if turnOn then lvl = 1 end
@@ -994,7 +993,7 @@ function deusStep(stepStampCheck)
     -- Arm for next cycle
     if nextCycleDelay ~= nil then
         L("deusStep(): cycle finished, next in " .. nextCycleDelay .. " seconds")
-        if nextCycleDelay < 1 then nextCycleDelay = 60 end
+        if nextCycleDelay < 1 then nextCycleDelay = 60 elseif nextCycleDelay > 7200 then nextCycleDelay = 7200 end
         luup.call_delay("deusStep", nextCycleDelay, stepStamp)
     else
         L("deusStep(): nil nextCycleDelay, next cycle not scheduled!")
