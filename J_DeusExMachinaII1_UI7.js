@@ -1,5 +1,5 @@
 //# sourceURL=J_DeusExMachinaII1_UI7.js
-/** 
+/**
  * J_DeusExMachinaII1_UI7.js
  * Configuration interface for DeusExMachinaII
  *
@@ -474,7 +474,7 @@ var DeusExMachinaII = (function(api) {
             html += '<ul id="scenepairs"></ul>';
             html += '</div>';
 
-            html += '<h2>More Information</h2>If you need more information about configuring DeusExMachinaII, please see the <a href="https://github.com/toggledbits/DeusExMachina/blob/master/README.md" target="_blank">README</a> in <a href="https://github.com/toggledbits/DeusExMachina" target="_blank"> our GitHub repository</a>.<p><b>Find DeusExMachinaII useful?</b> Please consider supporting the project with <a href="https://www.makersupport.com/toggledbits">a one-time "tip", or a monthly $1 donation</a>. I am grateful for any support you choose to give!</p>';
+            html += '<h2>More Information</h2>If you need more information about configuring DeusExMachinaII, please see the <a href="https://github.com/toggledbits/DeusExMachina/blob/master/README.md" target="_blank">README</a> in <a href="https://github.com/toggledbits/DeusExMachina" target="_blank"> our GitHub repository</a>.<p><b>Find DeusExMachinaII useful?</b> Please consider supporting the project with <a href="https://www.makersupport.com/toggledbits">a one-time &ldquo;tip&rdquo;, or a monthly $1 donation</a>. I am grateful for any support you choose to give!</p>';
 
             // Push generated HTML to page
             api.setCpanelContent(html);
