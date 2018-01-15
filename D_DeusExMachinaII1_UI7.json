@@ -131,12 +131,27 @@
                "left":"0",
                "Label":{
                   "lang_tag":"dem_about",
-                  "text":"DeusExMachina II ver 2.6 2017-08-15 &#169; 2016,2017 Patrick H. Rigney, All Rights Reserved. For documentation, license, or to report bugs, please go to the <a target='_blank' href='https://github.com/toggledbits/DeusExMachina'>DeusExMachina Github repository</a>.  Use of this plugin constitutes acceptance of and agreement to the license terms without limitation or exclusion."
+                  "text":"DeusExMachina II ver 2.7 2018-01-15 &#169; 2016,2017 Patrick H. Rigney, All Rights Reserved. For documentation, license, or to report bugs, please go to the <a target='_blank' href='https://github.com/toggledbits/DeusExMachina'>DeusExMachina Github repository</a>. Use of this plugin constitutes acceptance of and agreement to the license terms without limitation or exclusion."
                },
                "Display":{
                   "Top": 80,
                   "Left": 0,
-                  "Width": 200,
+                  "Width": 320,
+                  "Height": 96
+               }
+            },
+            {
+               "ControlType": "label",
+               "top": 0,
+               "left": 0,
+               "Label": {
+                  "lang_tag": "dem_donate",
+                  "text": "<b>Find DeusExMachinaII useful?</b> Please consider supporting the project with <a href="https://www.makersupport.com/toggledbits">a one-time "tip", or a monthly $1 donation</a>. I am grateful for any support you choose to give!"
+               },
+               "Display": {
+                  "Top": 140,
+                  "Left": 0,
+                  "Width": 320,
                   "Height": 96
                }
             }
