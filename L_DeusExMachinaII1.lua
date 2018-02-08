@@ -7,7 +7,7 @@
 module("L_DeusExMachinaII1", package.seeall)
 
 local _PLUGIN_NAME = "DeusExMachinaII"
-local _PLUGIN_VERSION = "2.7"
+local _PLUGIN_VERSION = "2.8"
 local _CONFIGVERSION = 20500
 
 local MYSID = "urn:toggledbits-com:serviceId:DeusExMachinaII1"
@@ -115,7 +115,7 @@ local function deleteVar( name, devid )
     -- Interestingly, setting a variable to nil with luup.variable_set does nothing interesting; too bad, it
     -- could have been used to delete variables, since a later get would yield nil anyway. But it turns out
     -- that using the variableset Luup request with no value WILL delete the variable.
-    local req = "http://127.0.0.1:3480/data_request?id=variableset&DeviceNum=" .. tostring(devid) .. "&serviceId=" .. MYSID .. "&Variable=" .. name .. "&Value="
+    local req = "http://127.0.0.1/port_3480/data_request?id=variableset&DeviceNum=" .. tostring(devid) .. "&serviceId=" .. MYSID .. "&Variable=" .. name .. "&Value="
     D("deleteVar(%1,%2) wget %3", name, devid, req)
     local status, result = luup.inet.wget(req)
     D("deleteVar(%1,%2) status=%3, result=%4", name, devid, status, result)
@@ -798,7 +798,7 @@ function deusInit(pdev)
     
     if debugMode then
         local status, body, httpStatus
-        status, body, httpStatus = luup.inet.wget("http://127.0.0.1:3480/data_request?id=status&DeviceNum=" .. tostring(myDevice) .. "&output_format=json")
+        status, body, httpStatus = luup.inet.wget("http://127.0.0.1/port_3480/data_request?id=status&DeviceNum=" .. tostring(myDevice) .. "&output_format=json")
         D("deusInit(): status %2, startup state is %1", body, status)
     end
 
