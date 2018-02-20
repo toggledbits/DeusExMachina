@@ -6,6 +6,8 @@
 
 module("L_DeusExMachinaII1", package.seeall)
 
+local string = require("string")
+
 local _PLUGIN_NAME = "DeusExMachinaII"
 local _PLUGIN_VERSION = "2.8"
 local _CONFIGVERSION = 20500
@@ -13,9 +15,7 @@ local _CONFIGVERSION = 20500
 local MYSID = "urn:toggledbits-com:serviceId:DeusExMachinaII1"
 local MYTYPE = "urn:schemas-toggledbits-com:device:DeusExMachinaII:1"
 
-local SWITCH_TYPE = "urn:schemas-upnp-org:device:BinaryLight:1"
 local SWITCH_SID  = "urn:upnp-org:serviceId:SwitchPower1"
-local DIMMER_TYPE = "urn:schemas-upnp-org:device:DimmableLight:1"
 local DIMMER_SID  = "urn:upnp-org:serviceId:Dimming1"
 
 local STATE_STANDBY = 0
@@ -32,10 +32,10 @@ local debugMode = false
 
 local function dump(t)
     if t == nil then return "nil" end
-    local k,v,str,val
     local sep = ""
     local str = "{ "
     for k,v in pairs(t) do
+        local val
         if type(v) == "table" then
             val = dump(v)
         elseif type(v) == "function" then
@@ -54,8 +54,10 @@ end
 
 local function L(msg, ...)
     local str
+    local level = 50
     if type(msg) == "table" then
         str = msg["prefix"] .. msg["msg"]
+        level = msg["level"] or level
     else
         str = _PLUGIN_NAME .. ": " .. msg
     end
@@ -71,7 +73,7 @@ local function L(msg, ...)
             return tostring(val)
         end
     )
-    luup.log(str)
+    luup.log(str, level)
 end
 
 local function D(msg, ...)
@@ -376,7 +378,6 @@ end
 -- Mark or unmark a scene as having been run
 local function updateSceneState(spec, isOn)
     local stateList = luup.variable_get(MYSID, "ScenesRunning", myDevice) or ""
-    local i
     local t = {}
     for i in string.gfind(stateList, "[^,]+") do
         t[i] = 1
@@ -411,7 +412,6 @@ end
 local function removeTarget(target, tlist)
     if tlist == nil then tlist = getTargetList() end
     target = tostring(target)
-    local i, d
     for i,d in ipairs(tlist) do
         local l = string.find(d, '[=<]')
         local devid = d
@@ -458,7 +458,7 @@ local function targetControl(targetid, turnOn)
     local first = string.upper(string.sub(targetid, 1, 1))
     if first == "S" then
         D("targetControl(): handling as scene spec %1", targetid)
-        i, j, onScene, offScene = string.find(string.sub(targetid, 2), "(%d+)-(%d+)")
+        local i, j, onScene, offScene = string.find(string.sub(targetid, 2), "(%d+)-(%d+)")
         if i == nil then
             L("DeusExMachina:targetControl(): malformed scene spec=" .. tostring(targetid))
             return
@@ -531,7 +531,6 @@ local function getTargetsOn()
     local n = 0
     devs,max = getTargetList()
     if (max > 0) then
-        local i
         for i = 1,max do
             local devOn = isDeviceOn(devs[i])
             if devOn ~= nil and devOn then
@@ -549,7 +548,7 @@ local function turnOffLight(on)
     if on == nil then
         on, n = getTargetsOn()
     else
-        n = table.getn(on)
+        n = #on
     end
     if n > 0 then
         local i = math.random(1, n)
@@ -564,7 +563,6 @@ end
 
 -- See if there's a limited-time device that needs to be turned off.
 local function turnOffLimited()
-    local dev,info
     local devState = getDeviceState()
     for dev,info in pairs(devState) do
         if info.expire ~= nil and info.expire <= os.time() then
@@ -610,7 +608,7 @@ local function runOnce()
         -- See if there are variables from older version of DEM
         -- Start by finding the old Deus device, if there is one...
         local devList = ""
-        local i, olddev
+        local olddev
         olddev = -1
         for i,v in pairs(luup.devices) do
             if (v.device_type == "urn:schemas-futzle-com:device:DeusExMachina:1") then
@@ -631,7 +629,6 @@ local function runOnce()
             s = luup.variable_get(oldsid, "controlCount", olddev)
             if (s ~= nil) then
                 local n = tonumber(s, 10)
-                local k
                 local t = {}
                 for k = 1,n do
                     s = luup.variable_get(oldsid, "control" .. tostring(k-1), olddev)
@@ -796,14 +793,7 @@ function deusInit(pdev)
     
     setMessage("Initializing...")
     
-    if debugMode then
-        local status, body, httpStatus
-        status, body, httpStatus = luup.inet.wget("http://127.0.0.1/port_3480/data_request?id=status&DeviceNum=" .. tostring(myDevice) .. "&output_format=json")
-        D("deusInit(): status %2, startup state is %1", body, status)
-    end
-
     -- Check for ALTUI and OpenLuup
-    local k,v
     for k,v in pairs(luup.devices) do
         if v.device_type == "urn:schemas-upnp-org:device:altui:1" then
             local rc,rs,jj,ra
@@ -826,9 +816,9 @@ function deusInit(pdev)
     runOnce(pdev)
     
     -- Other initialization
-    v = luup.variable_get(MYSID, "DebugMode", pdev)
+    local v = luup.variable_get(MYSID, "DebugMode", pdev)
     if v ~= nil then
-        k = tonumber(v,10)
+        local k = tonumber(v,10)
         if k ~= nil then debugMode = k ~= 0 
         else debugMode = string.len(v) > 0 
         end
@@ -971,7 +961,6 @@ function deusStep(stepStampCheck)
 
         -- If any devices are on limited on-time, we may need to adjust the cycle delay
         -- down so we don't miss its expiration. 
-        local info
         local minOff = nil
         local devState = getDeviceState()
         for _,info in pairs(devState) do
