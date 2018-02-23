@@ -96,7 +96,7 @@ set this value to some reasonable limit.
 
 #### Final Scene ####
 
-DEMII allows a "final scene" to run when DEMII is disabled or turns off the last light after the "lights out" time. This could be used for any purpose. I personally use it to make sure a whole-house off is run, but you could use it to ensure your alarm system is armed, or your garage door is closed, etc.
+DEMII allows a "final scene" to run when DEMII is explicitly disabled, stops due to the house mode changing to an "inactive" mode (one in which DEMII is not supposed to run), or turns off the last light after the "lights out" time. This could be used for any purpose. I personally use it to make sure a whole-house off is run, but you could use it to ensure your alarm system is armed, or your garage door is closed, etc.
 
 The scene can differentiate between DEMII being disabled and DEMII just going to sleep by checking the `Target` variable in service `urn:upnp-org:serviceId:SwitchPower1`. If the value is "0", then DEMII is being disabled. Otherwise, DEMII is going to sleep. The following code snippet, added as scene Lua, will allow the scene to only run when DEMII is being disabled:
 
@@ -113,7 +113,7 @@ end
 
 As of version 2.8, there is special handling of the final scene for when the house mode changes to an inactive mode. If a scene
 with the name of the final scene plus the prior house mode can be found, it will be run in preference to the specified scene.
-That is, if your final scene is called "DeusEnd", but there's a scene called "DeusEndAway", then it will be run Deus deactivates
+That is, if your final scene is called "DeusEnd", but there's a scene called "DeusEndAway", then it will be run when DEMII deactivates
 due to the house mode changing to something other than "away." Otherwise, the "DeusEnd" scene will run.
 
 ### Control of DEMII by Scenes and Lua ###
@@ -123,7 +123,7 @@ As of version 2.8, there are two ways to control DEMII's operation with scenes, 
 1. Set the active period to "Manual Activation" as described above, and use the `Activate` and `Deactivate` actions to start and stop cycling, respectively. When deactivating with this method, lights will be progressively turned off to simulate the bedtime "lights out" behavior DEMII uses with automatic scheduling. These actions are part of the `urn:toggledbits.com:serviceId:DeusExMachinaII1` service, and take no parameters.
 1. Use the `urn:upnp-org:serviceId:SwitchPower1` service `SetTarget` action to turn DEMII on and off as you would any switch. This enables and disables DEMII. Using this method to start and stop cycling, however, is deprecated in favor of the above message.
 
-Note that for cycling to occur, DEMII must either (a) be enabled with automatic timing on and a valid configured active period, or (b) be enable with manual activation, in which case cycling will not begin until the `Activate` action is run, and not stop until the `Deactivate` action is run.
+Note that for cycling to occur, DEMII must either (a) be enabled with automatic timing on and a valid configured active period, or (b) be enabled, and with manual activation configured, in which case cycling will not begin until the `Activate` action is run, and not stop until the `Deactivate` action is run.
 
 Here's an example of how to send the `Activate` action to DEMII:
 
