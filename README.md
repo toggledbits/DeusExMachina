@@ -47,22 +47,13 @@ Once you have installed the plugin and refreshed the browser, you can proceed to
 
 Deus Ex Machina's "Configure" tab gives you a set of simple controls to control the behavior of your vacation haunt.
 
-#### Start Time ####
+#### Active Period ####
 
-By default (when the "Start Time" field is blank), DEMII will start cycling lights at sunset plus a random delay. If you
-want DEMII to start cycling at a specific time (plus a random delay), provide that time in 24-hour format (e.g. 18:30 for 6:30pm).
+By default, you may specify a start time and an end time, during which DEMII will run (cycle lights). If the
+start time is blank, the current day's sunset time will be used.
 
-#### Lights-Out Time ####
-
-The "Lights Out" time is a time, expressed in 24-hour HH:MM format, that is the time at which lights should begin
-shutting off. This time should be after sunset/start time. When using sunset (Start Time is blank), keep in mind that sunset
-is a different time every day, and
-at certain times of year in some places can be quite late, so a Lights Out time of 20:15, for example, may not be
-a good choice for the longest days of summer. The lights out time can be a time after midnight.
-
-There is a special case for when "Start Time" and "Lights-Out" are equal: DEMII will just run, always, when enabled
-and in an active house mode. This helps scene scripting of DEMII's operation by removing potential interference/conflict
-with DEMII's scheduling.
+If the `Manual Activation` checkbox is checked, then no automatic schedule for DEMII is run, and it must be started
+and stopped by using the Activate and Deactivate actions (e.g. from a scene, PLEG, or Lua).
 
 #### House Modes ####
 
@@ -120,21 +111,23 @@ else
 end
 ```
 
+As of version 2.8, there is special handling of the final scene for when the house mode changes to an inactive mode. If a scene
+with the name of the final scene plus the prior house mode can be found, it will be run in preference to the specified scene.
+That is, if your final scene is called "DeusEnd", but there's a scene called "DeusEndAway", then it will be run Deus deactivates
+due to the house mode changing to something other than "away." Otherwise, the "DeusEnd" scene will run.
+
 ### Control of DEMII by Scenes and Lua ###
 
-For scenes, DeusExMachina can be enabled or disabled like a light switch in scenes or through the regular graphical interface (no Lua required),
-or by scripting in Lua.
+As of version 2.8, there are two ways to control DEMII's operation with scenes, PLEG, Lua, etc.:
 
-For Lua, DEMII implements the SwitchPower1 service, so enabling and disabling is the same as turning a light switch on and off:
-you simply use the SetTarget action to enable (newTargetValue=1) or disable (newTargetValue=0) DEMII.
-The MiOS GUI for devices and scenes takes care of this for you in its code; if scripting in Lua, you simply do this:
+1. Set the active period to "Manual Activation" as described above, and use the `Activate` and `Deactivate` actions to start and stop cycling, respectively. When deactivating with this method, lights will be progressively turned off to simulate the bedtime "lights out" behavior DEMII uses with automatic scheduling. These actions are part of the `urn:toggledbits.com:serviceId:DeusExMachinaII1` service, and take no parameters.
+1. Use the `urn:upnp-org:serviceId:SwitchPower1` service `SetTarget` action to turn DEMII on and off as you would any switch. This enables and disables DEMII. Using this method to start and stop cycling, however, is deprecated in favor of the above message.
 
-```
-luup.call_action("urn:upnp-org:serviceId:SwitchPower1", "SetTarget", { newTargetValue = "0|1" }, pluginDeviceId)
-```
+Note that for cycling to occur, DEMII must either (a) be enabled with automatic timing on and a valid configured active period, or (b) be enable with manual activation, in which case cycling will not begin until the `Activate` action is run, and not stop until the `Deactivate` action is run.
 
-When controlling DEMII using your own scenes or Lua, you may want to bypass DEMII's internal scheduling, so it runs exactly when your scene or Lua directs it to. This is done by setting the "Start Time" and "Lights-Out" equal. Then, whenever DEMII
-is enabled by your scene/Lua, it will cycle lights. House mode is still respected in this case.
+Here's an example of how to send the `Activate` action to DEMII:
+
+`luup.call_action("urn:toggledbits-com:serviceId:DeusExMachinaII1", "Activate", {}, _deviceNumber_)`
 
 ### Triggers ###
 
@@ -156,6 +149,8 @@ is disabled (at which point it goes to Standby).
 It should be noted that DEMII can enter Cycling or Shut-off mode immediately, without passing through Ready, if it is enabled after sunset or after the "lights out" time,
 respectively. DEMII will also transition into or out of Standby mode immediately and from any other mode when disabled or enabled, respectively.
 
+As of v2.8, DEMII also supports a binary `Active` trigger, which is 0 whenever DEMII is not cycling lights for any reason (i.e. disabled, outside of configured active period, or not activated in manual activation mode), and 1 otherwise.
+
 ### Cycle Timing ###
 
 DEMII's cycle timing is controlled by a set of state variables. By default, DEMII's random cycling of lights occurs at randomly selected intervals between 300 seconds (5 minutes) and 1800 seconds (30 minutes), as determined by the `MinCycleDelay` and `MaxCycleDelay` variables. You may change these values to customize the cycling time for your application.
@@ -169,7 +164,7 @@ There is a text field to the right of the on/off switch in that interface that w
 doing when enabled (it's blank when DEMII is disabled).
 
 If DEMII isn't behaving as expected, post a message in the MCV forums
-[in this thread](http://forum.micasaverde.com/index.php/topic,11333.0.html)
+[in this thread](http://forum.micasaverde.com/index.php/topic,54246.0.html)
 or open up an issue in the
 [GitHub repository](https://github.com/toggledbits/DeusExMachina/issues).
 
