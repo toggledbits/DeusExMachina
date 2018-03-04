@@ -56,10 +56,10 @@ local function L(msg, ...)
     local str
     local level = 50
     if type(msg) == "table" then
-        str = msg["prefix"] .. msg["msg"]
-        level = msg["level"] or level
+        str = tostring(msg.prefix or _PLUGIN_NAME) .. ": " .. tostring(msg.msg)
+        level = msg.level or level
     else
-        str = _PLUGIN_NAME .. ": " .. msg
+        str = _PLUGIN_NAME .. ": " .. tostring(msg)
     end
     str = string.gsub(str, "%%(%d+)", function( n )
             n = tonumber(n, 10)
