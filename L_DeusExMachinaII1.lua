@@ -74,6 +74,13 @@ local function L(msg, ...)
         end
     )
     luup.log(str, level)
+--[[
+    local ff = io.open("/etc/cmh-ludl/DeusActivity.log", "a")
+    if ff then
+        ff:write(string.format("%02d %s %s\n", level, os.date("%x.%X"), str))
+        ff:close()
+    end
+--]]
 end
 
 local function D(msg, ...)
@@ -880,11 +887,11 @@ function deusInit(pdev)
     runOnce(pdev)
 
     -- Other initialization
-    local v = luup.variable_get(MYSID, "DebugMode", pdev)
-    if v ~= nil then
-        local k = tonumber(v,10)
-        if k ~= nil then debugMode = k ~= 0
-        else debugMode = string.len(v) > 0
+    local v = getVarNumeric( "DebugMode", 0, pdev )
+    if v ~= 0 then
+        debugMode = true
+        if debugMode then
+            D("deusInit() debug mode enabled by state variable")
         end
     end
 
