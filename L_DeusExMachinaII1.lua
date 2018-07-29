@@ -7,7 +7,7 @@ module("L_DeusExMachinaII1", package.seeall)
 local string = require("string")
 
 local _PLUGIN_NAME = "DeusExMachinaII"
-local _PLUGIN_VERSION = "2.8develop"
+local _PLUGIN_VERSION = "2.8stable-180729"
 local _CONFIGVERSION = 20800
 
 local MYSID = "urn:toggledbits-com:serviceId:DeusExMachinaII1"
