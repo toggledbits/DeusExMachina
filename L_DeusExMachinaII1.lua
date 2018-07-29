@@ -2,14 +2,12 @@
 -- Copyright 2016,2017 Patrick H. Rigney, All Rights Reserved.
 -- This file is part of DeusExMachinaII. For license information, see LICENSE at https://github.com/toggledbits/DeusExMachina
 
--- TO-DO: different "final" scenes based on house mode.
-
 module("L_DeusExMachinaII1", package.seeall)
 
 local string = require("string")
 
 local _PLUGIN_NAME = "DeusExMachinaII"
-local _PLUGIN_VERSION = "2.8"
+local _PLUGIN_VERSION = "2.8develop"
 local _CONFIGVERSION = 20800
 
 local MYSID = "urn:toggledbits-com:serviceId:DeusExMachinaII1"
@@ -146,6 +144,7 @@ end
 -- Shortcut function to return state of SwitchPower1 Status variable
 local function isEnabled()
     local s = luup.variable_get(SWITCH_SID, "Target", myDevice) or "0"
+    D("isEnabled() Target=%1, myDevice=%2", s, myDevice)
     return s ~= "0"
 end
 
@@ -710,7 +709,7 @@ local function runOnce()
         luup.variable_set(MYSID, "MaxTargetsOn", 0, myDevice)
         local e = getVarNumeric("Enabled", 0)
         luup.variable_set(SWITCH_SID, "Target", e, myDevice)
-        luup.variable_set(SWITCH_SID, "Status", 0, myDevice)
+        luup.variable_set(SWITCH_SID, "Status", e, myDevice)
     end
     if s < 20500 then
         -- v2.5: Added StartTime and LeaveLightsOn
@@ -720,7 +719,7 @@ local function runOnce()
     end
     if s < 20800 then
         -- v2.8 Added Active and AutoTiming
-        D("runOnce(): updating config, version %1 < 20600", s)
+        D("runOnce(): updating config, version %1 < 20800", s)
         luup.variable_set(MYSID, "Active", "0", myDevice)
         luup.variable_set(MYSID, "AutoTiming", "1", myDevice)
         luup.variable_set(MYSID, "LastHouseMode", "1", myDevice)
@@ -791,7 +790,11 @@ end
 
 function actionActivate( dev, newState )
     D("actionActivate(%1,%2)", dev, newState)
-    if not isEnabled( dev ) then return end
+    
+    if not isEnabled( dev ) then 
+        L("Activate (%1) action request ignored; disabled.", newState)
+        return 
+    end
     local timing = getVarNumeric( "AutoTiming", 1, dev )
     if timing == 0 then
         -- Manual timing, so this action will (can) work...
