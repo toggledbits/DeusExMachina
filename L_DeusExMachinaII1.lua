@@ -2,14 +2,12 @@
 -- Copyright 2016,2017 Patrick H. Rigney, All Rights Reserved.
 -- This file is part of DeusExMachinaII. For license information, see LICENSE at https://github.com/toggledbits/DeusExMachina
 
--- TO-DO: different "final" scenes based on house mode.
-
 module("L_DeusExMachinaII1", package.seeall)
 
 local string = require("string")
 
 local _PLUGIN_NAME = "DeusExMachinaII"
-local _PLUGIN_VERSION = "2.8"
+local _PLUGIN_VERSION = "2.8develop"
 local _CONFIGVERSION = 20800
 
 local MYSID = "urn:toggledbits-com:serviceId:DeusExMachinaII1"
@@ -146,6 +144,7 @@ end
 -- Shortcut function to return state of SwitchPower1 Status variable
 local function isEnabled()
     local s = luup.variable_get(SWITCH_SID, "Target", myDevice) or "0"
+    D("isEnabled() Target=%1, myDevice=%2", s, myDevice)
     return s ~= "0"
 end
 
@@ -279,28 +278,13 @@ local function isBedtime()
     return ret
 end
 
--- Take a string and split it around sep, returning table (indexed) of substrings
--- For example abc,def,ghi becomes t[1]=abc, t[2]=def, t[3]=ghi
--- Returns: table of values, count of values (integer ge 0)
-local function split(s, sep)
-    local t = {}
-    local n = 0
-    if (#s == 0) then return t,n end -- empty string returns nothing
-    local i,j
-    local k = 1
-    repeat
-        i, j = string.find(s, sep or "%s*,%s*", k)
-        if (i == nil) then
-            table.insert(t, string.sub(s, k, -1))
-            n = n + 1
-            break
-        else
-            table.insert(t, string.sub(s, k, i-1))
-            n = n + 1
-            k = j + 1
-        end
-    until k > string.len(s)
-    return t, n
+local function split( str, sep )
+    if sep == nil then sep = "," end
+    local arr = {}
+    if #str == 0 then return arr, 0 end
+    local rest = string.gsub( str or "", "([^" .. sep .. "]*)" .. sep, function( m ) table.insert( arr, m ) return "" end )
+    table.insert( arr, rest )
+    return arr, #arr
 end
 
 -- Quick and dirty serialization of our simple data structure
@@ -725,7 +709,7 @@ local function runOnce()
         luup.variable_set(MYSID, "MaxTargetsOn", 0, myDevice)
         local e = getVarNumeric("Enabled", 0)
         luup.variable_set(SWITCH_SID, "Target", e, myDevice)
-        luup.variable_set(SWITCH_SID, "Status", 0, myDevice)
+        luup.variable_set(SWITCH_SID, "Status", e, myDevice)
     end
     if s < 20500 then
         -- v2.5: Added StartTime and LeaveLightsOn
@@ -735,7 +719,7 @@ local function runOnce()
     end
     if s < 20800 then
         -- v2.8 Added Active and AutoTiming
-        D("runOnce(): updating config, version %1 < 20600", s)
+        D("runOnce(): updating config, version %1 < 20800", s)
         luup.variable_set(MYSID, "Active", "0", myDevice)
         luup.variable_set(MYSID, "AutoTiming", "1", myDevice)
         luup.variable_set(MYSID, "LastHouseMode", "1", myDevice)
@@ -806,7 +790,11 @@ end
 
 function actionActivate( dev, newState )
     D("actionActivate(%1,%2)", dev, newState)
-    if not isEnabled( dev ) then return end
+    
+    if not isEnabled( dev ) then 
+        L("Activate (%1) action request ignored; disabled.", newState)
+        return 
+    end
     local timing = getVarNumeric( "AutoTiming", 1, dev )
     if timing == 0 then
         -- Manual timing, so this action will (can) work...
