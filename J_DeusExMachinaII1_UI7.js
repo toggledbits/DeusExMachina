@@ -342,7 +342,7 @@ var DeusExMachinaII = (function(api) {
             html += 'div.devicelist { }';
             html += 'div.scenecontrol { }';
             html += '.demslider { display: inline-block; width: 200px; height: 1em; border-radius: 8px; }';
-            html += '.demslider .ui-slider-handle { background: url("/cmh/skins/default/img/other/slider_horizontal_cursor_24.png?") no-repeat scroll left center rgba(0,0,0,0); cursor: pointer !important; height: 24px !important; width: 24px !important; margin-top: 6px; }';
+            html += '.demslider .ui-slider-handle { background: url("/cmh/skins/default/img/other/slider_horizontal_cursor_24.png?") no-repeat scroll left center rgba(0,0,0,0); cursor: pointer !important; height: 24px !important; width: 24px !important; margin-top: 6px; font-size: 12px; text-align: center; padding-top: 4px; text-decoration: none; }';
             html += '.demslider .ui-slider-range-min { background-color: #12805b !important; }';
             html += 'ul#scenepairs { list-style: none; }';
             html += '.cursor-hand { cursor: pointer; }';
@@ -509,8 +509,14 @@ var DeusExMachinaII = (function(api) {
                 max: 100,
                 step: 5,
                 range: "min",
-                stop: function ( event, ui ) {
+                stop: function ( ev, ui ) {
                     DeusExMachinaII.changeDimmerSlider( jQuery(this), ui.value );
+                },
+                slide: function( ev, ui ) {
+                    jQuery( 'a.ui-slider-handle', jQuery( this ) ).text( ui.value );
+                },
+                change: function( ev, ui ) {
+                    jQuery( 'a.ui-slider-handle', jQuery( this ) ).text( ui.value );
                 }
             });
             jQuery('.demslider').slider("option", "disabled", true);
