@@ -1,6 +1,6 @@
 {
     "_comment": "This file is part of DeusExMachinaII",
-    "_copyright": "Copyright (c) 2016, 2017 Patrick H. Rigney, All Rights Reserved.",
+    "_copyright": "Copyright (c) 2016, 2017, 2018 Patrick H. Rigney, All Rights Reserved.",
     "default_icon": "https://dtabq7xg0g1t1.cloudfront.net/deusII.png",
     "state_icons": [{
             "img": "https://dtabq7xg0g1t1.cloudfront.net/deus-red.png",
@@ -23,32 +23,32 @@
             }]
         }
     ],
-    "x": "2",
-    "y": "4",
-    "inScene": "1",
-    "ToggleButton": "1",
+    "x": 2,
+    "y": 4,
+    "inScene": 1,
+    "ToggleButton": 1,
     "Tabs": [{
             "Label": {
                 "lang_tag": "ui7_tabname_control",
                 "text": "Control"
             },
-            "Position": "0",
+            "Position": 0,
             "TabType": "flash",
             "top_navigation_tab": 1,
             "ControlGroup": [{
-                "id": "1",
-                "isSingle": "1",
-                "scenegroup": "1"
+                "id": 1,
+                "isSingle": 1,
+                "scenegroup": 1
             }],
             "SceneGroup": [{
-                "id": "1",
+                "id": 1,
                 "top": 0,
                 "left": 0,
                 "x": 4,
                 "y": 2
             }],
             "Control": [{
-                    "ControlGroup": "1",
+                    "ControlGroup": 1,
                     "ControlType": "multi_state_button",
                     "top": 0,
                     "left": 0,
@@ -149,8 +149,8 @@
                 },
                 {
                     "ControlType": "variable",
-                    "top": "0",
-                    "left": "0",
+                    "top": 0,
+                    "left": 0,
                     "Display": {
                         "Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
                         "Variable": "Message",
@@ -162,11 +162,11 @@
                 },
                 {
                     "ControlType": "label",
-                    "top": "0",
-                    "left": "0",
+                    "top": 0,
+                    "left": 0,
                     "Label": {
                         "lang_tag": "dem_about",
-                        "text": "DeusExMachina II ver 2.8stable-180729 &#169; 2016 Patrick H. Rigney, All Rights Reserved. For documentation, license, or to report bugs, please go to the <a target='_blank' href='https://github.com/toggledbits/DeusExMachina'>DeusExMachina Github repository</a>. Use of this plugin constitutes acceptance of and agreement to the license terms without limitation or exclusion."
+                        "text": "DeusExMachina II ver 2.8stable-181007 &#169; 2016,2018 Patrick H. Rigney, All Rights Reserved. For documentation, license, or to report bugs, please go to the <a target='_blank' href='https://github.com/toggledbits/DeusExMachina'>DeusExMachina Github repository</a>. Use of this plugin constitutes acceptance of and agreement to the license terms without limitation or exclusion."
                     },
                     "Display": {
                         "Top": 90,
@@ -191,33 +191,28 @@
                     }
                 }
             ],
-            "Conditions": [
-                {
+            "Conditions": [{
                     "Trigger": {
-                        "Operands": [
-                            {
-                                "Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
-                                "Variable": "AutoTiming",
-                                "Value": {
-                                    "Equals": "1"
-                                }
+                        "Operands": [{
+                            "Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
+                            "Variable": "AutoTiming",
+                            "Value": {
+                                "Equals": "1"
                             }
-                        ]
+                        }]
                     },
                     "Action": "disable",
                     "Target": "cmd_activate"
                 },
                 {
                     "Trigger": {
-                        "Operands": [
-                            {
-                                "Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
-                                "Variable": "AutoTiming",
-                                "Value": {
-                                    "Equals": "1"
-                                }
+                        "Operands": [{
+                            "Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
+                            "Variable": "AutoTiming",
+                            "Value": {
+                                "Equals": "1"
                             }
-                        ]
+                        }]
                     },
                     "Action": "disable",
                     "Target": "cmd_deactivate"
@@ -229,8 +224,9 @@
                 "lang_tag": "configure",
                 "text": "Configure"
             },
-            "Position": "1",
+            "Position": 1,
             "TabType": "javascript",
+            "TopNavigationTab": 1,
             "ScriptName": "J_DeusExMachinaII1_UI7.js",
             "Function": "DeusExMachinaII.configureDeus"
         },
@@ -239,7 +235,7 @@
                 "lang_tag": "ui7_advanced",
                 "text": "Advanced"
             },
-            "Position": "2",
+            "Position": 2,
             "TabType": "javascript",
             "ScriptName": "shared.js",
             "Function": "advanced_device"
