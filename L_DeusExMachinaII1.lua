@@ -515,7 +515,6 @@ local function targetControl(targetid, turnOn)
             return
         end
         if luup.device_supports_service("urn:upnp-org:serviceId:VSwitch1", targetid) then
-            -- PHR 2017-08-14 pass newTargetValue as string for compat w/VSwitch (uses string comparisons in its implementation--needs an update)
             if turnOn then lvl = 1 end
             D("targetControl(): handling %1 (%3) as VSwitch, set target to %2", targetid, lvl, luup.devices[targetid].description)
             luup.call_action("urn:upnp-org:serviceId:VSwitch1", "SetTarget", {newTargetValue=tostring(lvl)}, targetid)
@@ -524,10 +523,10 @@ local function targetControl(targetid, turnOn)
             D("targetControl(): handling %1 (%3) as generic dimmmer, set load level to %2", targetid, lvl, luup.devices[targetid].description)
             luup.call_action(DIMMER_SID, "SetLoadLevelTarget", {newLoadlevelTarget=lvl}, targetid) -- note odd case inconsistency in word "level"
         elseif luup.device_supports_service(SWITCH_SID, targetid) then
-            -- Handle as SwitchPower1
+            -- Handle as SwitchPower1. Send string here too, for openLuup.
             if turnOn then lvl = 1 end
             D("targetControl(): handling %1 (%3) as generic switch, set target to %2", targetid, lvl, luup.devices[targetid].description)
-            luup.call_action(SWITCH_SID, "SetTarget", {newTargetValue=lvl}, targetid)
+            luup.call_action(SWITCH_SID, "SetTarget", { newTargetValue=tostring(lvl) }, targetid)
         else
             D("targetControl(): don't know how to control target " .. tostring(targetid))
             removeTarget(targetid)
