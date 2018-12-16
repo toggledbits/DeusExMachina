@@ -154,12 +154,12 @@ local function isActiveHouseMode()
     local modebits = getVarNumeric("HouseModes", 0)
     if (modebits ~= 0) then
         -- Get the current house mode.
-        local currentMode = luup.attr_get("Mode", 0)
+        local currentMode = luup.attr_get("Mode", 0) or 1
 
         -- Check to see if house mode bits are non-zero, and if so, apply current mode as mask.
         -- If bit is set (current mode is in the bitset), we can run, otherwise skip.
         -- Get the current house mode (1=Home,2=Away,3=Night,4=Vacation) and mode into bit position.
-        currentMode = math.pow(2, tonumber(currentMode,10))
+        currentMode = math.pow(2, tonumber(currentMode))
         if (math.floor(modebits / currentMode) % 2) == 0 then
             D('isActiveHouseMode(): Current mode bit %1 not set in %2', string.format("0x%x", currentMode), string.format("0x%x", modebits))
             return false -- not active in this mode
