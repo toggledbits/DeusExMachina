@@ -452,9 +452,7 @@ local function isDeviceOn(targetid)
     local r = tonumber(string.match(targetid, '^%d+'), 10)
     local val = "0"
     if luup.devices[r] ~= nil then
-        if luup.device_supports_service(DIMMER_SID, r) then
-            val = luup.variable_get(DIMMER_SID, "LoadLevelStatus", r)
-        elseif luup.device_supports_service(SWITCH_SID, r) then
+        if luup.device_supports_service(SWITCH_SID, r) then
             val =  luup.variable_get(SWITCH_SID, "Status", r)
         end
         D("isDeviceOn(): current device %1 status is %2", r, val)
