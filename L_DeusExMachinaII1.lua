@@ -8,7 +8,7 @@ local string = require("string")
 
 local _PLUGIN_ID = 8702
 local _PLUGIN_NAME = "DeusExMachinaII"
-local _PLUGIN_VERSION = "2.8stable-180729"
+local _PLUGIN_VERSION = "2.8stable-181218"
 local _CONFIGVERSION = 20800
 
 local MYSID = "urn:toggledbits-com:serviceId:DeusExMachinaII1"
@@ -154,12 +154,12 @@ local function isActiveHouseMode()
     local modebits = getVarNumeric("HouseModes", 0)
     if (modebits ~= 0) then
         -- Get the current house mode.
-        local currentMode = luup.attr_get("Mode", 0)
+        local currentMode = luup.attr_get("Mode", 0) or 1
 
         -- Check to see if house mode bits are non-zero, and if so, apply current mode as mask.
         -- If bit is set (current mode is in the bitset), we can run, otherwise skip.
         -- Get the current house mode (1=Home,2=Away,3=Night,4=Vacation) and mode into bit position.
-        currentMode = math.pow(2, tonumber(currentMode,10))
+        currentMode = math.pow(2, tonumber(currentMode))
         if (math.floor(modebits / currentMode) % 2) == 0 then
             D('isActiveHouseMode(): Current mode bit %1 not set in %2', string.format("0x%x", currentMode), string.format("0x%x", modebits))
             return false -- not active in this mode
@@ -452,9 +452,7 @@ local function isDeviceOn(targetid)
     local r = tonumber(string.match(targetid, '^%d+'), 10)
     local val = "0"
     if luup.devices[r] ~= nil then
-        if luup.device_supports_service(DIMMER_SID, r) then
-            val = luup.variable_get(DIMMER_SID, "LoadLevelStatus", r)
-        elseif luup.device_supports_service(SWITCH_SID, r) then
+        if luup.device_supports_service(SWITCH_SID, r) then
             val =  luup.variable_get(SWITCH_SID, "Status", r)
         end
         D("isDeviceOn(): current device %1 status is %2", r, val)

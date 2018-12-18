@@ -1,5 +1,4 @@
-DeusExMachinaII: The Vacation Plugin
-=============
+# DeusExMachinaII: The Vacation Plugin
 
 ## Introduction ##
 

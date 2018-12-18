@@ -2,6 +2,7 @@
 
 ## Version 2.8 (stable branch) ##
 
+* Make on/off state of dimming devices more deterministics (follows DelayLight issue #14).
 * Issue #28: display slider values on sliders; updates during slide (feature request).
 * Ability to disable DEMII's automatic timing and issue Activate and Deactivate actions to control cycling. On deactivation, lights are turned off randomly on shorter intervals, in the same way DEMII does with automatic timing previously. Issue #26
 * Support for per-house-mode final scenes. This is a bit hackish, because I don't think it's going to be a widely used feature, but if so, I'll improve it. It works by adding the name of the house mode to the final scene--if a scene by that name exists, it is run in preference to the specified final scene (e.g. if the final scene is called "DeusEnd", then when the house mode changes from Away to Home, DEMII will try to find a scene called "DeusEndAway" to run, and runs it if found, or runs "DeusEnd" otherwise. Issue #23
