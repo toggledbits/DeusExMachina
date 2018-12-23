@@ -8,7 +8,7 @@ local string = require("string")
 
 local _PLUGIN_ID = 8702
 local _PLUGIN_NAME = "DeusExMachinaII"
-local _PLUGIN_VERSION = "2.8stable-181218"
+local _PLUGIN_VERSION = "2.8"
 local _CONFIGVERSION = 20800
 
 local MYSID = "urn:toggledbits-com:serviceId:DeusExMachinaII1"
