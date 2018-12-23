@@ -12,6 +12,8 @@
             luup.log("DeusExMachinaII STARTUP!")
             demII = require("L_DeusExMachinaII1")
             deusStep = demII.deusStep
+            deusTick = demII.deusTick
+            deusWatch = demII.deusWatch
             return demII.deusInit(deusDevice)
         end
     </functions>
@@ -55,6 +57,20 @@
                     luup.variable_set("urn:upnp-org:serviceId:SwitchPower1", "Target", 0, lul_device)
                     demII.deusDisable(lul_device)
                 end
+            </run>
+        </action>
+        <action>
+            <serviceId>urn:toggledbits-com:serviceId:DeusExMachinaII1</serviceId>
+            <name>Activate</name>
+            <run>
+                demII.actionActivate( lul_device, true )
+            </run>
+        </action>
+        <action>
+            <serviceId>urn:toggledbits-com:serviceId:DeusExMachinaII1</serviceId>
+            <name>Deactivate</name>
+            <run>
+                demII.actionActivate( lul_device, false )
             </run>
         </action>
         <action>

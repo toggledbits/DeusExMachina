@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<scpd xmlns="urn:schemas-upn-org:service-1-0">
+<scpd xmlns="urn:schemas-upnp-org:service-1-0">
     <specVersion>
         <major>1</major>
         <minor>0</minor>
@@ -29,6 +29,12 @@
             <defaultValue>0</defaultValue>
             <shortCode>state</shortCode>
         </stateVariable>
+        <stateVariable sendEvents="yes">
+            <name>Active</name>
+            <dataType>ui1</dataType>
+            <defaultValue>0</defaultValue>
+            <shortCode>active</shortCode>
+        </stateVariable>
         <stateVariable sendEvents="no">
             <name>HouseModes</name>
             <dataType>ui1</dataType>
@@ -45,6 +51,16 @@
                     <relatedStateVariable>Enabled</relatedStateVariable>
                     <direction>in</direction>
                 </argument>
+            </argumentList>
+        </action>
+        <action>
+            <name>Activate</name>
+            <argumentList>
+            </argumentList>
+        </action>
+        <action>
+            <name>Deactivate</name>
+            <argumentList>
             </argumentList>
         </action>
         <action>

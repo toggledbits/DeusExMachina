@@ -1,6 +1,6 @@
 {
     "_comment": "This file is part of DeusExMachinaII",
-    "_copyright": "Copyright (c) 2016, 2017 Patrick H. Rigney, All Rights Reserved.",
+    "_copyright": "Copyright (c) 2016, 2017, 2018 Patrick H. Rigney, All Rights Reserved.",
     "default_icon": "https://dtabq7xg0g1t1.cloudfront.net/deusII.png",
     "state_icons": [{
             "img": "https://dtabq7xg0g1t1.cloudfront.net/deus-red.png",
@@ -23,35 +23,35 @@
             }]
         }
     ],
-    "x": "2",
-    "y": "4",
-    "inScene": "1",
-    "ToggleButton": "1",
+    "x": 2,
+    "y": 4,
+    "inScene": 1,
+    "ToggleButton": 1,
     "Tabs": [{
             "Label": {
                 "lang_tag": "ui7_tabname_control",
                 "text": "Control"
             },
-            "Position": "0",
+            "Position": 0,
             "TabType": "flash",
             "top_navigation_tab": 1,
             "ControlGroup": [{
-                "id": "1",
-                "isSingle": "1",
-                "scenegroup": "1"
+                "id": 1,
+                "isSingle": 1,
+                "scenegroup": 1
             }],
             "SceneGroup": [{
-                "id": "1",
-                "top": "2",
-                "left": "0",
-                "x": "2",
-                "y": "1"
+                "id": 1,
+                "top": 0,
+                "left": 0,
+                "x": 4,
+                "y": 2
             }],
             "Control": [{
-                    "ControlGroup": "1",
+                    "ControlGroup": 1,
                     "ControlType": "multi_state_button",
-                    "top": "0",
-                    "left": "1",
+                    "top": 0,
+                    "left": 0,
                     "states": [{
                             "Label": {
                                 "lang_tag": "ui7_cmd_on",
@@ -94,12 +94,63 @@
                             },
                             "ControlCode": "power_off"
                         }
-                    ]
+                    ],
+                    "ControlCode": "ms_enable"
+                },
+                {
+                    "ControlGroup": 1,
+                    "ControlType": "button",
+                    "HorizontalMultiplier": 1.7,
+                    "top": 1,
+                    "left": 0,
+                    "x": 2,
+                    "y": 1,
+                    "Display": {
+                        "Top": 60,
+                        "Left": 0,
+                        "Width": 120,
+                        "Height": 24
+                    },
+                    "Label": {
+                        "lang_tag": "tb_activate",
+                        "text": "Activate"
+                    },
+                    "Command": {
+                        "Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
+                        "Action": "Activate",
+                        "Parameters": []
+                    },
+                    "ControlCode": "cmd_activate"
+                },
+                {
+                    "ControlGroup": 1,
+                    "ControlType": "button",
+                    "HorizontalMultiplier": 1.7,
+                    "top": 1,
+                    "left": 1,
+                    "x": 2,
+                    "y": 1,
+                    "Display": {
+                        "Top": 60,
+                        "Left": 150,
+                        "Width": 120,
+                        "Height": 24
+                    },
+                    "Label": {
+                        "lang_tag": "tb_deactivate",
+                        "text": "Deactivate"
+                    },
+                    "Command": {
+                        "Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
+                        "Action": "Deactivate",
+                        "Parameters": []
+                    },
+                    "ControlCode": "cmd_deactivate"
                 },
                 {
                     "ControlType": "variable",
-                    "top": "0",
-                    "left": "0",
+                    "top": 0,
+                    "left": 0,
                     "Display": {
                         "Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
                         "Variable": "Message",
@@ -111,14 +162,14 @@
                 },
                 {
                     "ControlType": "label",
-                    "top": "0",
-                    "left": "0",
+                    "top": 0,
+                    "left": 0,
                     "Label": {
                         "lang_tag": "dem_about",
-                        "text": "DeusExMachina II ver 2.7 2018-01-15 &#169; 2016,2017 Patrick H. Rigney, All Rights Reserved. For documentation, license, or to report bugs, please go to the <a target='_blank' href='https://github.com/toggledbits/DeusExMachina'>DeusExMachina Github repository</a>. Use of this plugin constitutes acceptance of and agreement to the license terms without limitation or exclusion."
+                        "text": "DeusExMachina II ver 2.8 &#169; 2016 Patrick H. Rigney, All Rights Reserved. For documentation, license, or to report bugs, please go to the <a target='_blank' href='https://github.com/toggledbits/DeusExMachina'>DeusExMachina Github repository</a>. Use of this plugin constitutes acceptance of and agreement to the license terms without limitation or exclusion."
                     },
                     "Display": {
-                        "Top": 80,
+                        "Top": 90,
                         "Left": 0,
                         "Width": 320,
                         "Height": 96
@@ -130,14 +181,41 @@
                     "left": 0,
                     "Label": {
                         "lang_tag": "dem_donate",
-                        "text": "<b>Find DeusExMachinaII useful?</b> Please consider supporting the project with <a href=\"https://www.makersupport.com/toggledbits\">a one-time &ldquo;tip&rdquo;, or a monthly $1 donation</a>. I am grateful for any support you choose to give!"
+                        "text": "<b>Find DeusExMachinaII useful?</b> Please consider supporting the project with <a href=\"https://www.toggledbits.com/donate\" target=\"_blank\">a small donation</a>. I am grateful for any support you choose to give!"
                     },
                     "Display": {
-                        "Top": 140,
+                        "Top": 150,
                         "Left": 0,
                         "Width": 320,
                         "Height": 96
                     }
+                }
+            ],
+            "Conditions": [{
+                    "Trigger": {
+                        "Operands": [{
+                            "Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
+                            "Variable": "AutoTiming",
+                            "Value": {
+                                "Equals": "1"
+                            }
+                        }]
+                    },
+                    "Action": "disable",
+                    "Target": "cmd_activate"
+                },
+                {
+                    "Trigger": {
+                        "Operands": [{
+                            "Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
+                            "Variable": "AutoTiming",
+                            "Value": {
+                                "Equals": "1"
+                            }
+                        }]
+                    },
+                    "Action": "disable",
+                    "Target": "cmd_deactivate"
                 }
             ]
         },
@@ -146,8 +224,9 @@
                 "lang_tag": "configure",
                 "text": "Configure"
             },
-            "Position": "1",
+            "Position": 1,
             "TabType": "javascript",
+            "TopNavigationTab": 1,
             "ScriptName": "J_DeusExMachinaII1_UI7.js",
             "Function": "DeusExMachinaII.configureDeus"
         },
@@ -156,42 +235,12 @@
                 "lang_tag": "ui7_advanced",
                 "text": "Advanced"
             },
-            "Position": "2",
+            "Position": 2,
             "TabType": "javascript",
             "ScriptName": "shared.js",
             "Function": "advanced_device"
         }
     ],
-    "sceneList": {
-        "group_1": {
-            "cmd_1": {
-                "label": "ON",
-                "serviceId": "urn:upnp-org:serviceId:SwitchPower1",
-                "action": "SetTarget",
-                "arguments": {
-                    "newTargetValue": "1"
-                },
-                "display": {
-                    "service": "urn:upnp-org:serviceId:SwitchPower1",
-                    "variable": "Status",
-                    "value": "1"
-                }
-            },
-            "cmd_2": {
-                "label": "OFF",
-                "serviceId": "urn:upnp-org:serviceId:SwitchPower1",
-                "action": "SetTarget",
-                "arguments": {
-                    "newTargetValue": "0"
-                },
-                "display": {
-                    "service": "urn:upnp-org:serviceId:SwitchPower1",
-                    "variable": "Status",
-                    "value": "0"
-                }
-            }
-        }
-    },
     "eventList2": [{
             "id": 1,
             "label": {
@@ -207,14 +256,14 @@
                         "Disabled": "0",
                         "HumanFriendlyText": {
                             "lang_tag": "dem_disabled",
-                            "text": "_DEVICE_NAME_ is disabled"
+                            "text": "disabled"
                         }
                     },
                     {
                         "Enabled": "1",
                         "HumanFriendlyText": {
                             "lang_tag": "dem_enabled",
-                            "text": "_DEVICE_NAME_ is enabled"
+                            "text": "enabled"
                         }
                     }
                 ],
@@ -233,7 +282,7 @@
             "id": 2,
             "label": {
                 "lang_tag": "dem_opstate",
-                "text": "The operating mode changes"
+                "text": "Changes operating mode"
             },
             "serviceId": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
             "argumentList": [{
@@ -244,32 +293,69 @@
                         "value": "0",
                         "HumanFriendlyText": {
                             "lang_tag": "dem_standby",
-                            "text": "Standby"
+                            "text": "standby (disabled)"
                         }
                     },
                     {
                         "value": "1",
                         "HumanFriendlyText": {
                             "lang_tag": "dem_ready",
-                            "text": "Ready"
+                            "text": "ready (enabled, idle)"
                         }
                     },
                     {
                         "value": "2",
                         "HumanFriendlyText": {
                             "lang_tag": "dem_cycle",
-                            "text": "Cycling"
+                            "text": "running (enabled, cycling)"
                         }
                     },
                     {
                         "value": "3",
                         "HumanFriendlyText": {
                             "lang_tag": "dem_shutoff",
-                            "text": "Shut-off"
+                            "text": "lights out (enabled, shutting down)"
                         }
                     }
                 ],
                 "name": "State",
+                "comparisson": "=",
+                "prefix": {
+                    "lang_tag": "dem_when",
+                    "text": "to"
+                },
+                "suffix": {
+
+                }
+            }]
+        },
+        {
+            "id": 3,
+            "label": {
+                "lang_tag": "dem_active",
+                "text": "Changes active state (shortcut)"
+            },
+            "serviceId": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
+            "argumentList": [{
+                "id": 1,
+                "dataType": "ui1",
+                "defaultValue": "0",
+                "allowedValueList": [{
+                        "value": "0",
+                        "HumanFriendlyText": {
+                            "lang_tag": "dem_inactive",
+                            "text": "inactive"
+                        }
+                    },
+                    {
+                        "value": "1",
+                        "HumanFriendlyText": {
+                            "lang_tag": "dem_active",
+                            "text": "active"
+                        }
+                    }
+                ],
+                "name": "Active",
                 "comparisson": "=",
                 "prefix": {
                     "lang_tag": "dem_when",

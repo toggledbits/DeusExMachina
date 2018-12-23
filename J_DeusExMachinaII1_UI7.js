@@ -65,7 +65,7 @@ var DeusExMachinaII = (function(api) {
                 level = ds.slider('option','value');
             if (level < 100)
                 devid += '=' + level;
-            if (max != undefined && parseInt(max) > 0)
+            if ( undefined !== max && parseInt(max) > 0)
                 devid += '<' + parseInt(max);
             controlled.push(devid);
         });
@@ -264,36 +264,29 @@ var DeusExMachinaII = (function(api) {
         }
         return -1;
     }
-
-    function checkStartTime(obj)
+    
+    function checkTimes(obj)
     {
         var deusDevice = api.getCpanelDeviceId();
-        var txt = jQuery(obj).val();
-        if (txt.match(/^\s*$/)) {
-            api.setDeviceStatePersistent(deusDevice, serviceId, "StartTime", "", 0);
-            return;
-        }
-
-        var t = checkTime(txt);
-        if (t >= 0) {
-            // save it
-            api.setDeviceStatePersistent(deusDevice, serviceId, "StartTime", t, 0);
+        var s = jQuery("input#noauto").prop("checked");
+        var startEl = jQuery("input#startTime");
+        var endEl = jQuery("input#deusExTime");
+        if ( s ) {
+            startEl.prop('disabled', true);
+            endEl.prop('disabled', true);
+            api.setDeviceStatePersistent(deusDevice, serviceId, "AutoTiming", "0", 0);
         } else {
-            alert("Start time must be blank, or HH:MM");
-            jQuery(obj).focus();
-        }
-    }
-
-    function checkLightsOut(obj)
-    {
-        var t = checkTime(jQuery(obj).val());
-        if (t >= 0) {
-            // save it
-            var deusDevice = api.getCpanelDeviceId();
-            api.setDeviceStatePersistent(deusDevice, serviceId, "LightsOut", t, 0);
-        } else {
-            alert("Lights-out time must be HH:MM");
-            jQuery(obj).focus();
+            api.setDeviceStatePersistent(deusDevice, serviceId, "AutoTiming", "1", 0);
+            startEl.prop('disabled', false);
+            var t = checkTime(startEl.val());
+            if ( t > 0 ) {
+                api.setDeviceStatePersistent(deusDevice, serviceId, "StartTime", t, 0);
+            }
+            endEl.prop('disabled', false);
+            t = checkTime(endEl.val());
+            if ( t > 0 ) {
+                api.setDeviceStatePersistent(deusDevice, serviceId, "LightsOut", t, 0);
+            }
         }
     }
 
@@ -341,7 +334,7 @@ var DeusExMachinaII = (function(api) {
         try {
             init();
 
-            var i, j, html = "";
+            var i, html = "";
 
             html += '<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">';
             html += '<style>.material-icons { vertical-align: -20%; }';
@@ -349,7 +342,7 @@ var DeusExMachinaII = (function(api) {
             html += 'div.devicelist { }';
             html += 'div.scenecontrol { }';
             html += '.demslider { display: inline-block; width: 200px; height: 1em; border-radius: 8px; }';
-            html += '.demslider .ui-slider-handle { background: url("/cmh/skins/default/img/other/slider_horizontal_cursor_24.png?") no-repeat scroll left center rgba(0,0,0,0); cursor: pointer !important; height: 24px !important; width: 24px !important; margin-top: 6px; }';
+            html += '.demslider .ui-slider-handle { background: url("/cmh/skins/default/img/other/slider_horizontal_cursor_24.png?") no-repeat scroll left center rgba(0,0,0,0); cursor: pointer !important; height: 24px !important; width: 24px !important; margin-top: 6px; font-size: 12px; text-align: center; padding-top: 4px; text-decoration: none; }';
             html += '.demslider .ui-slider-range-min { background-color: #12805b !important; }';
             html += 'ul#scenepairs { list-style: none; }';
             html += '.cursor-hand { cursor: pointer; }';
@@ -364,15 +357,11 @@ var DeusExMachinaII = (function(api) {
 
             // Start Time
             html += '<div class="demcgroup pull-left">';
-            html += "<h2>Start Time</h2>";
-            html += 'When to start cycling lights (HH:MM). Leave blank for sunset.<br/>';
-            html += '<input type="text" size="7" maxlength="5" onChange="DeusExMachinaII.checkStartTime(this)" id="startTime">&nbsp;(HH:MM)';
-            html += '</div>';
-
-            // Lights Out
-            html += '<div class="demcgroup pull-left">';
-            html += "<h2>Lights-Out Time</h2>Lights will cycle between the start time and the \"lights-out\" time. Enter the time to begin shutting off lights:<br/>";
-            html += "<input type=\"text\" size=\"7\" maxlength=\"5\" onChange=\"DeusExMachinaII.checkLightsOut(this)\" id=\"deusExTime\" />&nbsp;(HH:MM)";
+            html += "<h2>Active Period</h2>";
+            html += 'Set the approximate start and stop times for cycling. If the start time is left blank, it will be sunset. The actual start and stop times will be delayed randomly.<br/>';
+            html += '<input type="checkbox" value="1" id="noauto" onChange="DeusExMachinaII.checkTimes(this)">Manual Activation (action from your scene, PLEG or Lua)<br/>';
+            html += 'From: <input type="text" size="7" maxlength="5" onChange="DeusExMachinaII.checkTimes(this)" id="startTime">';
+            html += " to <input type=\"text\" size=\"7\" maxlength=\"5\" onChange=\"DeusExMachinaII.checkTimes(this)\" id=\"deusExTime\" /> (HH:MM)";
             html += '</div>';
 
             // House Modes
@@ -423,8 +412,8 @@ var DeusExMachinaII = (function(api) {
             var r = rooms.sort(
                 // Special sort for room name -- sorts "No Room" last
                 function (a, b) {
-                    if (a.id == 0) return 1;
-                    if (b.id == 0) return -1;
+                    if (a.id === 0) return 1;
+                    if (b.id === 0) return -1;
                     if (a.name === b.name) return 0;
                     return a.name > b.name ? 1 : -1;
                 }
@@ -474,7 +463,7 @@ var DeusExMachinaII = (function(api) {
             html += '<ul id="scenepairs"></ul>';
             html += '</div>';
 
-            html += '<h2>More Information</h2>If you need more information about configuring DeusExMachinaII, please see the <a href="https://github.com/toggledbits/DeusExMachina/blob/master/README.md" target="_blank">README</a> in <a href="https://github.com/toggledbits/DeusExMachina" target="_blank"> our GitHub repository</a>.<p><b>Find DeusExMachinaII useful?</b> Please consider supporting the project with <a href="https://www.makersupport.com/toggledbits">a one-time &ldquo;tip&rdquo;, or a monthly $1 donation</a>. I am grateful for any support you choose to give!</p>';
+            html += '<h2>More Information</h2>If you need more information about configuring DeusExMachinaII, please see the <a href="https://github.com/toggledbits/DeusExMachina/blob/master/README.md" target="_blank">README</a> in <a href="https://github.com/toggledbits/DeusExMachina" target="_blank"> our GitHub repository</a>.<p><b>Find DeusExMachinaII useful?</b> Please consider supporting the project with <a href="https://www.toggledbits.com/donate">a small donation</a>. I am grateful for any support you choose to give!</p>';
 
             // Push generated HTML to page
             api.setCpanelContent(html);
@@ -484,11 +473,17 @@ var DeusExMachinaII = (function(api) {
             // Restore time fields
             var timeMins = parseInt(api.getDeviceState(deusDevice, serviceId, "LightsOut"));
             var time = isNaN(timeMins) ? "23:59" : timeMinsToStr(timeMins);
-            jQuery("#deusExTime").val(time);
+            jQuery("input#deusExTime").val(time);
 
             timeMins = parseInt(api.getDeviceState(deusDevice, serviceId, "StartTime"));
             time = isNaN(timeMins) ? "" : timeMinsToStr(timeMins);
             jQuery("input#startTime").val(time);
+
+            var autoTiming = parseInt(api.getDeviceState(deusDevice, serviceId, "AutoTiming"));
+            var manual = ( !isNaN(autoTiming) ) && autoTiming == 0;
+            jQuery("input#noauto").prop("checked", manual);
+            jQuery("input#deusExTime").prop("disabled", manual);
+            jQuery("input#startTime").prop("disabled", manual);
 
             // Restore maxtargets
             var maxt = parseInt(api.getDeviceState(deusDevice, serviceId, "MaxTargetsOn"));
@@ -510,14 +505,22 @@ var DeusExMachinaII = (function(api) {
 
             // Activate dimmer sliders. Mark all disabled, then enable those for checked dimmers
             jQuery('.demslider').slider({
-                min: 1,
+                min: 5,
                 max: 100,
+                step: 5,
                 range: "min",
-                stop: function ( event, ui ) {
+                stop: function ( ev, ui ) {
                     DeusExMachinaII.changeDimmerSlider( jQuery(this), ui.value );
+                },
+                slide: function( ev, ui ) {
+                    jQuery( 'a.ui-slider-handle', jQuery( this ) ).text( ui.value );
+                },
+                change: function( ev, ui ) {
+                    jQuery( 'a.ui-slider-handle', jQuery( this ) ).text( ui.value );
                 }
             });
             jQuery('.demslider').slider("option", "disabled", true);
+            jQuery('.demslider').slider("option", "value", 100);
             jQuery('.demslider').each( function( ix, obj ) {
                 var id = jQuery(obj).attr('id');
                 id = id.substr(6);
@@ -589,8 +592,7 @@ var DeusExMachinaII = (function(api) {
         init: init,
         onBeforeCpanelClose: onBeforeCpanelClose,
         changeHouseModeSelector: changeHouseModeSelector,
-        checkStartTime: checkStartTime,
-        checkLightsOut: checkLightsOut,
+        checkTimes: checkTimes,
         checkMaxTargets: checkMaxTargets,
         saveStopAction: saveStopAction,
         changeDeviceOnOff: changeDeviceOnOff,
