@@ -1,6 +1,6 @@
 # DeusExMachinaII Change Log #
 
-## Version 2.8 (develop branch) ##
+## Version 2.8 (released) ##
 
 * Make on/off state of dimming devices more deterministic (follows DelayLight issue #14).
 * Issue #28: display slider values on sliders; updates during slide (feature request).
