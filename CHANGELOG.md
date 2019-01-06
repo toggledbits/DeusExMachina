@@ -1,5 +1,9 @@
 # DeusExMachinaII Change Log #
 
+## Version 2.9 (development)
+
+* Upgrade detection of AltUI so we don't falsely detect when bridged (on "real" device triggers AltUI feature registration).
+
 ## Version 2.8 (released) ##
 
 * Make on/off state of dimming devices more deterministic (follows DelayLight issue #14).
