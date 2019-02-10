@@ -24,7 +24,7 @@ local STATE_SHUTDOWN = 3
 
 local myDevice = 0
 local runStamp = 0
-local isALTUI = false
+-- local isALTUI = false
 local isOpenLuup = false
 
 local debugMode = false
@@ -51,7 +51,7 @@ local function dump(t)
     return str
 end
 
-local function L(msg, ...)
+local function L(msg, ...) -- luacheck: ignore 212
     local str
     local level = 50
     if type(msg) == "table" then
@@ -132,11 +132,6 @@ local function deleteVar( name, devid )
     D("deleteVar(%1,%2) status=%3, result=%4", name, devid, status, result)
 end
 
-local function pad(n)
-    if (n < 10) then return "0" .. n end
-    return n;
-end
-
 local function setMessage(s, dev)
     if dev == nil then dev = myDevice end
     luup.variable_set(MYSID, "Message", s or "", dev)
@@ -152,14 +147,14 @@ end
 local function isActiveHouseMode()
     -- Fetch our mask bits that tell us what modes we operate in. If 0, we're not checking house mode.
     local modebits = getVarNumeric("HouseModes", 0)
-    if (modebits ~= 0) then
+    if modebits ~= 0 then
         -- Get the current house mode.
-        local currentMode = luup.attr_get("Mode", 0) or 1
+        local currentMode = tonumber(luup.attr_get("Mode", 0)) or 1
 
         -- Check to see if house mode bits are non-zero, and if so, apply current mode as mask.
         -- If bit is set (current mode is in the bitset), we can run, otherwise skip.
         -- Get the current house mode (1=Home,2=Away,3=Night,4=Vacation) and mode into bit position.
-        currentMode = math.pow(2, tonumber(currentMode))
+        currentMode = math.pow(2, currentMode)
         if (math.floor(modebits / currentMode) % 2) == 0 then
             D('isActiveHouseMode(): Current mode bit %1 not set in %2', string.format("0x%x", currentMode), string.format("0x%x", modebits))
             return false -- not active in this mode
@@ -172,8 +167,8 @@ end
 
 -- Get a random delay from two state variables. Error check.
 local function getRandomDelay(minStateName,maxStateName,defMin,defMax)
-    if defMin == nil then defMin = 300 end
-    if defMax == nil then defMax = 1800 end
+    defMin = defMin or 300
+    defMax = defMax or 1800
     local mind = getVarNumeric(minStateName, defMin)
     if mind < 1 then mind = 1 elseif mind > 7200 then mind = 7200 end
     local maxd = getVarNumeric(maxStateName, defMax)
@@ -205,11 +200,6 @@ local function getSunset()
     return sunset
 end
 
-local function getSunsetMSM()
-    local t = os.date('*t', getSunset())
-    return t['hour']*60 + t['min']
-end
-
 -- Return start time in seconds. Could be configured, could be sunset.
 local function startTime(dev)
     local st = luup.variable_get(MYSID, "StartTime", dev)
@@ -235,7 +225,7 @@ end
 -- times are reduced to minutes-since-midnight.
 local function isBedtime()
     local testing = getVarNumeric("TestMode", 0)
-    if (testing ~= 0) then
+    if testing ~= 0 then
         D('isBedtime(): TestMode is on')
         debugMode = true
     end
@@ -243,7 +233,7 @@ local function isBedtime()
     -- Establish the lights-out time
     local bedtime = 1439 -- that's 23:59 in minutes since midnight (default)
     local bedtime_tmp = luup.variable_get(MYSID, "LightsOut", myDevice)
-    if (bedtime_tmp ~= nil) then
+    if bedtime_tmp ~= nil then
         bedtime_tmp = tonumber(bedtime_tmp,10)
         if (bedtime_tmp >= 0 and bedtime_tmp < 1440) then bedtime = bedtime_tmp end
     end
@@ -392,6 +382,7 @@ end
 -- Run "final" scene, if defined. This scene is run after all other targets have been
 -- turned off.
 local function runFinalScene(dev)
+    D("runFinalScene(%1)", dev)
     local scene  = getVarNumeric("FinalScene", nil)
     if (scene ~= nil and luup.scenes[scene] ~= nil) then
         D("runFinalScene(): running final scene %1", scene)
@@ -471,7 +462,7 @@ local function targetControl(targetid, turnOn)
     local first = string.upper(string.sub(targetid, 1, 1))
     if first == "S" then
         D("targetControl(): handling as scene spec %1", targetid)
-        local i, j, onScene, offScene = string.find(string.sub(targetid, 2), "(%d+)-(%d+)")
+        local i, _, onScene, offScene = string.find(string.sub(targetid, 2), "(%d+)-(%d+)")
         if i == nil then
             D("DeusExMachina:targetControl(): malformed scene spec=" .. tostring(targetid))
             return
@@ -576,14 +567,21 @@ end
 -- See if there's a limited-time device that needs to be turned off.
 local function turnOffLimited()
     local devState = getDeviceState()
+    local res = false
+    local nextLimited = false
+    local now = os.time()
     for dev,info in pairs(devState) do
-        if info.expire ~= nil and info.expire <= os.time() then
-            D("deusStep(): turning off time-limited device %1 (expired %2 ago)", dev, os.time()-info.expire)
-            targetControl(dev, false)
-            return true
+        if info.expire ~= nil then
+            if info.expire <= now then
+                D("turnOffLimited(): turning off time-limited device %1 (expired %2 ago)", dev, now-info.expire)
+                targetControl(dev, false)
+                res = true
+            elseif not nextLimited or info.expire < nextLimited then
+                nextLimited = info.expire
+            end
         end
     end
-    return false
+    return res, nextLimited
 end
 
 -- Turn off all lights as fast as we can. Transition through SHUTDOWN state during,
@@ -614,8 +612,9 @@ local function startCycling(dev)
     D("startCycling(%1)", dev)
     runStamp = os.time()
     luup.variable_set(MYSID, "State", STATE_CYCLE, dev)
+    luup.variable_set(MYSID, "NextStep", "0", dev)
     -- Give externals a chance to react to state change
-    luup.call_delay("deusStep", 60, runStamp)
+    luup.call_delay("deusStep", 5, runStamp)
 end
 
 -- runOnce() looks to see if a core state variable exists; if not, a one-time initialization
@@ -669,7 +668,7 @@ local function runOnce()
         luup.variable_set(MYSID, "Enabled", "0", myDevice)
         luup.variable_set(MYSID, "State", STATE_STANDBY, myDevice)
         luup.variable_set(MYSID, "Active", "0", myDevice)
-        luup.variable_set(MYSID, "AutoTiming", "1", myDevice)
+        luup.variable_set(MYSID, "AutoTiming", "0", myDevice)
         luup.variable_set(MYSID, "MinCycleDelay", "300", myDevice)
         luup.variable_set(MYSID, "MaxCycleDelay", "1800", myDevice)
         luup.variable_set(MYSID, "MinOffDelay", "60", myDevice)
@@ -788,10 +787,10 @@ end
 
 function actionActivate( dev, newState )
     D("actionActivate(%1,%2)", dev, newState)
-    
-    if not isEnabled( dev ) then 
+
+    if not isEnabled( dev ) then
         L("Activate (%1) action request ignored; disabled.", newState)
-        return 
+        return
     end
     local timing = getVarNumeric( "AutoTiming", 1, dev )
     if timing == 0 then
@@ -816,10 +815,9 @@ function actionActivate( dev, newState )
             end
         end
     else
-        local which = "activate"
-        if not newState then which = "deactivate" end
+        local which = newState and "activate" or "deactivate"
         L("Action request to %1 ignored, unable when automatic timing is enabled.", which)
-        setMessage("Can't " .. which)
+        setMessage("AutoTiming on; can't " .. which)
     end
 end
 
@@ -842,29 +840,16 @@ function deusInit(pdev)
         setMessage("Another Deus is running!", pdev)
         return false
     end
-
     myDevice = pdev
-    runStamp = 0
 
-    checkLocation(pdev)
+    if getVarNumeric( "DebugMode", 0, pdev ) ~= 0 then
+        debugMode = true
+        D("deusInit() debug mode enabled by state variable")
+    end
 
     setMessage("Initializing...")
 
-    -- Check for ALTUI and OpenLuup
-    for k,v in pairs(luup.devices) do
-        if v.device_type == "urn:schemas-upnp-org:device:altui:1" and v.device_num_parent == 0 then
-            local rc,rs,jj,ra
-            D("deusInit() detected ALTUI at %1", k)
-            isALTUI = true
-            rc,rs,jj,ra = luup.call_action("urn:upnp-org:serviceId:altui1", "RegisterPlugin",
-                { newDeviceType=MYTYPE, newScriptFile="J_DeusExMachinaII1_ALTUI.js", newDeviceDrawFunc="DeusExMachina_ALTUI.DeviceDraw" },
-                k )
-            D("deusInit() ALTUI's RegisterPlugin action returned resultCode=%1, resultString=%2, job=%3, returnArguments=%4", rc,rs,jj,ra)
-        elseif v.device_type == "openLuup" then
-            D("deusInit() detected openLuup")
-            isOpenLuup = true
-        end
-    end
+    runStamp = 0
 
     -- Check UI version
     checkVersion(pdev)
@@ -872,14 +857,35 @@ function deusInit(pdev)
     -- One-time stuff
     runOnce(pdev)
 
-    -- Other initialization
-    local v = getVarNumeric( "DebugMode", 0, pdev )
-    if v ~= 0 then
-        debugMode = true
-        if debugMode then
-            D("deusInit() debug mode enabled by state variable")
+    checkLocation(pdev)
+
+    math.randomseed( os.time() )
+
+    -- Check for ALTUI and OpenLuup
+    for k,v in pairs(luup.devices) do
+        if v.device_type == "urn:schemas-upnp-org:device:altui:1" and v.device_num_parent == 0 then
+            local rc,rs,jj,ra
+            D("deusInit() detected ALTUI at %1", k)
+            -- isALTUI = true
+            rc,rs,jj,ra = luup.call_action("urn:upnp-org:serviceId:altui1", "RegisterPlugin",
+                { newDeviceType=MYTYPE, newScriptFile="J_DeusExMachinaII1_ALTUI.js", newDeviceDrawFunc="DeusExMachina_ALTUI.DeviceDraw" },
+                k )
+            D("deusInit() ALTUI's RegisterPlugin action returned resultCode=%1, resultString=%2, job=%3, returnArguments=%4", rc,rs,jj,ra)
+        elseif v.device_type == "openLuup" then
+            D("deusInit() detected openLuup")
+            isOpenLuup = true
+        elseif v.device_type == "urn:schemas-toggledbits-com:device:Reactor:1" then
+            -- Reactor is installed. We can watch for house mode changes.
+            D("deusInit() Reactor detected!")
+            luup.variable_watch("deusWatch", "urn:toggledbits-com:serviceId:Reactor", "HouseMode", k)
+        elseif v.device_type == "urn:schemas-micasaverde-com:device:HouseModes:1" then
+            -- Housemodes plugin installed. We can watch for house mode changes.
+            D("deusInit() Housemodes plugin detected!")
+            luup.variable_watch("deusWatch", "urn:micasaverde-com:serviceId:HouseModes1", "HMode", k)
         end
     end
+
+    -- Other initialization
 
     -- Watch our own state, so we can track.
     luup.variable_watch("deusWatch", MYSID, "State", pdev)
@@ -892,7 +898,7 @@ function deusInit(pdev)
     if currState == STATE_CYCLE or currState == STATE_SHUTDOWN then
         -- Just get going. Tick and step will take care of ongoing state.
         runStamp = os.time()
-        luup.call_delay("deusStep", 5, runStamp)
+        luup.call_delay("deusStep", 15, runStamp)
     end
 
     luup.set_failure( 0, pdev )
@@ -910,6 +916,16 @@ function deusWatch( dev, sid, var, oldVal, newVal )
             active = 1
         end
         luup.variable_set( MYSID, "Active", active, dev )
+    elseif var == "HouseMode" or var == "HMode" then
+        -- House mode change. Check it.
+        L("Detected %1 (#%2) house mode change from %3 to %4", luup.devices[dev].description, dev, oldVal, newVal)
+        local currentState = getVarNumeric("State", STATE_SHUTDOWN, myDevice)
+        D("deusWatch() handling house mode change in state %1", currentState)
+        if currentState == STATE_CYCLE or currentState == STATE_SHUTDOWN then
+            -- Rush next step/check; we may need to stop.
+            runStamp = os.time()
+            luup.call_delay("deusStep", 1, runStamp)
+        end
     end
 end
 
@@ -941,6 +957,7 @@ function deusTick(dev)
                     L("Lights-out (auto timing), transitioning to shut-off cycles...")
                     setMessage("Starting lights-out...")
                     luup.variable_set(MYSID, "State", STATE_SHUTDOWN, dev)
+                    nextCycleDelay = getRandomDelay("MinOffDelay", "MaxOffDelay", 60, 300)
                 end
                 -- Otherwise, don't set message, let deusStep do it.
             elseif currState == STATE_IDLE then
@@ -985,15 +1002,20 @@ function deusStep(stepStampCheck)
         return
     end
 
+    local now = os.time()
+    local currentState = getVarNumeric("State", STATE_SHUTDOWN, myDevice)
+
     if not isActiveHouseMode() then
         -- Not in an active house mode. Turn everything back off and go to IDLE.
         D("deusStep(): transitioning to IDLE, not in an active house mode.")
         local leaveOn = getVarNumeric("LeaveLightsOn", 0)
         if currentState ~= STATE_STANDBY then
+            setMessage("Transitioning to idle (inactive house mode)")
             if leaveOn == 0 then
                 clearLights()
             end
             luup.variable_set(MYSID, "State", STATE_IDLE, myDevice)
+            setMessage("Idle")
         end
         return --  don't schedule another run.
     end
@@ -1002,20 +1024,25 @@ function deusStep(stepStampCheck)
     luup.variable_set(MYSID, "LastHouseMode", luup.attr_get("Mode", 0), myDevice)
 
     -- See if we're on time (early ticks come from restarts, usually)
-    local nextCycleDelay = 300 -- choose something to keep us honest
+    local nextCycleDelay = 300 -- luacheck: ignore 311
     local nextStep = getVarNumeric("NextStep", 0, myDevice)
     local modeWord = "Cycling"
-    if nextStep > os.time() then
-        nextCycleDelay = nextStep - os.time();
+    if nextStep > now then
+        nextCycleDelay = nextStep - now;
         D("deusStep(): early step, delaying %1 seconds", nextCycleDelay)
     else
         -- Ready to do some work.
-        local currentState = getVarNumeric("State", STATE_SHUTDOWN, myDevice)
         if currentState == STATE_SHUTDOWN then
             -- Shutting down. Find something else to turn off.
             D("deusStep(): running off cycle")
-            if turnOffLimited() then
-                nextCycleDelay = getVarNumeric("MinOffDelay", 60)
+            local hadLimited, nextLimited = turnOffLimited()
+            nextCycleDelay = getRandomDelay("MinOffDelay", "MaxOffDelay", 60, 300)
+            if hadLimited then
+                -- Turned off limited-time device, see if more coming up, schedule accordingly.
+                if nextLimited then
+                    local delay = nextLimited - now
+                    if delay < nextCycleDelay then nextCycleDelay = delay end
+                end
             elseif not turnOffLight() then
                 -- No more lights to turn off. Run final scene and don't reschedule this thread.
                 runFinalScene()
@@ -1032,7 +1059,8 @@ function deusStep(stepStampCheck)
             D("deusStep(): running toggle cycle, state=%1", currentState)
             nextCycleDelay = getRandomDelay("MinCycleDelay", "MaxCycleDelay")
 
-            if not turnOffLimited() then
+            local hadLimited, nextLimited = turnOffLimited()
+            if not hadLimited then
                 local devs, max
                 devs, max = getTargetList()
                 if (max > 0) then
@@ -1043,44 +1071,31 @@ function deusStep(stepStampCheck)
                         if (s ~= nil) then
                             if (s) then
                                 -- It's on; turn it off.
-                                D("deusStep(): turn %1 OFF", devspec)
+                                L("Cycle: turn %1 OFF", devspec)
                                 targetControl(devspec, false)
                             else
                                 -- Turn something on. If we're at the max number of targets we're allowed to turn on,
                                 -- turn targets off first.
                                 local maxOn = getVarNumeric("MaxTargetsOn", 0)
                                 if (maxOn > 0) then
-                                    local on, n
-                                    on, n = getTargetsOn()
+                                    local on, n = getTargetsOn()
                                     while ( n >= maxOn ) do
                                         D("deusStep(): too many targets on, max is %1, have %2, turning one off", maxOn, n)
                                         _, on, n = turnOffLight(on)
                                     end
                                 end
-                                D("deusStep(): turn %1 ON", devspec)
+                                L("Cycle: turn %1 ON", devspec)
                                 targetControl(devspec, true)
                             end
                         end
                     end
                 end
             end
-
-            -- If any devices are on limited on-time, we may need to adjust the cycle delay
-            -- down so we don't miss its expiration.
-            local minOff = nil
-            local devState = getDeviceState()
-            for _,info in pairs(devState) do
-                if info.expire ~= nil and (minOff == nil or info.expire < minOff) then
-                    minOff = info.expire
-                end
-            end
-            if minOff ~= nil then
-                local nextOff = minOff - os.time()
-                if nextOff < 15 then nextOff = 15 end
-                if nextOff < nextCycleDelay then
-                    D("deusStep() adjusting next cycle for time-limited device pending in %1", nextOff)
-                    nextCycleDelay = nextOff
-                end
+            -- If there's a limited-time device coming up sooner than our default delay,
+            -- pull the delay in so we don't miss it.
+            if nextLimited then
+                local delay = nextLimited - now
+                if delay < nextCycleDelay then nextCycleDelay = delay end
             end
         end
     end
@@ -1088,8 +1103,10 @@ function deusStep(stepStampCheck)
     -- Arm for next cycle
     D("deusStep(): cycle finished, next in " .. nextCycleDelay .. " seconds")
     if nextCycleDelay < 1 then nextCycleDelay = 1 elseif nextCycleDelay > 7200 then nextCycleDelay = 7200 end
-    nextStep = os.time() + nextCycleDelay
+    nextStep = now + nextCycleDelay
     luup.variable_set(MYSID, "NextStep", nextStep, myDevice)
     luup.call_delay("deusStep", nextCycleDelay, stepStamp)
-    setMessage(modeWord .. "; next at " .. os.date("%X", nextStep))
+    local m = modeWord .. "; next at " .. os.date("%X", nextStep)
+    L(m)
+    setMessage(m)
 end
