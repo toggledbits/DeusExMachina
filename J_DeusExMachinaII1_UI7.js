@@ -6,10 +6,11 @@
  * Copyright 2016,2017 Patrick H. Rigney, All Rights Reserved.
  * This file is part of DeusExMachinaII. For license information, see LICENSE at https://github.com/toggledbits/DeusExMachina
  */
+/* globals api,jQuery,$,Utils */
 
 //"use strict"; // fails on UI7, works fine with ALTUI
 
-var DeusExMachinaII = (function(api) {
+var DeusExMachinaII = (function(api, $) {
 
     // unique identifier for this plugin...
     var uuid = '11816AA9-0C7C-4E8F-B490-AAB429FA140F';
@@ -575,8 +576,8 @@ var DeusExMachinaII = (function(api) {
                     }
 
                     jQuery('select#finalscene').append(menu);
-                    var final = api.getDeviceState(deusDevice, serviceId, "FinalScene");
-                    if (final !== undefined) jQuery('select#finalscene option[value="' + final + '"]').prop('selected', true);
+                    var fs = api.getDeviceState(deusDevice, serviceId, "FinalScene");
+                    if (fs !== undefined) jQuery('select#finalscene option[value="' + fs + '"]').prop('selected', true);
                 }
             });
         }
@@ -608,4 +609,4 @@ var DeusExMachinaII = (function(api) {
         doSceneAdd: doSceneAdd
     };
     return myModule;
-})(api);
+})(api, $ || jQuery);
