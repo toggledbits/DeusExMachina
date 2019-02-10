@@ -357,9 +357,9 @@ var DeusExMachinaII = (function(api) {
 
             // Start Time
             html += '<div class="demcgroup pull-left">';
-            html += "<h2>Active Period</h2>";
+            html += "<h2>Auto-Activation</h2>";
             html += 'Set the approximate start and stop times for cycling. If the start time is left blank, it will be sunset. The actual start and stop times will be delayed randomly.<br/>';
-            html += '<input type="checkbox" value="1" id="noauto" onChange="DeusExMachinaII.checkTimes(this)">Manual Activation (action from your scene, PLEG or Lua)<br/>';
+            html += '<input type="checkbox" value="1" id="noauto" onChange="DeusExMachinaII.checkTimes(this)">Manual Activation (e.g. action from Reactor or Lua)<br/>';
             html += 'From: <input type="text" size="7" maxlength="5" onChange="DeusExMachinaII.checkTimes(this)" id="startTime">';
             html += " to <input type=\"text\" size=\"7\" maxlength=\"5\" onChange=\"DeusExMachinaII.checkTimes(this)\" id=\"deusExTime\" /> (HH:MM)";
             html += '</div>';
