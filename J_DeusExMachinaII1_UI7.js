@@ -373,6 +373,7 @@ var DeusExMachinaII = (function(api, $) {
             html += '&nbsp;&nbsp;<input type="checkbox" id="mode2" class="hmselect" name="houseMode" value="2" onChange="DeusExMachinaII.changeHouseModeSelector(this);">&nbsp;Away</input>';
             html += '&nbsp;&nbsp;<input type="checkbox" id="mode3" class="hmselect" name="houseMode" value="3" onChange="DeusExMachinaII.changeHouseModeSelector(this);">&nbsp;Night</input>';
             html += '&nbsp;&nbsp;<input type="checkbox" id="mode4" class="hmselect" name="houseMode" value="4" onChange="DeusExMachinaII.changeHouseModeSelector(this);">&nbsp;Vacation</input>';
+            html += '<br/>Note: Response to house mode changes will be improved if DEMII finds Reactor (better) or the HouseModes plugin (acceptable) installed; no other configuration changes are needed--they just need to be installed and DEMII will use them automatically.';
             html += '</div>';
 
             // Maximum number of targets allowed to be "on" simultaneously
