@@ -6,10 +6,11 @@
  * Copyright 2016,2017 Patrick H. Rigney, All Rights Reserved.
  * This file is part of DeusExMachinaII. For license information, see LICENSE at https://github.com/toggledbits/DeusExMachina
  */
+/* globals api,jQuery,$,Utils */
 
 //"use strict"; // fails on UI7, works fine with ALTUI
 
-var DeusExMachinaII = (function(api) {
+var DeusExMachinaII = (function(api, $) {
 
     // unique identifier for this plugin...
     var uuid = '11816AA9-0C7C-4E8F-B490-AAB429FA140F';
@@ -357,9 +358,9 @@ var DeusExMachinaII = (function(api) {
 
             // Start Time
             html += '<div class="demcgroup pull-left">';
-            html += "<h2>Active Period</h2>";
+            html += "<h2>Auto-Activation</h2>";
             html += 'Set the approximate start and stop times for cycling. If the start time is left blank, it will be sunset. The actual start and stop times will be delayed randomly.<br/>';
-            html += '<input type="checkbox" value="1" id="noauto" onChange="DeusExMachinaII.checkTimes(this)">Manual Activation (action from your scene, PLEG or Lua)<br/>';
+            html += '<input type="checkbox" value="1" id="noauto" onChange="DeusExMachinaII.checkTimes(this)">Manual Activation (e.g. action from Reactor or Lua)<br/>';
             html += 'From: <input type="text" size="7" maxlength="5" onChange="DeusExMachinaII.checkTimes(this)" id="startTime">';
             html += " to <input type=\"text\" size=\"7\" maxlength=\"5\" onChange=\"DeusExMachinaII.checkTimes(this)\" id=\"deusExTime\" /> (HH:MM)";
             html += '</div>';
@@ -372,6 +373,7 @@ var DeusExMachinaII = (function(api) {
             html += '&nbsp;&nbsp;<input type="checkbox" id="mode2" class="hmselect" name="houseMode" value="2" onChange="DeusExMachinaII.changeHouseModeSelector(this);">&nbsp;Away</input>';
             html += '&nbsp;&nbsp;<input type="checkbox" id="mode3" class="hmselect" name="houseMode" value="3" onChange="DeusExMachinaII.changeHouseModeSelector(this);">&nbsp;Night</input>';
             html += '&nbsp;&nbsp;<input type="checkbox" id="mode4" class="hmselect" name="houseMode" value="4" onChange="DeusExMachinaII.changeHouseModeSelector(this);">&nbsp;Vacation</input>';
+            html += '<br/>Note: Response to house mode changes will be improved if DEMII finds Reactor (better) or the HouseModes plugin (acceptable) installed; no other configuration changes are needed--they just need to be installed and DEMII will use them automatically.';
             html += '</div>';
 
             // Maximum number of targets allowed to be "on" simultaneously
@@ -575,8 +577,8 @@ var DeusExMachinaII = (function(api) {
                     }
 
                     jQuery('select#finalscene').append(menu);
-                    var final = api.getDeviceState(deusDevice, serviceId, "FinalScene");
-                    if (final !== undefined) jQuery('select#finalscene option[value="' + final + '"]').prop('selected', true);
+                    var fs = api.getDeviceState(deusDevice, serviceId, "FinalScene");
+                    if (fs !== undefined) jQuery('select#finalscene option[value="' + fs + '"]').prop('selected', true);
                 }
             });
         }
@@ -608,4 +610,4 @@ var DeusExMachinaII = (function(api) {
         doSceneAdd: doSceneAdd
     };
     return myModule;
-})(api);
+})(api, $ || jQuery);

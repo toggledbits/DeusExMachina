@@ -1,5 +1,10 @@
 # DeusExMachinaII Change Log #
 
+## Version 2.9 (development)
+
+* Upgrade detection of AltUI so we don't falsely detect when bridged (on "real" device triggers AltUI feature registration).
+* Make use of Reactor, if installed, to detect house mode changes more quickly (this does not require additional ReactorSensors or configuration on the user's part, it just starts working when DEMII and Reactor are installed together). The HouseModes plugin also works, but is less responsive than Reactor.
+
 ## Version 2.8 (released) ##
 
 * Make on/off state of dimming devices more deterministic (follows DelayLight issue #14).

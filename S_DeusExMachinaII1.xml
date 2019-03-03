@@ -15,13 +15,11 @@
             <name>LightsOut</name>
             <dataType>ui4</dataType>
             <defaultValue>1439</defaultValue>
-            <shortCode>lightsout</shortCode>
         </stateVariable>
         <stateVariable sendEvents="no">
             <name>Devices</name>
             <dataType>string</dataType>
             <defaultValue>nil</defaultValue>
-            <shortCode>devices</shortCode>
         </stateVariable>
         <stateVariable sendEvents="yes">
             <name>State</name>
@@ -31,15 +29,19 @@
         </stateVariable>
         <stateVariable sendEvents="yes">
             <name>Active</name>
-            <dataType>ui1</dataType>
+            <dataType>boolean</dataType>
             <defaultValue>0</defaultValue>
             <shortCode>active</shortCode>
         </stateVariable>
         <stateVariable sendEvents="no">
             <name>HouseModes</name>
             <dataType>ui1</dataType>
-            <defaultValue>0</defaultValue>
-            <shortCode>housemodes</shortCode>
+            <defaultValue>2</defaultValue>
+        </stateVariable>
+        <stateVariable sendEvents="no">
+            <name>AutoTiming</name>
+            <dataType>boolean</dataType>
+            <defaultValue>1</defaultValue>
         </stateVariable>
     </serviceStateTable>
     <actionList>
@@ -70,6 +72,7 @@
                     <name>ResultVersion</name>
                     <direction>out</direction>
                     <relatedStateVariable>TempStorage</relatedStateVariable>
+                    <retval/>
                 </argument>
             </argumentList>
         </action>
