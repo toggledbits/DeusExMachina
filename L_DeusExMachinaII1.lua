@@ -812,6 +812,9 @@ function deusInit(pdev)
 	end
 	pluginDevice = pdev
 
+	maxEvents = getVarNumeric( "MaxEvents", 300, pdev )
+	if maxEvents < 1 then maxEvents = 1 end
+
 	if getVarNumeric( "DebugMode", 0, pdev ) ~= 0 then
 		debugMode = true
 		D("deusInit() debug mode enabled by state variable")
