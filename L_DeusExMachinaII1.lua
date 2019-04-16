@@ -32,7 +32,7 @@ local systemHMD = false
 local sysLastMode = 1
 local devStateCache = false
 local sysEvents = {}
-local maxEvents = 1000
+local maxEvents = 300
 
 local houseModeText = { "Home", "Away", "Night", "Vacation" }
 
