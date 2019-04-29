@@ -11,6 +11,7 @@ local string = require("string")
 local _PLUGIN_ID = 8702 -- luacheck: ignore 211
 local _PLUGIN_NAME = "DeusExMachinaII"
 local _PLUGIN_VERSION = "2.9develop-19106"
+local _PLUGIN_URL = "https://www.toggledbits.com/demii"
 local _CONFIGVERSION = 20800
 
 local MYSID = "urn:toggledbits-com:serviceId:DeusExMachinaII1"
@@ -26,7 +27,7 @@ local STATE_SHUTDOWN = 3
 
 local runStamp = 0
 local pluginDevice = -1
--- local isALTUI = false
+local isALTUI = false
 local isOpenLuup = false
 local systemHMD = false
 local sysLastMode = 1
@@ -657,21 +658,37 @@ local function runOnce()
 
 	-- Consider per-version changes.
 	s = getVarNumeric("Version", 0)
-	if (s < 20300) then
+	if s == 0 then
+		D("runOnce(): updating config for first-time initialization")
+		luup.variable_set( MYSID, "Enabled", 0, pluginDevice )
+		luup.variable_set( MYSID, "AutoTiming", "1", pluginDevice )
+		luup.variable_set( MYSID, "StartTime", "", pluginDevice )
+		luup.variable_set( MYSID, "LightsOut", 1439, pluginDevice )
+		luup.variable_set( MYSID, "MaxTargetsOn", 0, pluginDevice )
+		luup.variable_set( MYSID, "LeaveLightsOn", 0, pluginDevice )
+		luup.variable_set( MYSID, "Active", "0", pluginDevice )
+		luup.variable_set( MYSID, "LastHouseMode", "1", pluginDevice )
+		luup.variable_set( MYSID, "NextStep", "0", pluginDevice )
+		luup.variable_set( SWITCH_SID, "Target", 0, pluginDevice )
+		luup.variable_set( SWITCH_SID, "Status", 0, pluginDevice )
+		luup.variable_set( MYSID, "Version", _CONFIGVERSION, pluginDevice )
+		return
+	end
+	if s < 20300 then
 		-- v2.3: LightsOutTime (in milliseconds) deprecated, now using LightsOut (in minutes since midnight)
 		D("runOnce(): updating config, version %1 < 20300", s)
-		s = luup.variable_get(MYSID, "LightsOut", pluginDevice)
-		if (s == nil) then
-			s = getVarNumeric("LightsOutTime") -- get pre-2.3 variable
-			if (s == nil) then
+		local t = luup.variable_get(MYSID, "LightsOut", pluginDevice)
+		if t == nil then
+			t = getVarNumeric("LightsOutTime") -- get pre-2.3 variable
+			if t == nil then
 				luup.variable_set(MYSID, "LightsOut", 1439, pluginDevice) -- default 23:59
 			else
-				luup.variable_set(MYSID, "LightsOut", tonumber(s,10) / 60000, pluginDevice) -- conv ms to minutes
+				luup.variable_set(MYSID, "LightsOut", ( tonumber(t) or 86340000 )  / 60000, pluginDevice) -- conv ms to minutes
 			end
 		end
 		deleteVar("LightsOutTime", pluginDevice)
 	end
-	if (s < 20400) then
+	if s < 20400 then
 		-- v2.4: SwitchPower1 variables added. Follow previous plugin state in case of auto-update.
 		D("runOnce(): updating config, version %1 < 20400", 2)
 		luup.variable_set(MYSID, "MaxTargetsOn", 0, pluginDevice)
@@ -837,7 +854,7 @@ function deusInit(pdev)
 		if v.device_type == "urn:schemas-upnp-org:device:altui:1" and v.device_num_parent == 0 then
 			local rc,rs,jj,ra
 			D("deusInit() detected ALTUI at %1", k)
-			-- isALTUI = true
+			isALTUI = true
 			rc,rs,jj,ra = luup.call_action("urn:upnp-org:serviceId:altui1", "RegisterPlugin",
 				{ newDeviceType=MYTYPE, newScriptFile="J_DeusExMachinaII1_ALTUI.js", newDeviceDrawFunc="DeusExMachina_ALTUI.DeviceDraw" },
 				k )
@@ -1162,7 +1179,7 @@ stringify = function( v, seen )
 	return string.format( "%q", tostring(v) )
 end
 
-local function getDevice( dev, pdev, v )
+local function getDevice( dev, pdev, v ) -- luacheck: ignore 212
 	if v == nil then v = luup.devices[dev] end
 	if json == nil then json = require("dkjson") end
 	local devinfo = {
