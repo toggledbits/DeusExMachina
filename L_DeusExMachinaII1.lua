@@ -1,17 +1,17 @@
 -- L_DeusExMachinaII1.lua - Core module for DeusExMachinaII
--- L_DeusExMachinaII1.lua - Core module for DeusExMachinaII
 -- Copyright 2016,2017 Patrick H. Rigney, All Rights Reserved.
 -- This file is part of DeusExMachinaII. For license information, see LICENSE at https://github.com/toggledbits/DeusExMachina
 
 module("L_DeusExMachinaII1", package.seeall)
 
-local debugMode = false
+local debugMode = true
 
 local string = require("string")
 
 local _PLUGIN_ID = 8702 -- luacheck: ignore 211
 local _PLUGIN_NAME = "DeusExMachinaII"
-local _PLUGIN_VERSION = "2.9stable-19098"
+local _PLUGIN_VERSION = "2.9stable-19119"
+local _PLUGIN_URL = "https://www.toggledbits.com/demii"
 local _CONFIGVERSION = 20800
 
 local MYSID = "urn:toggledbits-com:serviceId:DeusExMachinaII1"
@@ -27,11 +27,13 @@ local STATE_SHUTDOWN = 3
 
 local runStamp = 0
 local pluginDevice = -1
--- local isALTUI = false
+local isALTUI = false
 local isOpenLuup = false
-local systemHMD
+local systemHMD = false
 local sysLastMode = 1
 local devStateCache = false
+local sysEvents = {}
+local maxEvents = 1000
 
 local houseModeText = { "Home", "Away", "Night", "Vacation" }
 
@@ -79,6 +81,10 @@ local function L(msg, ...) -- luacheck: ignore 212
 		end
 	)
 	luup.log(str, level)
+	if debugMode then
+		table.insert( sysEvents, str )
+		while #sysEvents > maxEvents do table.remove( sysEvents, 1 ) end
+	end
 --[[
 	local ff = io.open("/etc/cmh-ludl/DeusActivity.log", "a")
 	if ff then
@@ -652,21 +658,37 @@ local function runOnce()
 
 	-- Consider per-version changes.
 	s = getVarNumeric("Version", 0)
-	if (s < 20300) then
+	if s == 0 then
+		D("runOnce(): updating config for first-time initialization")
+		luup.variable_set( MYSID, "Enabled", 0, pluginDevice )
+		luup.variable_set( MYSID, "AutoTiming", "1", pluginDevice )
+		luup.variable_set( MYSID, "StartTime", "", pluginDevice )
+		luup.variable_set( MYSID, "LightsOut", 1439, pluginDevice )
+		luup.variable_set( MYSID, "MaxTargetsOn", 0, pluginDevice )
+		luup.variable_set( MYSID, "LeaveLightsOn", 0, pluginDevice )
+		luup.variable_set( MYSID, "Active", "0", pluginDevice )
+		luup.variable_set( MYSID, "LastHouseMode", "1", pluginDevice )
+		luup.variable_set( MYSID, "NextStep", "0", pluginDevice )
+		luup.variable_set( SWITCH_SID, "Target", 0, pluginDevice )
+		luup.variable_set( SWITCH_SID, "Status", 0, pluginDevice )
+		luup.variable_set( MYSID, "Version", _CONFIGVERSION, pluginDevice )
+		return
+	end
+	if s < 20300 then
 		-- v2.3: LightsOutTime (in milliseconds) deprecated, now using LightsOut (in minutes since midnight)
 		D("runOnce(): updating config, version %1 < 20300", s)
-		s = luup.variable_get(MYSID, "LightsOut", pluginDevice)
-		if (s == nil) then
-			s = getVarNumeric("LightsOutTime") -- get pre-2.3 variable
-			if (s == nil) then
+		local t = luup.variable_get(MYSID, "LightsOut", pluginDevice)
+		if t == nil then
+			t = getVarNumeric("LightsOutTime") -- get pre-2.3 variable
+			if t == nil then
 				luup.variable_set(MYSID, "LightsOut", 1439, pluginDevice) -- default 23:59
 			else
-				luup.variable_set(MYSID, "LightsOut", tonumber(s,10) / 60000, pluginDevice) -- conv ms to minutes
+				luup.variable_set(MYSID, "LightsOut", ( tonumber(t) or 86340000 )  / 60000, pluginDevice) -- conv ms to minutes
 			end
 		end
 		deleteVar("LightsOutTime", pluginDevice)
 	end
-	if (s < 20400) then
+	if s < 20400 then
 		-- v2.4: SwitchPower1 variables added. Follow previous plugin state in case of auto-update.
 		D("runOnce(): updating config, version %1 < 20400", 2)
 		luup.variable_set(MYSID, "MaxTargetsOn", 0, pluginDevice)
@@ -832,7 +854,7 @@ function deusInit(pdev)
 		if v.device_type == "urn:schemas-upnp-org:device:altui:1" and v.device_num_parent == 0 then
 			local rc,rs,jj,ra
 			D("deusInit() detected ALTUI at %1", k)
-			-- isALTUI = true
+			isALTUI = true
 			rc,rs,jj,ra = luup.call_action("urn:upnp-org:serviceId:altui1", "RegisterPlugin",
 				{ newDeviceType=MYTYPE, newScriptFile="J_DeusExMachinaII1_ALTUI.js", newDeviceDrawFunc="DeusExMachina_ALTUI.DeviceDraw" },
 				k )
@@ -1118,4 +1140,128 @@ function deusStep(stepStampCheck)
 	local m = modeWord .. "; next at " .. os.date("%X", nextStep)
 	L(m)
 	setMessage(m)
+end
+
+-- A "safer" JSON encode for Lua structures that may contain recursive refereance.
+-- This output is intended for display ONLY, it is not to be used for data transfer.
+local stringify
+local function alt_json_encode( st, seen )
+	seen = seen or {}
+	str = "{"
+	local comma = false
+	for k,v in pairs(st) do
+		str = str .. ( comma and "," or "" )
+		comma = true
+		str = str .. '"' .. k .. '":'
+		if type(v) == "table" then
+			if seen[v] then str = str .. '"(recursion)"'
+			else
+				seen[v] = k
+				str = str .. alt_json_encode( v, seen )
+			end
+		else
+			str = str .. stringify( v, seen )
+		end
+	end
+	str = str .. "}"
+	return str
+end
+
+-- Stringify a primitive type
+stringify = function( v, seen )
+	if v == nil then
+		return "(nil)"
+	elseif type(v) == "number" or type(v) == "boolean" then
+		return tostring(v)
+	elseif type(v) == "table" then
+		return alt_json_encode( v, seen )
+	end
+	return string.format( "%q", tostring(v) )
+end
+
+local function getDevice( dev, pdev, v ) -- luacheck: ignore 212
+	if v == nil then v = luup.devices[dev] end
+	if json == nil then json = require("dkjson") end
+	local devinfo = {
+		  devNum=dev
+		, ['type']=v.device_type
+		, description=v.description or ""
+		, room=v.room_num or 0
+		, udn=v.udn or ""
+		, id=v.id
+		, parent=v.device_num_parent
+		, ['device_json'] = luup.attr_get( "device_json", dev )
+		, ['impl_file'] = luup.attr_get( "impl_file", dev )
+		, ['device_file'] = luup.attr_get( "device_file", dev )
+		, manufacturer = luup.attr_get( "manufacturer", dev ) or ""
+		, model = luup.attr_get( "model", dev ) or ""
+	}
+	local rc,t,httpStatus,uri
+	if isOpenLuup then
+		uri = "http://localhost:3480/data_request?id=status&DeviceNum=" .. dev .. "&output_format=json"
+	else
+		uri = "http://localhost/port_3480/data_request?id=status&DeviceNum=" .. dev .. "&output_format=json"
+	end
+	rc,t,httpStatus = luup.inet.wget(uri, 15)
+	if httpStatus ~= 200 or rc ~= 0 then
+		devinfo['_comment'] = string.format( 'State info could not be retrieved, rc=%s, http=%s', tostring(rc), tostring(httpStatus) )
+		return devinfo
+	end
+	local d = json.decode(t)
+	local key = "Device_Num_" .. dev
+	if d ~= nil and d[key] ~= nil and d[key].states ~= nil then d = d[key].states else d = nil end
+	devinfo.states = d or {}
+	return devinfo
+end
+
+function request( lul_request, lul_parameters, lul_outputformat )
+	D("request(%1,%2,%3) luup.device=%4", lul_request, lul_parameters, lul_outputformat, luup.device)
+	local action = lul_parameters['action'] or lul_parameters['command'] or ""
+	local deviceNum = tonumber( lul_parameters['device'] or "" ) or luup.device
+	if action == "debug" then
+		if lul_parameters.debug ~= nil then
+			debugMode = (":1:true:yes:y:t"):match( lul_parameters.debug )
+		else
+			debugMode = not debugMode
+		end
+		D("debug set %1 by request", debugMode)
+		return "Debug is now " .. ( debugMode and "on" or "off" ), "text/plain"
+
+	elseif action == "status" then
+		local st = {
+			name=_PLUGIN_NAME,
+			plugin=_PLUGIN_ID,
+			version=_PLUGIN_VERSION,
+			configversion=_CONFIGVERSION,
+			author="Patrick H. Rigney (rigpapa)",
+			url=_PLUGIN_URL,
+			['type']=MYTYPE,
+			responder=luup.device,
+			timestamp=os.time(),
+			system = {
+				version=luup.version,
+				isOpenLuup=isOpenLuup,
+				isALTUI=isALTUI,
+				hardware=luup.attr_get("model",0),
+				lua=tostring((_G or {})._VERSION),
+				housemode=luup.attr_get("Mode",0),
+				longitude=luup.longitude,
+				latitude=luup.latitude
+			},
+			devices={},
+			devStateCache=devStateCache,
+			systemHMD=systemHMD,
+			sysEvents=sysEvents
+		}
+		for k,v in pairs( luup.devices ) do
+			if v.device_type == MYTYPE or v.device_num_parent == deviceNum then
+				local devinfo = getDevice( k, pluginDevice, v ) or {}
+				table.insert( st.devices, devinfo )
+			end
+		end
+		return alt_json_encode( st ), "application/json"
+
+	else
+		error("Not implemented: " .. action)
+	end
 end
