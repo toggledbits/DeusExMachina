@@ -33,7 +33,7 @@ local systemHMD = false
 local sysLastMode = 1
 local devStateCache = false
 local sysEvents = {}
-local maxEvents = 1000
+local maxEvents = 300
 
 local houseModeText = { "Home", "Away", "Night", "Vacation" }
 
@@ -788,6 +788,9 @@ function deusInit(pdev)
 		return false
 	end
 	pluginDevice = pdev
+
+	maxEvents = getVarNumeric( "MaxEvents", 300, pdev )
+	if maxEvents < 1 then maxEvents = 1 end
 
 	if getVarNumeric( "DebugMode", 0, pdev ) ~= 0 then
 		debugMode = true
