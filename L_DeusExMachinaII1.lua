@@ -1,5 +1,5 @@
 -- L_DeusExMachinaII1.lua - Core module for DeusExMachinaII
--- Copyright 2016,2017 Patrick H. Rigney, All Rights Reserved.
+-- Copyright 2016,2017,2019 Patrick H. Rigney, All Rights Reserved.
 -- This file is part of DeusExMachinaII. For license information, see LICENSE at https://github.com/toggledbits/DeusExMachina
 
 module("L_DeusExMachinaII1", package.seeall)
@@ -10,7 +10,7 @@ local string = require("string")
 
 local _PLUGIN_ID = 8702 -- luacheck: ignore 211
 local _PLUGIN_NAME = "DeusExMachinaII"
-local _PLUGIN_VERSION = "2.9develop-19119"
+local _PLUGIN_VERSION = "2.9develop-19120"
 local _PLUGIN_URL = "https://www.toggledbits.com/demii"
 local _CONFIGVERSION = 20800
 
@@ -132,12 +132,35 @@ local function getVarNumeric( name, dflt, dev )
 	return s
 end
 
+-- Initialize a variable if it does not already exist.
+local function initVar( sid, name, dflt, dev )
+	assert( dev ~= nil )
+	assert( sid ~= nil )
+	local currVal = luup.variable_get( sid, name, dev )
+	if currVal == nil then
+		luup.variable_set( sid, name, tostring(dflt), dev )
+		return tostring(dflt)
+	end
+	return currVal
+end
+
+-- Set variable, only if value has changed.
+local function setVar( sid, name, val, dev )
+	val = (val == nil) and "" or tostring(val)
+	local s = luup.variable_get( sid, name, dev ) or ""
+	if s ~= val then
+		luup.variable_set( sid, name, val, dev )
+	end
+	return s
+end
+
 -- Delete a variable (if we can... read on...)
 local function deleteVar( name, devid )
 	if devid == nil then devid = pluginDevice end
 	-- Interestingly, setting a variable to nil with luup.variable_set does nothing interesting; too bad, it
 	-- could have been used to delete variables, since a later get would yield nil anyway. But it turns out
 	-- that using the variableset Luup request with no value WILL delete the variable.
+	-- 2019-03-11: Later versions of firmware now delete variable when set to nil; request is still reliable.
 	local req = "http://127.0.0.1/port_3480/data_request?id=variableset&DeviceNum=" .. tostring(devid) .. "&serviceId=" .. MYSID .. "&Variable=" .. name .. "&Value="
 	D("deleteVar(%1,%2) wget %3", name, devid, req)
 	local status, result = luup.inet.wget(req)
@@ -146,7 +169,7 @@ end
 
 local function setMessage(s, dev)
 	if dev == nil then dev = pluginDevice end
-	luup.variable_set(MYSID, "Message", s or "", dev)
+	setVar(MYSID, "Message", s or "", dev)
 end
 
 -- Shortcut function to return state of SwitchPower1 Status variable
@@ -564,7 +587,7 @@ local function clearLights()
 	D("clearLights()")
 	local devs, count
 	devs, count = getTargetList()
-	luup.variable_set(MYSID, "State", STATE_SHUTDOWN, pluginDevice)
+	setVar(MYSID, "State", STATE_SHUTDOWN, pluginDevice)
 	while count > 0 do
 		targetControl(devs[count], false)
 		count = count - 1
@@ -583,8 +606,8 @@ end
 local function startCycling(dev)
 	D("startCycling(%1)", dev)
 	runStamp = os.time()
-	luup.variable_set(MYSID, "State", STATE_CYCLE, dev)
-	luup.variable_set(MYSID, "NextStep", "0", dev)
+	setVar(MYSID, "State", STATE_CYCLE, dev)
+	setVar(MYSID, "NextStep", "0", dev)
 	-- Give externals a chance to react to state change
 	luup.call_delay("deusStep", 5, runStamp)
 end
@@ -593,87 +616,24 @@ end
 -- takes place. For us, that means looking to see if an older version of Deus is still
 -- installed, and copying its config into our new config. Then disable the old Deus.
 local function runOnce()
-	local s = luup.variable_get(MYSID, "Devices", pluginDevice)
-	if (s == nil) then
-		D("runOnce(): Devices variable not found, setting up new instance...")
-		-- See if there are variables from older version of DEM
-		-- Start by finding the old Deus device, if there is one...
-		local devList = ""
-		local olddev
-		olddev = -1
-		for i,v in pairs(luup.devices) do
-			if (v.device_type == "urn:schemas-futzle-com:device:DeusExMachina:1") then
-				D("runOnce(): Found old Deus Ex Machina device #%1", i)
-				olddev = i
-				break
-			end
-		end
-		if (olddev > 0) then
-			-- We found an old Deus device, copy its config into our new state variables
-			local oldsid = "urn:futzle-com:serviceId:DeusExMachina1"
-			s = luup.variable_get(oldsid, "LightsOutTime", olddev)
-			if (s ~= nil) then
-				local n = tonumber(s,10) / 60000
-				luup.variable_set(MYSID, "LightsOut", n, pluginDevice)
-				deleteVar("LightsOutTime", pluginDevice)
-			end
-			s = luup.variable_get(oldsid, "controlCount", olddev)
-			if (s ~= nil) then
-				local n = tonumber(s, 10)
-				local t = {}
-				for k = 1,n do
-					s = luup.variable_get(oldsid, "control" .. tostring(k-1), olddev)
-					if (s ~= nil) then
-						table.insert(t, s)
-					end
-				end
-				devList = table.concat(t, ",")
-				deleteVar("controlCount", pluginDevice)
-			end
-
-			-- Finally, turn off old Deus
-			luup.call_action(oldsid, "SetEnabled", { NewEnabledValue = "0" }, olddev)
-		end
-		luup.variable_set(MYSID, "Devices", devList, pluginDevice)
-
-		-- Set up some other default config
-		luup.variable_set(MYSID, "Enabled", "0", pluginDevice)
-		luup.variable_set(MYSID, "State", STATE_STANDBY, pluginDevice)
-		luup.variable_set(MYSID, "Active", "0", pluginDevice)
-		luup.variable_set(MYSID, "AutoTiming", "0", pluginDevice)
-		luup.variable_set(MYSID, "MinCycleDelay", "300", pluginDevice)
-		luup.variable_set(MYSID, "MaxCycleDelay", "1800", pluginDevice)
-		luup.variable_set(MYSID, "MinOffDelay", "60", pluginDevice)
-		luup.variable_set(MYSID, "MaxOffDelay", "300", pluginDevice)
-		luup.variable_set(MYSID, "StartTime", "", pluginDevice)
-		luup.variable_set(MYSID, "LightsOut", 1439, pluginDevice)
-		luup.variable_set(MYSID, "MaxTargetsOn", 0, pluginDevice)
-		luup.variable_set(MYSID, "LeaveLightsOn", 0, pluginDevice)
-		luup.variable_set(MYSID, "LastHouseMode", 1, pluginDevice)
-		luup.variable_set(MYSID, "NextStep", 0, pluginDevice)
-		luup.variable_set(MYSID, "Version", _CONFIGVERSION, pluginDevice)
-		luup.variable_set(SWITCH_SID, "Status", "0", pluginDevice)
-		luup.variable_set(SWITCH_SID, "Target", "0", pluginDevice)
-	end
-
-	-- Consider per-version changes.
-	s = getVarNumeric("Version", 0)
+	local s = getVarNumeric("Version", 0)
 	if s == 0 then
 		D("runOnce(): updating config for first-time initialization")
-		luup.variable_set( MYSID, "Enabled", 0, pluginDevice )
-		luup.variable_set( MYSID, "AutoTiming", "1", pluginDevice )
-		luup.variable_set( MYSID, "StartTime", "", pluginDevice )
-		luup.variable_set( MYSID, "LightsOut", 1439, pluginDevice )
-		luup.variable_set( MYSID, "MaxTargetsOn", 0, pluginDevice )
-		luup.variable_set( MYSID, "LeaveLightsOn", 0, pluginDevice )
-		luup.variable_set( MYSID, "Active", "0", pluginDevice )
-		luup.variable_set( MYSID, "LastHouseMode", "1", pluginDevice )
-		luup.variable_set( MYSID, "NextStep", "0", pluginDevice )
-		luup.variable_set( SWITCH_SID, "Target", 0, pluginDevice )
-		luup.variable_set( SWITCH_SID, "Status", 0, pluginDevice )
-		luup.variable_set( MYSID, "Version", _CONFIGVERSION, pluginDevice )
+		initVar( MYSID, "Enabled", 0, pluginDevice )
+		initVar( MYSID, "AutoTiming", "1", pluginDevice )
+		initVar( MYSID, "StartTime", "", pluginDevice )
+		initVar( MYSID, "LightsOut", 1439, pluginDevice )
+		initVar( MYSID, "MaxTargetsOn", 0, pluginDevice )
+		initVar( MYSID, "LeaveLightsOn", 0, pluginDevice )
+		initVar( MYSID, "Active", "0", pluginDevice )
+		initVar( MYSID, "LastHouseMode", "1", pluginDevice )
+		initVar( MYSID, "NextStep", "0", pluginDevice )
+		initVar( SWITCH_SID, "Target", 0, pluginDevice )
+		initVar( SWITCH_SID, "Status", 0, pluginDevice )
+		initVar( MYSID, "Version", _CONFIGVERSION, pluginDevice )
 		return
 	end
+	-- Handle upgrades from prior versions.
 	if s < 20300 then
 		-- v2.3: LightsOutTime (in milliseconds) deprecated, now using LightsOut (in minutes since midnight)
 		D("runOnce(): updating config, version %1 < 20300", s)
@@ -691,29 +651,29 @@ local function runOnce()
 	if s < 20400 then
 		-- v2.4: SwitchPower1 variables added. Follow previous plugin state in case of auto-update.
 		D("runOnce(): updating config, version %1 < 20400", 2)
-		luup.variable_set(MYSID, "MaxTargetsOn", 0, pluginDevice)
+		initVar(MYSID, "MaxTargetsOn", 0, pluginDevice)
 		local e = getVarNumeric("Enabled", 0)
-		luup.variable_set(SWITCH_SID, "Target", e, pluginDevice)
-		luup.variable_set(SWITCH_SID, "Status", e, pluginDevice)
+		initVar(SWITCH_SID, "Target", e, pluginDevice)
+		initVar(SWITCH_SID, "Status", e, pluginDevice)
 	end
 	if s < 20500 then
 		-- v2.5: Added StartTime and LeaveLightsOn
 		D("runOnce(): updating config, version %1 < 20500", s)
-		luup.variable_set(MYSID, "StartTime", "", pluginDevice)
-		luup.variable_set(MYSID, "LeaveLightsOn", 0, pluginDevice)
+		initVar(MYSID, "StartTime", "", pluginDevice)
+		initVar(MYSID, "LeaveLightsOn", 0, pluginDevice)
 	end
 	if s < 20800 then
 		-- v2.8 Added Active and AutoTiming
 		D("runOnce(): updating config, version %1 < 20800", s)
-		luup.variable_set(MYSID, "Active", "0", pluginDevice)
-		luup.variable_set(MYSID, "AutoTiming", "1", pluginDevice)
-		luup.variable_set(MYSID, "LastHouseMode", "1", pluginDevice)
-		luup.variable_set(MYSID, "NextStep", "0", pluginDevice)
+		initVar(MYSID, "Active", "0", pluginDevice)
+		initVar(MYSID, "AutoTiming", "1", pluginDevice)
+		initVar(MYSID, "LastHouseMode", "1", pluginDevice)
+		initVar(MYSID, "NextStep", "0", pluginDevice)
 	end
 
 	-- Update version state last.
 	if (s ~= _CONFIGVERSION) then
-		luup.variable_set(MYSID, "Version", _CONFIGVERSION, pluginDevice)
+		initVar(MYSID, "Version", _CONFIGVERSION, pluginDevice)
 	end
 end
 
@@ -727,18 +687,18 @@ function deusEnable(dev)
 	L("enabling %1", dev)
 	assert(dev == pluginDevice)
 
-	luup.variable_set(SWITCH_SID, "Target", "1", dev)
+	setVar(SWITCH_SID, "Target", "1", dev)
 
 	checkLocation(dev)
 
 	setMessage("Enabling...", dev)
 
 	-- Old Enabled variable follows SwitchPower1's Target
-	luup.variable_set(MYSID, "Enabled", "1", dev)
-	luup.variable_set(MYSID, "State", STATE_IDLE, dev)
+	setVar(MYSID, "Enabled", "1", dev)
+	setVar(MYSID, "State", STATE_IDLE, dev)
 
 	-- SwitchPower1 status now on, we are running.
-	luup.variable_set(SWITCH_SID, "Status", "1", dev)
+	setVar(SWITCH_SID, "Status", "1", dev)
 end
 
 -- Disable DEM and go to standby state. If we are currently cycling (as opposed to idle/waiting for sunset),
@@ -747,7 +707,7 @@ function deusDisable(dev)
 	L("disabling %1", dev)
 	-- assert(dev == pluginDevice)
 
-	luup.variable_set(SWITCH_SID, "Target", "0", dev)
+	setVar(SWITCH_SID, "Target", "0", dev)
 
 	setMessage("Disabling...", dev)
 
@@ -765,9 +725,9 @@ function deusDisable(dev)
 
 	-- start with a clean slate next time
 	clearDeviceState()
-	luup.variable_set(MYSID, "State", STATE_STANDBY, dev)
-	luup.variable_set(MYSID, "Enabled", "0", dev)
-	luup.variable_set(SWITCH_SID, "Status", "0", dev)
+	setVar(MYSID, "State", STATE_STANDBY, dev)
+	setVar(MYSID, "Enabled", "0", dev)
+	setVar(SWITCH_SID, "Status", "0", dev)
 
 	setMessage("Disabled")
 end
@@ -795,7 +755,7 @@ function actionActivate( dev, newState )
 		else
 			if currState == STATE_CYCLE then
 				L("Manual deactivation action.")
-				luup.variable_set(MYSID, "State", STATE_SHUTDOWN, dev)
+				setVar(MYSID, "State", STATE_SHUTDOWN, dev)
 				setMessage("Deactivating...")
 			else
 				L("Ignored request to deactivate, already shut/shutting down")
@@ -813,8 +773,8 @@ function setTrace(dev, newTraceState)
 	debugMode = newTraceState
 	local n
 	if newTraceState then n=1 else n=0 end
-	luup.variable_set(MYSID, "DebugMode", n, dev)
-	luup.variable_set(MYSID, "TraceMode", n, dev)
+	setVar(MYSID, "DebugMode", n, dev)
+	setVar(MYSID, "TraceMode", n, dev)
 	D("setTrace() set state to %1 by action", newTraceState)
 end
 
@@ -921,7 +881,7 @@ local function checkHouseMode()
 				if getVarNumeric("LeaveLightsOn", 0) == 0 then
 					clearLights()
 				end
-				luup.variable_set(MYSID, "State", STATE_IDLE, pluginDevice)
+				setVar(MYSID, "State", STATE_IDLE, pluginDevice)
 				setMessage( "Idle (" .. ( houseModeText[newmode] or newmode ) .. ")" )
 			else
 				-- Rush next step/check. Let it decide if it wants to continue.
@@ -949,7 +909,7 @@ function deusWatch( dev, sid, var, oldVal, newVal )
 		-- Turn off active flag in inactive states. Cycler turns flag on when it's working.
 		local state = tonumber(newVal)
 		if not (state == STATE_CYCLE or state == STATE_SHUTDOWN) then
-			luup.variable_set( MYSID, "Active", "0", dev )
+			setVar( MYSID, "Active", "0", dev )
 		end
 	end
 end
@@ -989,7 +949,7 @@ function deusTick(dev)
 					-- Transition to shut-off
 					L("Lights-out (auto timing), transitioning to shut-off cycles...")
 					setMessage("Starting lights-out...")
-					luup.variable_set(MYSID, "State", STATE_SHUTDOWN, dev)
+					setVar(MYSID, "State", STATE_SHUTDOWN, dev)
 				end
 				-- Otherwise, don't set message, let deusStep do it.
 				nextCycleDelay = 60
@@ -1048,7 +1008,7 @@ function deusStep(stepStampCheck)
 		return
 	end
 	-- Valid house mode. Save it.
-	luup.variable_set(MYSID, "LastHouseMode", luup.attr_get("Mode", 0), pluginDevice)
+	setVar(MYSID, "LastHouseMode", luup.attr_get("Mode", 0), pluginDevice)
 
 	local now = os.time()
 	local currentState = getVarNumeric("State", STATE_SHUTDOWN, pluginDevice)
@@ -1074,7 +1034,7 @@ function deusStep(stepStampCheck)
 			if not ( hadLimited or turnOffLight() ) then
 				-- No more lights to turn off. Run final scene and don't reschedule this thread.
 				runFinalScene()
-				luup.variable_set(MYSID, "State", STATE_IDLE, pluginDevice)
+				setVar(MYSID, "State", STATE_IDLE, pluginDevice)
 				L("All lights out; now idle, end of cycling until next activation.")
 				setMessage("Idle")
 				return
@@ -1089,7 +1049,7 @@ function deusStep(stepStampCheck)
 			-- Start by making sure active flag is set.
 			D("deusStep(): running toggle cycle, state=%1", currentState)
 			if getVarNumeric("Active",0) == 0 then
-				luup.variable_set(MYSID, "Active", "1", pluginDevice)
+				setVar(MYSID, "Active", "1", pluginDevice)
 			end
 			-- Next cycle is sooner of random delay or next limited-time light (if any)
 			nextCycleDelay = getRandomDelay("MinCycleDelay", "MaxCycleDelay")
@@ -1135,7 +1095,7 @@ function deusStep(stepStampCheck)
 	D("deusStep(): cycle finished, next in %1 seconds", nextCycleDelay)
 	if nextCycleDelay < 15 then nextCycleDelay = 15 elseif nextCycleDelay > 7200 then nextCycleDelay = 7200 end
 	nextStep = now + nextCycleDelay
-	luup.variable_set(MYSID, "NextStep", nextStep, pluginDevice)
+	setVar(MYSID, "NextStep", nextStep, pluginDevice)
 	luup.call_delay("deusStep", nextCycleDelay, stepStamp)
 	local m = modeWord .. "; next at " .. os.date("%X", nextStep)
 	L(m)
