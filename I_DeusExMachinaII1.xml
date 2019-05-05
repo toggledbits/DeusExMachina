@@ -11,7 +11,6 @@
 		function startupDeusExMachinaII1(deusDevice)
 			luup.log("DeusExMachinaII STARTUP!")
 			demII = require("L_DeusExMachinaII1")
-			deusStep = demII.deusStep
 			deusTick = demII.deusTick
 			deusWatch = demII.deusWatch
 			deusRequestHandler = demII.request
