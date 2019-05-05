@@ -26,10 +26,10 @@ local STATE_CYCLE = 2
 local STATE_SHUTDOWN = 3
 
 local sysTaskManager = false
+local systemHMD = false
 local pluginDevice = -1
 local isALTUI = false
 local isOpenLuup = false
-local systemHMD = false
 local devStateCache = false
 local sysEvents = {}
 local maxEvents = 300
@@ -281,13 +281,12 @@ local function checkVersion(dev)
 end
 
 -- Get numeric variable, or return default value if not set or blank
-local function getVarNumeric( name, dflt, dev )
+local function getVarNumeric( name, dflt, dev, sid )
 	dev = dev or pluginDevice
-	local s = luup.variable_get(MYSID, name, dev)
-	if (s == nil or s == "") then return dflt end
-	s = tonumber(s, 10)
-	if (s == nil) then return dflt end
-	return s
+	sid = sid or MYSID
+	local s = luup.variable_get(sid, name, dev) or ""
+	if s == "" then return dflt end
+	return tonumber(s) or dflt
 end
 
 -- Initialize a variable if it does not already exist.
@@ -760,6 +759,54 @@ local function checkLocation(dev)
 	end
 end
 
+-- Set HMT ModeSetting
+local function setHMTModeSetting( hmtdev )
+	if not hmtdev then return end
+	local chm = luup.attr_get( 'Mode', 0 ) or "1"
+	local armed = getVarNumeric( "Armed", 0, hmtdev, "urn:micasaverde-com:serviceId:SecuritySensor1" ) ~= 0
+	local s = {}
+	for ix=1,4 do
+		table.insert( s, string.format( "%d:%s", ix, ( tostring(ix) == chm ) and ( armed and "A" or "" ) or ( armed and "" or "A" ) ) )
+	end
+	s = table.concat( s, ";" )
+	D("setHMTModeSetting(%4) HM=%1 armed=%2; new ModeSetting=%3", chm, armed, s, hmtdev)
+	luup.variable_set( "urn:micasaverde-com:serviceId:HaDevice1", "ModeSetting", s, hmtdev )
+end
+
+-- Get the house mode tracker. If it doesn't exist, create it (child device).
+-- No HMT on openLuup because it doesn't have native device file to support it.
+local function getHouseModeTracker( createit, pdev )
+	pdev = pdev or pluginDevice
+	if not isOpenLuup then
+		for k,v in pairs( luup.devices ) do
+			if v.device_num_parent == pdev and v.id == "hmt" then
+				return k, v
+			end
+		end
+		-- Didn't find it. At this point, we have a list of children.
+		if createit then
+			-- Didn't find it. Need to create a new child device for it. Sigh.
+			L{level=2,msg="Did not find house mode tracker; creating. This will cause a Luup reload."}
+			local ptr = luup.chdev.start( pdev )
+			setMessage( "Message", "Adding house mode tracker, please wait..." )
+			--[[
+			for k,v in pairs( luup.devices ) do
+				if v.device_num_parent == pdev then
+					local df = dfMap[ v.device_type ]
+					D("getHouseModeTracker() appending existing device %1 (%2)", v.id, v.description)
+					luup.chdev.append( pdev, ptr, v.id, v.description, "", df.device_file, "", "", false )
+				end
+			end
+			--]]
+			D("getHouseModeTracker() creating hmt child; final step before reload.")
+			luup.chdev.append( pdev, ptr, "hmt", "DeusExMachinaII HMT", "", "D_DoorSensor1.xml", "", "", false )
+			luup.chdev.sync( pdev, ptr )
+			-- Should cause reload immediately. Drop through.
+		end
+	end
+	return false
+end
+
 local function startCycling(dev)
 	D("startCycling(%1)", dev)
 	setVar(MYSID, "State", STATE_CYCLE, dev)
@@ -1002,7 +1049,7 @@ local function runMasterTask( task, dev )
 					stopCycling( dev )
 				end
 				setMessage( "Inactive in " .. ( houseModeText[mode] or tostring(mode) ) .. " mode" )
-				if nextStart <= os.time() then nextStart = nextStart + 86400 end 
+				if nextStart <= os.time() then nextStart = nextStart + 86400 end
 				return task:schedule( nextStart ) -- default timing
 			end
 		else
@@ -1027,7 +1074,7 @@ local function runMasterTask( task, dev )
 			end
 			L("Waiting for " .. startWord)
 			setMessage("Waiting for " .. startWord)
-			if nextStart <= os.time() then nextStart = nextStart + 86400 end 
+			if nextStart <= os.time() then nextStart = nextStart + 86400 end
 			return task:schedule( nextStart ) -- default timing
 		end
 	else
@@ -1161,10 +1208,12 @@ end
 -- Check house mode.
 local function checkHouseMode()
 	D("checkHouseMode()")
-	local houseModes = getVarNumeric("HouseModes", 0)
+	setHMTModeSetting( systemHMD ) -- update/reset, always
+
 	-- This is only relevant if we are checking house mode.
+	local houseModes = getVarNumeric("HouseModes", 0)
 	if houseModes ~= 0 then
-		local newmode = tonumber( luup.attr_get("Mode",0) or 1 ) or 1
+		local newmode = tonumber( luup.attr_get("Mode", 0) or 1 ) or 1
 		local lastMode = getVarNumeric( "LastHouseMode", 1, pluginDevice )
 		if newmode == lastMode then return end
 		sysTaskManager.getTask( "master" ):delay( 0 ) -- kick master task
@@ -1229,17 +1278,19 @@ function deusInit(pdev)
 		elseif v.device_type == "openLuup" then
 			D("deusInit() detected openLuup")
 			isOpenLuup = true
-		elseif v.device_type == "urn:schemas-toggledbits-com:device:Reactor:1" then
-			-- Reactor is installed. We can watch it for house mode changes.
-			L("Found Reactor (device #%1); using for house mode detection.", k)
-			hmt = { device=k, service="urn:toggledbits-com:serviceId:Reactor", variable="HouseMode" }
 		end
 	end
-	if hmt then
-		systemHMD = hmt
-		luup.variable_watch( "deusWatch", hmt.service, hmt.variable, hmt.device )
-	else
-		systemHMD = false
+
+	-- House mode tracking
+	systemHMD = getHouseModeTracker( true, pdev )
+	if systemHMD then
+		D("deusInit(): watching system HMD device #%1", systemHMD)
+		luup.attr_set( "invisible", debugMode and 0 or 1, systemHMD )
+		luup.attr_set( "hidden", debugMode and 0 or 1, systemHMD )
+		luup.attr_set( "room", luup.attr_get( "room", pdev ) or "0", systemHMD )
+		setVar( "urn:micasaverde-com:serviceId:SecuritySensor1", "Tripped", "0", systemHMD )
+		setHMTModeSetting( systemHMD )
+		luup.variable_watch( "deusWatch", "urn:micasaverde-com:serviceId:SecuritySensor1", "Armed", systemHMD )
 	end
 
 	-- Other initialization
@@ -1259,11 +1310,9 @@ function deusInit(pdev)
 		t:delay( 30 )
 	end
 
-	-- Create and start the house mode poller if Reactor not installed
-	if not systemHMD then
-		t = sysTaskManager.Task:new( "hmpoll", pluginDevice, runHouseModeDefaultTask, { pluginDevice } )
-		t:delay( 60 )
-	end
+	-- Create and start the house mode poller ask fallback to HMD
+	t = sysTaskManager.Task:new( "hmpoll", pluginDevice, runHouseModeDefaultTask, { pluginDevice } )
+	t:delay( 60 )
 
 	luup.set_failure( 0, pdev )
 	return true, "OK", _PLUGIN_NAME
@@ -1272,12 +1321,15 @@ end
 -- Watch callback
 function deusWatch( dev, sid, var, oldVal, newVal )
 	D("deusWatch(%1,%2,%3,%4,%5)", dev, sid, var, oldVal, newVal)
-	if systemHMD and dev == systemHMD.device and
-			sid == systemHMD.service and
-			var == systemHMD.variable then
-		-- House mode change. React?
-		L("Detected %1 (#%2) house mode change from %3 to %4", luup.devices[dev].description, dev, oldVal, newVal)
-		checkHouseMode()
+	if systemHMD and dev == systemHMD then
+		-- House mode tracker state change.
+		L("Detected house mode change by HMT (#%1)", dev)
+		-- Defer polling task if it's running.
+		if isEnabled() then
+			local task = sysTaskManager.getTask( 'hmtpoll' )
+			if task then task:delay( 60 ) end -- defer poll
+			checkHouseMode() -- also updates/resets HMT
+		end
 	elseif sid == MYSID and var == "State" then
 		-- Turn off active flag in inactive states. Cycler turns flag on when it's working.
 		local state = tonumber(newVal)
