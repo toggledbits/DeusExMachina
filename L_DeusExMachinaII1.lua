@@ -10,7 +10,7 @@ local string = require("string")
 
 local _PLUGIN_ID = 8702 -- luacheck: ignore 211
 local _PLUGIN_NAME = "DeusExMachinaII"
-local _PLUGIN_VERSION = "2.9stable-19124"
+local _PLUGIN_VERSION = "2.9develop-19126"
 local _PLUGIN_URL = "https://www.toggledbits.com/demii"
 local _CONFIGVERSION = 20900
 
@@ -1326,7 +1326,7 @@ function deusWatch( dev, sid, var, oldVal, newVal )
 		L("Detected house mode change by HMT (#%1)", dev)
 		-- Defer polling task if it's running.
 		if isEnabled() then
-			local task = sysTaskManager.getTask( 'hmtpoll' )
+			local task = sysTaskManager.getTask( 'hmpoll' )
 			if task then task:delay( 60 ) end -- defer poll
 			checkHouseMode() -- also updates/resets HMT
 		end
