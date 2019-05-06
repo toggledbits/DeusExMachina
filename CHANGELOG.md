@@ -1,6 +1,6 @@
 # DeusExMachinaII Change Log #
 
-## Version 2.9 (stable-19062)
+## Version 2.9 (stable-19124)
 
 * Fix initialization of new instances to avoid overwriting needed value and causing later error.
 * Upgrade detection of AltUI so we don't falsely detect when bridged (on "real" device triggers AltUI feature registration).
