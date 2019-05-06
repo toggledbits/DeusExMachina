@@ -1326,7 +1326,7 @@ function deusWatch( dev, sid, var, oldVal, newVal )
 		L("Detected house mode change by HMT (#%1)", dev)
 		-- Defer polling task if it's running.
 		if isEnabled() then
-			local task = sysTaskManager.getTask( 'hmtpoll' )
+			local task = sysTaskManager.getTask( 'hmpoll' )
 			if task then task:delay( 60 ) end -- defer poll
 			checkHouseMode() -- also updates/resets HMT
 		end
