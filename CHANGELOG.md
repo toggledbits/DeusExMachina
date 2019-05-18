@@ -1,7 +1,8 @@
 # DeusExMachinaII Change Log #
 
-## Version 2.9 (stable-19124)
+## Version 2.9 (stable-19138)
 
+* Fix an error in internal state tracking cache update when brightness or maxtime specified on device.
 * Fix initialization of new instances to avoid overwriting needed value and causing later error.
 * Upgrade detection of AltUI so we don't falsely detect when bridged (on "real" device triggers AltUI feature registration).
 * Use Reactor's HMT approach for super-responsive house mode tracking (Reactor does not need to be installed).
