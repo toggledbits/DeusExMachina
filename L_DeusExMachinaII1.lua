@@ -10,7 +10,7 @@ local string = require("string")
 
 local _PLUGIN_ID = 8702 -- luacheck: ignore 211
 local _PLUGIN_NAME = "DeusExMachinaII"
-local _PLUGIN_VERSION = "2.9develop-19126"
+local _PLUGIN_VERSION = "2.9develop-19138"
 local _PLUGIN_URL = "https://www.toggledbits.com/demii"
 local _CONFIGVERSION = 20900
 
@@ -484,19 +484,19 @@ local function clearDeviceState()
 	devStateCache = {}
 end
 
-local function updateDeviceState( devid, isOn, expire )
-	D("updateDeviceState(%1,%2,%3)", devid, isOn, expire )
-	devid = tostring(devid)
+local function updateDeviceState( spec, isOn, expire )
+	D("updateDeviceState(%1,%2,%3)", spec, isOn, expire )
+	spec = tostring(spec)
 	local devState = getDeviceState()
-	if devState[devid] == nil then devState[devid] = {} end
+	if devState[spec] == nil then devState[spec] = {} end
 	if isOn then
-		devState[devid].state = 1
-		devState[devid].onTime = os.time()
-		devState[devid].expire = expire
+		devState[spec].state = 1
+		devState[spec].onTime = os.time()
+		devState[spec].expire = expire
 	else
-		devState[devid].state = 0
-		devState[devid].offTime = os.time()
-		devState[devid].expire = nil
+		devState[spec].state = 0
+		devState[spec].offTime = os.time()
+		devState[spec].expire = nil
 	end
 	local json = require "dkjson"
 	luup.variable_set(MYSID, "DeviceState", json.encode( devState ), pluginDevice)
@@ -637,43 +637,45 @@ local function targetControl(targetid, turnOn)
 		luup.call_action("urn:micasaverde-com:serviceId:HomeAutomationGateway1", "RunScene", { SceneNum=targetScene }, 0)
 		updateSceneState(targetid, turnOn)
 	else
-		-- Parse the level if this is a dimming target spec
 		local lvl = 100
 		local maxOnTime = nil
-		local m = string.find(targetid, '<')
+		local devid = targetid -- string for now
+		-- Parse time limit if specified (must be end of string/spec)
+		local m = string.find(devid, '<')
 		if m ~= nil then
-			maxOnTime = string.sub(targetid, m+1)
-			targetid = string.sub(targetid, 1, m-1)
+			maxOnTime = string.sub(devid, m+1)
+			devid = string.sub(devid, 1, m-1)
 		end
-		local k = string.find(targetid, '=')
-		if k ~= nil then
-			_, _, targetid, lvl = string.find(targetid, "(%d+)=(%d+)")
-			lvl = tonumber(lvl, 10)
+		-- Parse the level if this is a dimming target spec
+		local k, _, j, l = string.find(devid, "(%d+)=(%d+)")
+		if k then
+			devid = j
+			lvl = tonumber( l, 10 ) or 100
 		end
-		targetid = tonumber(targetid, 10)
+		devid = tonumber(devid, 10) or -1 -- convert to number
 		-- Level for all types is 0 if turning device off
 		if not turnOn then lvl = 0 end
-		if luup.devices[targetid] == nil then
+		if luup.devices[devid] == nil then
 			-- Device doesn't exist (user deleted, etc.). Remove from Devices state variable.
-			D("targetControl(): device %1 not found in luup.devices", targetid)
+			D("targetControl(): device %1 not found in luup.devices, targetid=", devid, targetid)
 			removeTarget(targetid)
 			return
 		end
-		if luup.device_supports_service("urn:upnp-org:serviceId:VSwitch1", targetid) and getVarNumeric( "UseOldVSwitch", 0 ) ~= 0 then
+		if luup.device_supports_service("urn:upnp-org:serviceId:VSwitch1", devid) and getVarNumeric( "UseOldVSwitch", 0 ) ~= 0 then
 			if turnOn then lvl = 1 end
-			D("targetControl(): handling %1 (%3) as VSwitch, set target to %2", targetid, lvl, luup.devices[targetid].description)
-			luup.call_action("urn:upnp-org:serviceId:VSwitch1", "SetTarget", {newTargetValue=tostring(lvl)}, targetid)
-		elseif turnOn and luup.device_supports_service(DIMMER_SID, targetid) then
+			D("targetControl(): handling %1 (%3) as VSwitch, set target to %2", devid, lvl, luup.devices[devid].description)
+			luup.call_action("urn:upnp-org:serviceId:VSwitch1", "SetTarget", {newTargetValue=tostring(lvl)}, devid)
+		elseif turnOn and luup.device_supports_service(DIMMER_SID, devid) then
 			-- Handle as Dimming1 for power on only.
-			D("targetControl(): handling %1 (%3) as generic dimmmer, set load level to %2", targetid, lvl, luup.devices[targetid].description)
+			D("targetControl(): handling %1 (%3) as generic dimmmer, set load level to %2", devid, lvl, luup.devices[devid].description)
 			luup.call_action(DIMMER_SID, "SetLoadLevelTarget", {newLoadlevelTarget=lvl}, targetid) -- note odd case inconsistency in word "level"
-		elseif luup.device_supports_service(SWITCH_SID, targetid) then
+		elseif luup.device_supports_service(SWITCH_SID, devid) then
 			-- Handle as SwitchPower1. Send string here too, for openLuup.
 			if turnOn then lvl = 1 end
-			D("targetControl(): handling %1 (%3) as generic switch, set target to %2", targetid, lvl, luup.devices[targetid].description)
-			luup.call_action(SWITCH_SID, "SetTarget", { newTargetValue=tostring(lvl) }, targetid)
+			D("targetControl(): handling %1 (%3) as generic switch, set target to %2", devid, lvl, luup.devices[devid].description)
+			luup.call_action(SWITCH_SID, "SetTarget", { newTargetValue=tostring(lvl) }, devid)
 		else
-			D("targetControl(): don't know how to control target %1" , targetid)
+			D("targetControl(): don't know how to control target %1 device %2" , targetid, devid)
 			removeTarget(targetid)
 			return
 		end
@@ -1117,6 +1119,7 @@ local function runCyclerTask( task, dev )
 			-- No more lights to turn off. Run final scene and don't reschedule this thread.
 			runFinalScene()
 			setVar(MYSID, "State", STATE_IDLE, pluginDevice)
+			clearLights() -- Make sure they're all out.
 			clearDeviceState()
 			L("All lights out; now idle, end of cycling until next activation.")
 			setMessage("Idle")
@@ -1265,7 +1268,6 @@ function deusInit(pdev)
 	math.randomseed( os.time() )
 
 	-- Check for ALTUI and OpenLuup, HMD.
-	local hmt
 	for k,v in pairs(luup.devices) do
 		if v.device_type == "urn:schemas-upnp-org:device:altui:1" and v.device_num_parent == 0 then
 			local rc,rs,jj,ra
