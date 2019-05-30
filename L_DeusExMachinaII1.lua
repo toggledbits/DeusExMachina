@@ -10,7 +10,7 @@ local string = require("string")
 
 local _PLUGIN_ID = 8702 -- luacheck: ignore 211
 local _PLUGIN_NAME = "DeusExMachinaII"
-local _PLUGIN_VERSION = "2.9develop-19138"
+local _PLUGIN_VERSION = "2.9develop-19150"
 local _PLUGIN_URL = "https://www.toggledbits.com/demii"
 local _CONFIGVERSION = 20900
 
@@ -920,7 +920,8 @@ function deusEnable(dev)
 	setVar(MYSID, "State", STATE_IDLE, dev)
 
 	-- Resume house mode poller
-	if not systemHMD then
+	if systemHMD then
+		setHMTModeSetting( systemHMD )
 		sysTaskManager.getTask( "hmpoll" ):delay( 15 )
 	end
 
@@ -1211,7 +1212,6 @@ end
 -- Check house mode.
 local function checkHouseMode()
 	D("checkHouseMode()")
-	setHMTModeSetting( systemHMD ) -- update/reset, always
 
 	-- This is only relevant if we are checking house mode.
 	local houseModes = getVarNumeric("HouseModes", 0)
@@ -1219,6 +1219,7 @@ local function checkHouseMode()
 		local newmode = tonumber( luup.attr_get("Mode", 0) or 1 ) or 1
 		local lastMode = getVarNumeric( "LastHouseMode", 1, pluginDevice )
 		if newmode == lastMode then return end
+		setHMTModeSetting( systemHMD ) -- update/reset, always
 		sysTaskManager.getTask( "master" ):delay( 0 ) -- kick master task
 		setVar( MYSID, "LastHouseMode", newmode, pluginDevice )
 		return true
