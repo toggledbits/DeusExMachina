@@ -4,13 +4,13 @@
 
 module("L_DeusExMachinaII1", package.seeall)
 
-local debugMode = true
+local debugMode = false
 
 local string = require("string")
 
 local _PLUGIN_ID = 8702 -- luacheck: ignore 211
 local _PLUGIN_NAME = "DeusExMachinaII"
-local _PLUGIN_VERSION = "2.9develop-19150"
+local _PLUGIN_VERSION = "2.9"
 local _PLUGIN_URL = "https://www.toggledbits.com/demii"
 local _CONFIGVERSION = 20900
 
@@ -754,13 +754,6 @@ local function clearLights()
 	runFinalScene()
 end
 
-local function checkLocation(dev)
-	if luup.latitude == 0 and luup.longitude == 0 then
-		setMessage("Invalid lat/long in system config", dev)
-		error("Invalid lat/long/location data in system configuration.")
-	end
-end
-
 -- Set HMT ModeSetting
 local function setHMTModeSetting( hmtdev )
 	if not hmtdev then return end
@@ -909,8 +902,6 @@ end
 -- Enable DEM by setting a new cycle stamp and scheduling our first cycle step.
 function deusEnable(dev)
 	L("Enabling")
-
-	checkLocation(dev)
 
 	setMessage("Enabling...", dev)
 
@@ -1263,8 +1254,6 @@ function deusInit(pdev)
 
 	-- One-time stuff
 	runOnce(pdev)
-
-	checkLocation(pdev)
 
 	math.randomseed( os.time() )
 
