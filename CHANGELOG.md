@@ -1,6 +1,6 @@
 # DeusExMachinaII Change Log #
 
-## Version 2.9 (development)
+## Version 2.9 (released)
 
 * Fix an error in internal state tracking cache update when brightness or maxtime specified on device.
 * Fix initialization of new instances to avoid overwriting needed value and causing later error.
