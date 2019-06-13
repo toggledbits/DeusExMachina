@@ -10,9 +10,9 @@ local string = require("string")
 
 local _PLUGIN_ID = 8702 -- luacheck: ignore 211
 local _PLUGIN_NAME = "DeusExMachinaII"
-local _PLUGIN_VERSION = "2.9"
+local _PLUGIN_VERSION = "2.10develop-19164"
 local _PLUGIN_URL = "https://www.toggledbits.com/demii"
-local _CONFIGVERSION = 20900
+local _CONFIGVERSION = 20903 -- increment only, do not change 20 prefix
 
 local MYSID = "urn:toggledbits-com:serviceId:DeusExMachinaII1"
 local MYTYPE = "urn:schemas-toggledbits-com:device:DeusExMachinaII:1"
@@ -33,7 +33,7 @@ local isOpenLuup = false
 local devStateCache = false
 local sysEvents = {}
 local maxEvents = 300
-
+local actionHook
 local houseModeText = { "Home", "Away", "Night", "Vacation" }
 
 local function dump(t)
@@ -611,6 +611,37 @@ local function isDeviceOn(targetid)
 	return val ~= "0"
 end
 
+-- Call the action hook, if specified
+local function doActionHook( target, state )
+	if actionHook == nil then
+		local f,err = loadfile( "/etc/cmh-ludl/DEMIIAction.lua" )
+		if err then
+			L({level=2,msg="DEMIIAction.lua can't be loaded: %1"}, err)
+			actionHook = false -- prevent further load attempts
+		else
+			-- Call the code, which must return a function
+			--[[ Sample DEMIIAction.lua:
+					return function( target, state )
+						luup.log("DEMII action hook running, I'm about to turn " .. tostring(target) .. ( state and " on" or " off"))
+					end
+			--]]
+			local status
+			status,actionHook = pcall( f )
+			if not status or type(actionHook) ~= "function" then
+				L({level=2,msg="DEMIIAction.lua: %1"}, status and "returned value is not a function" or actionHook)
+				actionHook = false -- prevent further load attempts
+			end
+		end
+	end
+	if actionHook then
+		D("doActionHook() running %1(%2,%3)", actionHook, target, state)
+		local status,err = pcall( actionHook, target, state )
+		if not status then
+			L({level=2,msg="DEMIIAction.lua pre-action hook failed: %1"}, err)
+		end
+	end
+end
+
 -- Control target. Target is a string, expected to be a pure integer (in which case the target is assumed to be a switch or dimmer),
 -- or a string in the form Sxx:yy, in which case xx is an "on" scene to run, and yy is an "off" scene to run.
 local function targetControl(targetid, turnOn)
@@ -634,6 +665,7 @@ local function targetControl(targetid, turnOn)
 		D("targetControl(): on scene is %1, off scene is %2", onScene, offScene)
 		local targetScene
 		if turnOn then targetScene = onScene else targetScene = offScene end
+		doActionHook( targetid, true )
 		luup.call_action("urn:micasaverde-com:serviceId:HomeAutomationGateway1", "RunScene", { SceneNum=targetScene }, 0)
 		updateSceneState(targetid, turnOn)
 	else
@@ -661,6 +693,7 @@ local function targetControl(targetid, turnOn)
 			removeTarget(targetid)
 			return
 		end
+		doActionHook( devid, turnOn )
 		if luup.device_supports_service("urn:upnp-org:serviceId:VSwitch1", devid) and getVarNumeric( "UseOldVSwitch", 0 ) ~= 0 then
 			if turnOn then lvl = 1 end
 			D("targetControl(): handling %1 (%3) as VSwitch, set target to %2", devid, lvl, luup.devices[devid].description)
@@ -833,6 +866,7 @@ local function runOnce()
 	if s == 0 then
 		D("runOnce(): updating config for first-time initialization")
 		initVar( MYSID, "Enabled", 0, pluginDevice )
+		initVar( MYSID, "State", STATE_STANDBY, pluginDevice )
 		initVar( MYSID, "AutoTiming", "1", pluginDevice )
 		initVar( MYSID, "StartTime", "", pluginDevice )
 		initVar( MYSID, "LightsOut", 1439, pluginDevice )
@@ -842,6 +876,11 @@ local function runOnce()
 		initVar( MYSID, "Active", "0", pluginDevice )
 		initVar( MYSID, "LastHouseMode", "1", pluginDevice )
 		initVar( MYSID, "NextStep", "0", pluginDevice )
+		initVar( MYSID, "DebugMode", 0, pluginDevice )
+		initVar( MYSID, "MinCycleDelay", "", pluginDevice )
+		initVar( MYSID, "MaxCycleDelay", "", pluginDevice )
+		initVar( MYSID, "MinOffDelay", "", pluginDevice )
+		initVar( MYSID, "MaxOffDelay", "", pluginDevice )
 		initVar( SWITCH_SID, "Target", 0, pluginDevice )
 		initVar( SWITCH_SID, "Status", 0, pluginDevice )
 		initVar( MYSID, "Version", _CONFIGVERSION, pluginDevice )
@@ -886,6 +925,13 @@ local function runOnce()
 	end
 	if s < 20900 then
 		initVar( MYSID, "MinTargetsOn", 1, pluginDevice )
+		initVar( MYSID, "DebugMode", 0, pluginDevice )
+	end
+	if s < 20903 then
+		initVar( MYSID, "MinCycleDelay", "", pluginDevice )
+		initVar( MYSID, "MaxCycleDelay", "", pluginDevice )
+		initVar( MYSID, "MinOffDelay", "", pluginDevice )
+		initVar( MYSID, "MaxOffDelay", "", pluginDevice )
 	end
 
 	-- Update version state last.
@@ -949,6 +995,10 @@ function actionActivate( dev, newState )
 		L("Activate (%1) action request ignored; disabled.", newState)
 		return
 	end
+
+	-- Force reload of the action hook every time (even if this call doesn't succeed)
+	actionHook = nil
+
 	local timing = getVarNumeric( "AutoTiming", 1, dev )
 	if timing == 0 then
 		-- Manual timing, so this action will (can) work...
