@@ -161,7 +161,7 @@ When DEMII is in its "lights out" (shut-off) mode, it uses a different set of sh
 As of 2.10, DEMII supports an "action hook"--a function that is called prior to a target being turned on or off. This is by request from a user who wishes to mute his camera motion sensing prior to lights changing, so that the change would not cause snapshots/recording.
 
 There are two ways to implement the action hook:
-1. Using a scene that is run before the target is changed: the state variable `PreactionScene` (in service `urn:toggledbits`) stores the scene number (or blank/zero for no scene/hook).
+1. Using a scene that is run before the target is changed: the state variable `PreactionScene` (in service `urn:toggledbits-com:serviceId:DeusExMachinaII1`) stores the scene number (or blank/zero for no scene/hook).
 2. Using Lua code in a file called `/etc/cmh-ludl/DEMIIAction.lua` that returns a function. The function may accept two arguments: the target, and the state. The target is a numeric device number or string scene reference ("S"+scene number); the state is *true* or *false* depending on whether the target is being turned on or off, respectively (scenes are only turned on, so state will always be *true* for scenes).
 
 <code>-- Sample /etc/cmh-ludl/DEMIIAction.lua
