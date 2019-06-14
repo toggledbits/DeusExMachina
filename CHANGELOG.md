@@ -2,7 +2,7 @@
 
 ## Version 2.10 (development)
 
-* Enhancement: implement DEMIIAction.lua hook. This file, if it exists, is loaded and run; the code is expected to return a function that accepts two arguments: target and state. Before DEMII turns a target on or off, it will call this function. This is the result of a request by @rafale77 for a "hook" to allow him to mute his camera motion sensors before lights change.
+* Enhancement: implement PreactionScene (state variable) and DEMIIAction.lua hook. The latter (file), if it exists, is loaded and run; the code is expected to return a function that accepts two arguments: target and state. Before DEMII turns a target on or off, it will call this function. This is the result of a request by @rafale77 for a "hook" to allow him to mute his camera motion sensors before lights change.
 
 ## Version 2.9 (released)
 

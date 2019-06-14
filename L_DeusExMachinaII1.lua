@@ -612,7 +612,17 @@ local function isDeviceOn(targetid)
 end
 
 -- Call the action hook, if specified
-local function doActionHook( target, state )
+local function doActionHook( target, state, dev )
+	local s = getVarNumeric( "PreactionScene", 0, dev, MYSID )
+	if s > 0 then
+		local ra,rb,rj,rd = luup.call_action( "urn:micasaverde-com:serviceId:HomeAutomationGateway1", "RunScene", { SceneNum=s }, 0 )
+		D("runScene() scene hand-off to Luup returns %1,%2,%3,%4", ra, rb, rj, rd)
+		if ra ~= 0 then
+			L({level=2,msg="invocation of preaction scene %1 failed: %2"}, s, rb)
+		elseif rj > 0 then
+			L({level=2,msg="WARNING: Luup started the preaction scene as a job! Race condition probable!"}, s )
+		end
+	end
 	if actionHook == nil then
 		local f,err = loadfile( "/etc/cmh-ludl/DEMIIAction.lua" )
 		if err then
