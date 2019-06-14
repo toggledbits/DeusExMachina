@@ -164,11 +164,12 @@ There are two ways to implement the action hook:
 1. Using a scene that is run before the target is changed: the state variable `PreactionScene` (in service `urn:toggledbits-com:serviceId:DeusExMachinaII1`) stores the scene number (or blank/zero for no scene/hook).
 2. Using Lua code in a file called `/etc/cmh-ludl/DEMIIAction.lua` that returns a function. The function may accept two arguments: the target, and the state. The target is a numeric device number or string scene reference ("S"+scene number); the state is *true* or *false* depending on whether the target is being turned on or off, respectively (scenes are only turned on, so state will always be *true* for scenes).
 
-<code>-- Sample /etc/cmh-ludl/DEMIIAction.lua
+```
+-- Sample /etc/cmh-ludl/DEMIIAction.lua
 return function( target, state )
     luup.log("DEMII action hook: DEMII is about to turn " .. tostring(target) .. ( state and " on" or " off" ))
 end
-</code>
+```
 
 ### Troubleshooting ###
 
