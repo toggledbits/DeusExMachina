@@ -10,7 +10,7 @@ local string = require("string")
 
 local _PLUGIN_ID = 8702 -- luacheck: ignore 211
 local _PLUGIN_NAME = "DeusExMachinaII"
-local _PLUGIN_VERSION = "2.9"
+local _PLUGIN_VERSION = "2.9hotfix-19165"
 local _PLUGIN_URL = "https://www.toggledbits.com/demii"
 local _CONFIGVERSION = 20900
 
@@ -668,7 +668,7 @@ local function targetControl(targetid, turnOn)
 		elseif turnOn and luup.device_supports_service(DIMMER_SID, devid) then
 			-- Handle as Dimming1 for power on only.
 			D("targetControl(): handling %1 (%3) as generic dimmmer, set load level to %2", devid, lvl, luup.devices[devid].description)
-			luup.call_action(DIMMER_SID, "SetLoadLevelTarget", {newLoadlevelTarget=lvl}, targetid) -- note odd case inconsistency in word "level"
+			luup.call_action(DIMMER_SID, "SetLoadLevelTarget", {newLoadlevelTarget=tostring(lvl)}, devid) -- note odd case inconsistency in word "level"
 		elseif luup.device_supports_service(SWITCH_SID, devid) then
 			-- Handle as SwitchPower1. Send string here too, for openLuup.
 			if turnOn then lvl = 1 end
