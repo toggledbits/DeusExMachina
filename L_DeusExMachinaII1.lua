@@ -707,11 +707,11 @@ local function targetControl(targetid, turnOn)
 		if luup.device_supports_service("urn:upnp-org:serviceId:VSwitch1", devid) and getVarNumeric( "UseOldVSwitch", 0 ) ~= 0 then
 			if turnOn then lvl = 1 end
 			D("targetControl(): handling %1 (%3) as VSwitch, set target to %2", devid, lvl, luup.devices[devid].description)
-			luup.call_action("urn:upnp-org:serviceId:VSwitch1", "SetTarget", {newTargetValue=tostring(lvl)}, devid)
+			luup.call_action("urn:upnp-org:serviceId:VSwitch1", "SetTarget", { newTargetValue=tostring(lvl) }, devid)
 		elseif turnOn and luup.device_supports_service(DIMMER_SID, devid) then
 			-- Handle as Dimming1 for power on only.
 			D("targetControl(): handling %1 (%3) as generic dimmmer, set load level to %2", devid, lvl, luup.devices[devid].description)
-			luup.call_action(DIMMER_SID, "SetLoadLevelTarget", {newLoadlevelTarget=lvl}, targetid) -- note odd case inconsistency in word "level"
+			luup.call_action(DIMMER_SID, "SetLoadLevelTarget", { newLoadlevelTarget=tostring(lvl) }, devid) -- note odd case inconsistency in word "level"
 		elseif luup.device_supports_service(SWITCH_SID, devid) then
 			-- Handle as SwitchPower1. Send string here too, for openLuup.
 			if turnOn then lvl = 1 end
