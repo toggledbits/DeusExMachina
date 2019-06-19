@@ -279,14 +279,24 @@ var DeusExMachinaII = (function(api, $) {
 		} else {
 			api.setDeviceStatePersistent(deusDevice, serviceId, "AutoTiming", "1", 0);
 			startEl.prop('disabled', false);
-			var t = checkTime(startEl.val());
+			s = startEl.val() || ""; /* re-use */
+			var t = 0;
+			if ( "" !== s ) {
+				t = checkTime( s );
+			}
 			if ( t > 0 ) {
 				api.setDeviceStatePersistent(deusDevice, serviceId, "StartTime", t, 0);
+			} else {
+				api.setDeviceStatePersistent(deusDevice, serviceId, "StartTime", "", 0);
+				startEl.val("");
 			}
 			endEl.prop('disabled', false);
 			t = checkTime(endEl.val());
 			if ( t > 0 ) {
 				api.setDeviceStatePersistent(deusDevice, serviceId, "LightsOut", t, 0);
+			} else {
+				api.setDeviceStatePersistent(deusDevice, serviceId, "LightsOut", "1439", 0);
+				endEl.val("23:59");
 			}
 		}
 	}
@@ -503,7 +513,6 @@ var DeusExMachinaII = (function(api, $) {
 			var leaveOn = parseInt(api.getDeviceState(deusDevice, serviceId, "LeaveLightsOn"));
 			if (!isNaN(leaveOn))
 				jQuery('select#stopaction option[value="' + leaveOn + '"]').prop('selected', true);
-
 
 			// Activate dimmer sliders. Mark all disabled, then enable those for checked dimmers
 			jQuery('.demslider').slider({
