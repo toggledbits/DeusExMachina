@@ -10,7 +10,7 @@ local string = require("string")
 
 local _PLUGIN_ID = 8702 -- luacheck: ignore 211
 local _PLUGIN_NAME = "DeusExMachinaII"
-local _PLUGIN_VERSION = "2.10develop-19164"
+local _PLUGIN_VERSION = "2.10develop-19170"
 local _PLUGIN_URL = "https://www.toggledbits.com/demii"
 local _CONFIGVERSION = 20903 -- increment only, do not change 20 prefix
 
