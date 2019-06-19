@@ -1,10 +1,15 @@
 # DeusExMachinaII Change Log #
 
-## Version 2.9 (stable-19119)
+## Version 2.10 (development)
 
+* Enhancement: implement PreactionScene (state variable) and DEMIIAction.lua hook. The latter (file), if it exists, is loaded and run; the code is expected to return a function that accepts two arguments: target and state. Before DEMII turns a target on or off, it will call this function. This is the result of a request by @rafale77 for a "hook" to allow him to mute his camera motion sensors before lights change.
+
+## Version 2.9 (released)
+
+* Fix an error in internal state tracking cache update when brightness or maxtime specified on device.
 * Fix initialization of new instances to avoid overwriting needed value and causing later error.
 * Upgrade detection of AltUI so we don't falsely detect when bridged (on "real" device triggers AltUI feature registration).
-* Make use of Reactor, if installed, to detect house mode changes more quickly (this does not require additional ReactorSensors or configuration on the user's part, it just starts working when DEMII and Reactor are installed together). The HouseModes plugin also works, but is less responsive than Reactor.
+* Use Reactor's HMT approach for super-responsive house mode tracking (Reactor does not need to be installed).
 
 ## Version 2.8 (released) ##
 

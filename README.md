@@ -156,6 +156,21 @@ DEMII's cycle timing is controlled by a set of state variables. By default, DEMI
 
 When DEMII is in its "lights out" (shut-off) mode, it uses a different set of shorter (by default) cycle times, to more closely imitate actual human behavior. The random interval for lights-out is between 60 seconds and 300 seconds (5 minutes), as determined by `MinOffDelay` and `MaxOffDelay`. These intervals could be kept short, particularly if DEMII is controlling a large number of lights.
 
+### Action Hook ###
+
+As of 2.10, DEMII supports an "action hook"--a function that is called prior to a target being turned on or off. This is by request from a user who wishes to mute his camera motion sensing prior to lights changing, so that the change would not cause snapshots/recording.
+
+There are two ways to implement the action hook:
+1. Using a scene that is run before the target is changed: the state variable `PreactionScene` (in service `urn:toggledbits-com:serviceId:DeusExMachinaII1`) stores the scene number (or blank/zero for no scene/hook).
+2. Using Lua code in a file called `/etc/cmh-ludl/DEMIIAction.lua` that returns a function. The function may accept two arguments: the target, and the state. The target is a numeric device number or string scene reference ("S"+scene number); the state is *true* or *false* depending on whether the target is being turned on or off, respectively (scenes are only turned on, so state will always be *true* for scenes).
+
+```
+-- Sample /etc/cmh-ludl/DEMIIAction.lua
+return function( target, state )
+    luup.log("DEMII action hook: DEMII is about to turn " .. tostring(target) .. ( state and " on" or " off" ))
+end
+```
+
 ### Troubleshooting ###
 
 If you're not sure what DEMII is going, the easiest way to see is to go into the Settings interface for the plugin.
