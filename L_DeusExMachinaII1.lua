@@ -207,7 +207,7 @@ TaskManager = function( luupCallbackName )
 		assert(self.id, "Can't run() a closed task")
 		self.when = 0
 		local success, err = pcall( self.func, self, unpack( self.args or {} ) )
-		if not success then error("Task callback failed: "..tostring(err)) end
+		if not success then L({level=1, msg="Task:run() task %1 failed: %2"}, self, err) error("Task callback failed: "..tostring(err)) end
 		return self
 	end
 
@@ -406,7 +406,6 @@ local function startTime(dev)
 		tt.sec = 0
 		local ts = os.time(tt)
 		D("startTime() tt=%1, ts=%2", tt, ts)
-		if ts < os.time() then ts = ts + 86400 end
 		return ts, string.format("%02d:%02d", tt.hour, tt.min)
 	end
 end
@@ -860,12 +859,14 @@ local function stopCycling( dev )
 		sysTaskManager.getTask( "cycler" ):suspend()
 		if getVarNumeric("LeaveLightsOn", 0) == 0 then
 			clearLights()
+		else
+			runFinalScene( dev ) -- always run final scene
 		end
 		setVar(MYSID, "State", STATE_IDLE, pluginDevice)
+		setVar(MYSID, "NextStep", "0", dev)
 		setMessage("Idle")
-	else
-		clearDeviceState()
 	end
+	clearDeviceState()
 end
 
 -- runOnce() looks to see if a core state variable exists; if not, a one-time initialization
@@ -965,6 +966,7 @@ function deusEnable(dev)
 	-- Old Enabled variable follows SwitchPower1's Target
 	setVar(MYSID, "Enabled", "1", dev)
 	setVar(MYSID, "State", STATE_IDLE, dev)
+	setVar(MYSID, "NextStep", 0, dev)
 
 	-- Resume house mode poller
 	if systemHMD then
@@ -1086,17 +1088,27 @@ local function runMasterTask( task, dev )
 		local inActiveHouseMode = isActiveHouseMode( mode )
 		-- We're auto-timing. We may need to do something...
 		if inActiveTimePeriod then
+			D("runMasterTask(): in active time period")
 			if inActiveHouseMode then
+				D("runMasterTask(): in active house mode, currState=%1", currState)
 				-- Right time, right house mode.
 				if currState == STATE_IDLE then
 					-- Get rolling!
 					L("Auto-start! Launching cycler...")
 					setMessage("Starting...")
 					startCycling(dev)
+				elseif currState == STATE_CYCLE or currState == STATE_SHUTDOWN then
+					local t = sysTaskManager.getTask( 'cycler' )
+					D("runMasterTick(): cycling in valid time and house mode, next at %1", t.when)
+					if t.when == 0 then
+						L{level=2, msg="Cycler hard start"}
+						t:delay( 0 )
+					end
 				end
 				return task:delay( 60 )
 			else
 				-- Right time, wrong house mode.
+				D("runMasterTask(): not active house mode, currState=%1", currState)
 				if currState == STATE_CYCLE or currState == STATE_SHUTDOWN then
 					L("Stopping; inactive house mode")
 					setMessage("Stopping; inactive house mode")
@@ -1107,7 +1119,9 @@ local function runMasterTask( task, dev )
 				return task:schedule( nextStart ) -- default timing
 			end
 		else
+			D("runMasterTask(): not active time period")
 			if inActiveHouseMode then
+				D("runMasterTask(): in active house mode for inactive period, currState=%1", currState)
 				-- Wrong time, right house mode.
 				if currState == STATE_CYCLE then
 					L("Lights-out (auto timing), transitioning to shut-off cycles...")
@@ -1120,6 +1134,7 @@ local function runMasterTask( task, dev )
 				end
 			else
 				-- Wrong time, wrong house mode.
+				D("runMasterTask(): inactive house mode, inactive time period, currState=%1", currState)
 				if currState == STATE_CYCLE or currState == STATE_SHUTDOWN then
 					L("Stopping; inactive house mode")
 					setMessage("Stopping; inactive house mode")
@@ -1169,13 +1184,12 @@ local function runCyclerTask( task, dev )
 		end
 		if not ( hadLimited or turnOffLight() ) then
 			-- No more lights to turn off. Run final scene and don't reschedule this thread.
-			runFinalScene()
-			setVar(MYSID, "State", STATE_IDLE, pluginDevice)
-			clearLights() -- Make sure they're all out.
-			clearDeviceState()
+			clearLights() -- Make sure they're all out; runs final scene.
 			L("All lights out; now idle, end of cycling until next activation.")
+			setVar(MYSID, "State", STATE_IDLE, pluginDevice)
+			setVar(MYSID, "NextStep", 0, pluginDevice)
 			setMessage("Idle")
-			return
+			return -- without rescheduling
 		end
 		task:delay( d )
 		local m = "Deactivating; next at " .. os.date("%X", now+d)
@@ -1271,8 +1285,8 @@ local function checkHouseMode()
 		local lastMode = getVarNumeric( "LastHouseMode", 1, pluginDevice )
 		if newmode == lastMode then return end
 		setHMTModeSetting( systemHMD ) -- update/reset, always
-		sysTaskManager.getTask( "master" ):delay( 0 ) -- kick master task
 		setVar( MYSID, "LastHouseMode", newmode, pluginDevice )
+		sysTaskManager.getTask( "master" ):delay( 0 ) -- kick master task
 		return true
 	end
 	return false
@@ -1379,7 +1393,7 @@ function deusWatch( dev, sid, var, oldVal, newVal )
 		-- Defer polling task if it's running.
 		if isEnabled() then
 			local task = sysTaskManager.getTask( 'hmpoll' )
-			if task then task:delay( 60 ) end -- defer poll
+			if task then task:delay( 60, { replace=true } ) end -- defer poll
 			checkHouseMode() -- also updates/resets HMT
 		end
 	elseif sid == MYSID and var == "State" then
