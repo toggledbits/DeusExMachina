@@ -10,7 +10,7 @@ local string = require("string")
 
 local _PLUGIN_ID = 8702 -- luacheck: ignore 211
 local _PLUGIN_NAME = "DeusExMachinaII"
-local _PLUGIN_VERSION = "2.10develop-19170"
+local _PLUGIN_VERSION = "2.10develop-19179"
 local _PLUGIN_URL = "https://www.toggledbits.com/demii"
 local _CONFIGVERSION = 20903 -- increment only, do not change 20 prefix
 
@@ -679,7 +679,7 @@ local function targetControl(targetid, turnOn)
 		updateSceneState(targetid, turnOn)
 	else
 		local lvl = 100
-		local maxOnTime = nil
+		local maxOnTime = false
 		local devid = targetid -- string for now
 		-- Parse time limit if specified (must be end of string/spec)
 		local m = string.find(devid, '<')
@@ -722,8 +722,12 @@ local function targetControl(targetid, turnOn)
 			return
 		end
 		local expire = nil
-		if maxOnTime ~= nil then expire = os.time() + tonumber(maxOnTime)*60 end
+		if turnOn and maxOnTime then 
+			maxOnTime = tonumber( maxOnTime ) * 60 -- now seconds
+			expire = os.time() + maxOnTime
+		end
 		updateDeviceState(targetid, turnOn, expire)
+		return maxOnTime
 	end
 end
 
@@ -1163,11 +1167,17 @@ local function runCyclerTask( task, dev )
 
 	local now = os.time()
 	local currentState = getVarNumeric("State", STATE_SHUTDOWN, pluginDevice)
+	if currentState ~= STATE_CYCLE and currentState ~= STATE_SHUTDOWN then
+		L({level=1,msg="runCyclerTask(): WHY ARE WE HERE? In runCyclerTask with state %1?"},
+			currentState, STATE_CYCLE)
+		return -- do not schedule
+	end
 
 	-- See if we're on time (early ticks come from restarts, usually)
 	local nextStep = getVarNumeric("NextStep", 0, pluginDevice)
 	if nextStep > now then
 		D("runCyclerTask(): early step, delaying to %1", nextStep)
+		setMessage( "Resuming; next at " .. os.date("%X", nextStep))
 		task:schedule( nextStep )
 		return
 	end
@@ -1196,13 +1206,9 @@ local function runCyclerTask( task, dev )
 		L(m)
 		setMessage(m)
 		return
-	elseif currentState ~= STATE_CYCLE then
-		L({level=1,msg="runCyclerTask(): WHY ARE WE HERE? In runCyclerTask with state %1, expecting %2"},
-			currentState, STATE_CYCLE)
-		return -- do not schedule
 	end
 
-	-- Fully active. Find a random target to control and control it.
+	-- Cycling. Find a random target to control and control it.
 	-- Start by making sure active flag is set.
 	D("runCyclerTask(): running toggle cycle, state=%1", currentState)
 	setVar(MYSID, "Active", "1", pluginDevice)
@@ -1250,7 +1256,8 @@ local function runCyclerTask( task, dev )
 								turnOffLight(on)
 							else
 								L("Cycle: turn %1 ON", devspec)
-								targetControl(devspec, true)
+								local maxOnTime = targetControl(devspec, true)
+								if maxOnTime then nextCycleDelay = maxOnTime end
 							end
 							break
 						end
