@@ -80,7 +80,7 @@ local function L(msg, ...) -- luacheck: ignore 212
 		end
 	)
 	luup.log(str, level)
-	if debugMode then
+	if debugMode or level <= 2 then
 		table.insert( sysEvents, str )
 		while #sysEvents > maxEvents do table.remove( sysEvents, 1 ) end
 	end
@@ -207,7 +207,7 @@ TaskManager = function( luupCallbackName )
 		assert(self.id, "Can't run() a closed task")
 		self.when = 0
 		local success, err = pcall( self.func, self, unpack( self.args or {} ) )
-		if not success then L({level=1, msg="Task:run() task %1 failed: %2"}, self, err) error("Task callback failed: "..tostring(err)) end
+		if not success then L({level=1, msg="Task:run() task %1 failed: %2"}, self, err) end
 		return self
 	end
 
