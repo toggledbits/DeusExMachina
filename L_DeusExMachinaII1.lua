@@ -68,7 +68,7 @@ local function L(msg, ...) -- luacheck: ignore 212
 		str = _PLUGIN_NAME .. ": " .. tostring(msg)
 	end
 	str = string.gsub(str, "%%(%d+)", function( n )
-			n = tonumber(n, 10)
+			n = tonumber(n)
 			if n < 1 or n > #arg then return "nil" end
 			local val = arg[n]
 			if type(val) == "table" then
