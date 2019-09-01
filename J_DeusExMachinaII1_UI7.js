@@ -30,17 +30,19 @@ var DeusExMachinaII = (function(api, $) {
 		api.registerEventHandler('on_ui_cpanel_before_close', myModule, 'onBeforeCpanelClose');
 	}
 
-	function isDimmer(devid) {
-		var v = api.getDeviceState( devid, "urn:upnp-org:serviceId:Dimming1", "LoadLevelStatus" );
-		if (v === undefined || v === false) return false;
-		return true;
+	function isDimmer(d) {
+		return 2 === parseInt( d.category_num || "0");
 	}
 
-	function isControllable(devid) {
-		var v = api.getDeviceState( devid, "urn:toggledbits-com:serviceId:DeusExMachinaII1", "LightsOut" );
-		if (!(v === undefined || v === false)) return false; /* exclude self */
-		if (isDimmer(devid)) return true; /* a dimmer is a light */
-		v = api.getDeviceState( devid, "urn:upnp-org:serviceId:SwitchPower1", "Status" );
+	function isControllable(d) {
+		if ( !d ) return false;
+		if ( d.device_type === "urn:schemas-toggledbits-com:device:DeusExMachinaII:1" ) return false;
+		var cat = parseInt( d.category_num ) || 0;
+		if ( cat === 2 || cat === 3 ) return true;
+		/* Final check, switchable device in a different category? */
+		/* Better would be to see if it IMPLEMENTS SwitchPower1/SetTarget, but can't get to that quickly */
+		var devid = d.id;
+		var v = api.getDeviceState( devid, "urn:upnp-org:serviceId:SwitchPower1", "Status" );
 		if (v === undefined || v === false) return false;
 		return true;
 	}
@@ -447,23 +449,33 @@ var DeusExMachinaII = (function(api, $) {
 			html += '<tr><th>Device</th><th>Max "On" Time</th><th>Level</th></tr>';
 			html += '</thead><tbody>';
 			r.forEach( function( roomObj ) {
-				if ( roomObj.devices && roomObj.devices.length ) {
-					html += '<tr class="success"><td colspan="3">' + roomObj.name + '</td></tr>';
+				var first = true;
+				if ( (roomObj.devices || []).length > 0 ) {
 					for (i=0; i<roomObj.devices.length; i+=1) {
+						var devobj = roomObj.devices[i];
+						var controlled = DeusExMachinaII.findControlledDevice(devobj.id) >= 0;
+						if ( ! ( controlled || isControllable(devobj) ) ) continue;
+						if ( first ) {
+							html += '<tr class="success"><td colspan="3">' + roomObj.name + '</td></tr>';
+							first = false;
+						}
 						html += '<tr>'; // row-like
 							html += '<td class="col-xs-3">';
-							html += '<input class="controlled-device" id="device' + roomObj.devices[i].id + '" type="checkbox"';
-							if (DeusExMachinaII.findControlledDevice(roomObj.devices[i].id) >= 0)
+							html += '<input class="controlled-device" id="device' + devobj.id + '" type="checkbox"';
+							if ( controlled ) {
 								html += ' checked="true"';
+							}
 							html += ">";
-							html += "&nbsp;#" + roomObj.devices[i].id + " ";
-							html += roomObj.devices[i].name;
+							html += "&nbsp;#" + devobj.id + " ";
+							html += devobj.name;
 							html += "</td>";
 							html += '<td class="col-xs-2">';
-							html += '<input class="ontime" id="ontime' + roomObj.devices[i].id + '">';
+							html += '<input class="ontime" id="ontime' + devobj.id + '">';
 							html += '</td>';
 							html += '<td>';
-							if (isDimmer(roomObj.devices[i].id)) html += '<div class="demslider" id="slider' + roomObj.devices[i].id + '"></div>';
+							if (isDimmer(devobj)) {
+								html += '<div class="demslider" id="slider' + devobj.id + '"></div>';
+							}
 							html += '</td>';
 						html += "</tr>\n"; // row-like
 					}
@@ -483,6 +495,7 @@ var DeusExMachinaII = (function(api, $) {
 			html += '</div>';
 
 			html += '<h2>More Information</h2>If you need more information about configuring DeusExMachinaII, please see the <a href="https://github.com/toggledbits/DeusExMachina/blob/master/README.md" target="_blank">README</a> in <a href="https://github.com/toggledbits/DeusExMachina" target="_blank"> our GitHub repository</a>.<p><b>Find DeusExMachinaII useful?</b> Please consider supporting the project with <a href="https://www.toggledbits.com/donate">a small donation</a>. I am grateful for any support you choose to give!</p>';
+			html += '<a href="' + api.getDataRequestURL() + '?id=lr_DeusExMachinaII&action=status" target="_blank">Config/status dump</a>';
 
 			// Push generated HTML to page
 			api.setCpanelContent(html);
@@ -559,9 +572,9 @@ var DeusExMachinaII = (function(api, $) {
 				var id = jQuery(obj).attr('id').substr(6);
 				if ( jQuery('input#device'+id).prop('checked') ) {
 					jQuery("input#ontime"+id).prop('disabled', false);
-					var ix = DeusExMachinaII.findControlledDevice(id);
-					if (ix >= 0) {
-						var info = DeusExMachinaII.getControlled(ix);
+					var ij = DeusExMachinaII.findControlledDevice(id);
+					if (ij >= 0) {
+						var info = DeusExMachinaII.getControlled(ij);
 						if (info.maxon != null) jQuery(obj).val(info.maxon);
 					}
 				}
@@ -602,6 +615,7 @@ var DeusExMachinaII = (function(api, $) {
 		{
 			console.log("Error in DeusExMachinaII.configureDeus(): " + e);
 			Utils.logError('Error in DeusExMachinaII.configureDeus(): ' + e);
+			console.log(e);
 		}
 	}
 
