@@ -62,7 +62,7 @@ local function L(msg, ...) -- luacheck: ignore 212
 	local str
 	local level = 50
 	if type(msg) == "table" then
-		str = tostring(msg.prefix or _PLUGIN_NAME) .. ": " .. tostring(msg.msg)
+		str = tostring(msg.prefix or _PLUGIN_NAME) .. ": " .. tostring(msg.msg or msg[1])
 		level = msg.level or level
 	else
 		str = _PLUGIN_NAME .. ": " .. tostring(msg)
@@ -702,27 +702,27 @@ local function targetControl(targetid, turnOn)
 			removeTarget(targetid)
 			return
 		end
+		local category = tonumber( luup.attr_get( 'category_num', devid ) ) or -1
 		doActionHook( devid, turnOn )
 		if luup.device_supports_service("urn:upnp-org:serviceId:VSwitch1", devid) and getVarNumeric( "UseOldVSwitch", 0 ) ~= 0 then
-			if turnOn then lvl = 1 end
+			lvl = turnOn and "1" or "0"
 			D("targetControl(): handling %1 (%3) as VSwitch, set target to %2", devid, lvl, luup.devices[devid].description)
 			luup.call_action("urn:upnp-org:serviceId:VSwitch1", "SetTarget", { newTargetValue=tostring(lvl) }, devid)
-		elseif turnOn and luup.device_supports_service(DIMMER_SID, devid) then
-			-- Handle as Dimming1 for power on only.
+		elseif turnOn and category == 2 then
+			-- Handle as Dimming1 for power ON only.
 			D("targetControl(): handling %1 (%3) as generic dimmmer, set load level to %2", devid, lvl, luup.devices[devid].description)
 			luup.call_action(DIMMER_SID, "SetLoadLevelTarget", { newLoadlevelTarget=tostring(lvl) }, devid) -- note odd case inconsistency in word "level"
-		elseif luup.device_supports_service(SWITCH_SID, devid) then
-			-- Handle as SwitchPower1. Send string here too, for openLuup.
-			if turnOn then lvl = 1 end
+		else
+			-- Everything else gets handled as a switch.
+			if not luup.device_supports_service("urn:upnp-org:serviceId:SwitchPower1") then
+				L({level=2,msg="Device %1 (#%2) type unrecognized, being handled as binary light."}, luup.devices[devid], devid)
+			end
+			lvl = turnOn and "1" or "0"
 			D("targetControl(): handling %1 (%3) as generic switch, set target to %2", devid, lvl, luup.devices[devid].description)
 			luup.call_action(SWITCH_SID, "SetTarget", { newTargetValue=tostring(lvl) }, devid)
-		else
-			D("targetControl(): don't know how to control target %1 device %2" , targetid, devid)
-			removeTarget(targetid)
-			return
 		end
 		local expire = nil
-		if turnOn and maxOnTime then 
+		if turnOn and maxOnTime then
 			maxOnTime = tonumber( maxOnTime ) * 60 -- now seconds
 			expire = os.time() + maxOnTime
 		end
@@ -1494,7 +1494,7 @@ end
 function request( lul_request, lul_parameters, lul_outputformat )
 	D("request(%1,%2,%3) luup.device=%4", lul_request, lul_parameters, lul_outputformat, luup.device)
 	local action = lul_parameters['action'] or lul_parameters['command'] or ""
-	local deviceNum = tonumber( lul_parameters['device'] or "" ) or luup.device
+	local deviceNum = tonumber( lul_parameters['device'] or "" ) or pluginDevice
 	if action == "debug" then
 		if lul_parameters.debug ~= nil then
 			debugMode = (":1:true:yes:y:t"):match( lul_parameters.debug )
@@ -1533,10 +1533,33 @@ function request( lul_request, lul_parameters, lul_outputformat )
 		}
 		for k,v in pairs( luup.devices ) do
 			if v.device_type == MYTYPE or v.device_num_parent == deviceNum then
-				local devinfo = getDevice( k, pluginDevice, v ) or {}
+				local devinfo = getDevice( k, deviceNum, v ) or {}
 				table.insert( st.devices, devinfo )
 			end
 		end
+		st.controlled = {}
+		local cd = split(luup.variable_get( MYSID, "Devices", deviceNum ) or "")
+		if ( #cd > 1 or ( #cd == 1 and cd[1] ~= "" ) ) then
+			for _,dd in ipairs(cd) do
+				if dd:byte(1) == 83 then
+					-- scene
+					st.controlled[dd] = { ['type']="scene", control=dd }
+				else
+					local dev = tostring(dd or "-1"):match( "^(%d+)(.*)" )
+					if not dev then
+						st.controlled[dd] = { ['type']="unrecognized" }
+					else
+						devid = tonumber(dev)
+						st.controlled[tostring(devid)] = { ['type']="device", control=dd, device=luup.devices[devid] or "(unknown)" }
+						if ( ((luup.devices[devid] or {}).device_num_parent or 0) ~= 0 ) then
+							local n = tonumber( luup.devices[devid].device_num_parent )
+							st.controlled[tostring(n)] = { ['type']="parent", device=luup.devices[n] or "(unknown)" }
+						end
+					end
+				end
+			end
+		end
+
 		return alt_json_encode( st ), "application/json"
 
 	else
