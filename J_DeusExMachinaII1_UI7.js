@@ -12,6 +12,8 @@
 
 var DeusExMachinaII = (function(api, $) {
 
+	var pluginVersion = '2.10develop-19245';
+
 	// unique identifier for this plugin...
 	var uuid = '11816AA9-0C7C-4E8F-B490-AAB429FA140F';
 
@@ -495,7 +497,10 @@ var DeusExMachinaII = (function(api, $) {
 			html += '</div>';
 
 			html += '<h2>More Information</h2>If you need more information about configuring DeusExMachinaII, please see the <a href="https://github.com/toggledbits/DeusExMachina/blob/master/README.md" target="_blank">README</a> in <a href="https://github.com/toggledbits/DeusExMachina" target="_blank"> our GitHub repository</a>.<p><b>Find DeusExMachinaII useful?</b> Please consider supporting the project with <a href="https://www.toggledbits.com/donate">a small donation</a>. I am grateful for any support you choose to give!</p>';
-			html += '<a href="' + api.getDataRequestURL() + '?id=lr_DeusExMachinaII&action=status" target="_blank">Config/status dump</a>';
+			html += '<div>';
+			html += 'DeusExMachinaII (DEMII) version ' + pluginVersion + '. ';
+			html += '<a href="' + api.getDataRequestURL() + '?id=lr_DeusExMachinaII&action=status" target="_blank">Config/status Report</a>';
+			html += '</div>';
 
 			// Push generated HTML to page
 			api.setCpanelContent(html);
