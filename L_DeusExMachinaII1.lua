@@ -5,6 +5,7 @@
 module("L_DeusExMachinaII1", package.seeall)
 
 local debugMode = false
+local logFile = false
 
 local string = require("string")
 
@@ -12,7 +13,7 @@ local _PLUGIN_ID = 8702 -- luacheck: ignore 211
 local _PLUGIN_NAME = "DeusExMachinaII"
 local _PLUGIN_VERSION = "2.10develop-19245"
 local _PLUGIN_URL = "https://www.toggledbits.com/demii"
-local _CONFIGVERSION = 20903 -- increment only, do not change 20 prefix
+local _CONFIGVERSION = 20904 -- increment only, do not change 20 prefix
 
 local MYSID = "urn:toggledbits-com:serviceId:DeusExMachinaII1"
 local MYTYPE = "urn:schemas-toggledbits-com:device:DeusExMachinaII:1"
@@ -35,6 +36,10 @@ local sysEvents = {}
 local maxEvents = 300
 local actionHook
 local houseModeText = { "Home", "Away", "Night", "Vacation" }
+
+-- Forward declarations
+local logToFile
+-- End forwards
 
 local function dump(t)
 	if t == nil then return "nil" end
@@ -84,13 +89,9 @@ local function L(msg, ...) -- luacheck: ignore 212
 		table.insert( sysEvents, str )
 		while #sysEvents > maxEvents do table.remove( sysEvents, 1 ) end
 	end
---[[
-	local ff = io.open("/etc/cmh-ludl/DeusActivity.log", "a")
-	if ff then
-		ff:write(string.format("%02d %s %s\n", level, os.date("%x.%X"), str))
-		ff:close()
+	if logFile then
+		pcall( logToFile, str, level )
 	end
---]]
 end
 
 local function D(msg, ...)
@@ -326,6 +327,31 @@ end
 
 local function setMessage(s, dev)
 	setVar(MYSID, "Message", s or "", dev or pluginDevice)
+end
+
+-- Log message to log file.
+logToFile = function(str, level)
+	if logFile == false then
+		logFile = io.open("/etc/cmh-ludl/DeusActivity.log", "a")
+		-- Yes, we leave nil if it can't be opened, and therefore don't
+		-- keep trying to open as a result. By design.
+	end
+	if logFile then
+		local maxsizek = getVarNumeric("MaxLogSize", 0)
+		if maxsizek <= 0 then
+			-- We should not be open now (runtime change, no reload needed)
+			logFile:close()
+			logFile = false
+			return
+		end
+		if logFile:seek("end") >= (1024*maxsizek) then
+			logFile:close()
+			os.execute("pluto-lzo c /etc/cmh-ludl/DeusActivity.log /etc/cmh-ludl/DeusActivity.log.lzo")
+			logFile = io.open("/etc/cmh-ludl/DeusActivity.log", "w")
+		end
+		level = level or 50
+		logFile:write(string.format("%02d %s %s\n", level, os.date("%x.%X"), str))
+	end
 end
 
 -- Shortcut function to return state of SwitchPower1 Status variable
@@ -948,6 +974,9 @@ local function runOnce()
 		initVar( MYSID, "MinOffDelay", "", pluginDevice )
 		initVar( MYSID, "MaxOffDelay", "", pluginDevice )
 	end
+	if s < 20904 then
+		initVar( MYSID, "MaxLogSize", "0", pluginDevice )
+	end
 
 	-- Update version state last.
 	if (s ~= _CONFIGVERSION) then
@@ -1180,6 +1209,17 @@ local function runCyclerTask( task, dev )
 		setMessage( "Resuming; next at " .. os.date("%X", nextStep))
 		task:schedule( nextStep )
 		return
+	end
+
+	-- See if log file needs to be opened
+	if getVarNumeric("MaxLogSize", 0) > 0 then
+		if logFile == false then -- false means we've never tried to open it
+			pcall( logToFile, "Log file opened" )
+		end
+	elseif logFile then
+		-- Needs to be closed.
+		logFile:close()
+		logFile = false
 	end
 
 	-- Ready to do some work.
