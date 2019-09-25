@@ -24,8 +24,8 @@
 			<serviceId>urn:upnp-org:serviceId:SwitchPower1</serviceId>
 			<name>SetTarget</name>
 			<run>
-				local newTargetValue = tonumber(lul_settings.newTargetValue or "0", 10)
-				if (newTargetValue ~= 0) then
+				local newTargetValue = tonumber(lul_settings.newTargetValue) or 0
+				if newTargetValue ~= 0 then
 					demII.deusEnable(lul_device)
 				else
 					demII.deusDisable(lul_device)
@@ -50,12 +50,12 @@
 			<serviceId>urn:toggledbits-com:serviceId:DeusExMachinaII1</serviceId>
 			<name>SetEnabled</name>
 			<run>
-				local newEnabledValue = tonumber(lul_settings.NewEnabledValue or "0", 10)
+				local newEnabledValue = tonumber(lul_settings.NewEnabledValue) or 0
 				if (newEnabledValue ~= 0) then
-					luup.variable_set("urn:upnp-org:serviceId:SwitchPower1", "Target", 1, lul_device)
+					luup.variable_set("urn:upnp-org:serviceId:SwitchPower1", "Target", "1", lul_device)
 					demII.deusEnable(lul_device)
 				else
-					luup.variable_set("urn:upnp-org:serviceId:SwitchPower1", "Target", 0, lul_device)
+					luup.variable_set("urn:upnp-org:serviceId:SwitchPower1", "Target", "0", lul_device)
 					demII.deusDisable(lul_device)
 				end
 			</run>

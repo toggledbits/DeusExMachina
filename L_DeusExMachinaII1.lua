@@ -5,13 +5,12 @@
 module("L_DeusExMachinaII1", package.seeall)
 
 local debugMode = false
-local logFile = false
 
 local string = require("string")
 
 local _PLUGIN_ID = 8702 -- luacheck: ignore 211
 local _PLUGIN_NAME = "DeusExMachinaII"
-local _PLUGIN_VERSION = "2.10develop-19245"
+local _PLUGIN_VERSION = "2.10develop-19267"
 local _PLUGIN_URL = "https://www.toggledbits.com/demii"
 local _CONFIGVERSION = 20904 -- increment only, do not change 20 prefix
 
@@ -34,6 +33,7 @@ local isOpenLuup = false
 local devStateCache = false
 local sysEvents = {}
 local maxEvents = 300
+local logFile = false
 local actionHook
 local houseModeText = { "Home", "Away", "Night", "Vacation" }
 
@@ -259,6 +259,19 @@ TaskManager = function( luupCallbackName )
 	}
 end
 
+local function getInstallPath()
+	if not installPath then
+		installPath = "/etc/cmh-ludl/" -- until we know otherwise
+		if isOpenLuup then
+			local loader = require "openLuup.loader"
+			if loader.find_file then
+				installPath = loader.find_file( "L_DeusExMachinaII1.lua" ):gsub( "L_DeusExMachinaII1.lua$", "" )
+			end
+		end
+	end
+	return installPath
+end
+
 local function checkVersion(dev)
 	local ui7Check = luup.variable_get(MYSID, "UI7Check", dev) or ""
 	if isOpenLuup or ( luup.version_branch == 1 and luup.version_major >= 7 ) then
@@ -312,17 +325,9 @@ local function setVar( sid, name, val, dev )
 	return s
 end
 
--- Delete a variable (if we can... read on...)
-local function deleteVar( name, devid )
-	if devid == nil then devid = pluginDevice end
-	-- Interestingly, setting a variable to nil with luup.variable_set does nothing interesting; too bad, it
-	-- could have been used to delete variables, since a later get would yield nil anyway. But it turns out
-	-- that using the variableset Luup request with no value WILL delete the variable.
-	-- 2019-03-11: Later versions of firmware now delete variable when set to nil; request is still reliable.
-	local req = "http://127.0.0.1/port_3480/data_request?id=variableset&DeviceNum=" .. tostring(devid) .. "&serviceId=" .. MYSID .. "&Variable=" .. name .. "&Value="
-	D("deleteVar(%1,%2) wget %3", name, devid, req)
-	local status, result = luup.inet.wget(req)
-	D("deleteVar(%1,%2) status=%3, result=%4", name, devid, status, result)
+-- Delete a variable
+local function deleteVar( name, devid, sid )
+	luup.variable_set( sid or MYSID, name, nil, devid or pluginDevice )
 end
 
 local function setMessage(s, dev)
@@ -331,8 +336,9 @@ end
 
 -- Log message to log file.
 logToFile = function(str, level)
+	lfn = getInstallPath() .. "DeusActivity.log"
 	if logFile == false then
-		logFile = io.open("/etc/cmh-ludl/DeusActivity.log", "a")
+		logFile = io.open(lfn, "a")
 		-- Yes, we leave nil if it can't be opened, and therefore don't
 		-- keep trying to open as a result. By design.
 	end
@@ -346,11 +352,12 @@ logToFile = function(str, level)
 		end
 		if logFile:seek("end") >= (1024*maxsizek) then
 			logFile:close()
-			os.execute("pluto-lzo c /etc/cmh-ludl/DeusActivity.log /etc/cmh-ludl/DeusActivity.log.lzo")
-			logFile = io.open("/etc/cmh-ludl/DeusActivity.log", "w")
+			os.execute("pluto-lzo c '" .. lfn .. "' '" .. lfn .. ".lzo'")
+			logFile = io.open(lfn, "w")
 		end
 		level = level or 50
 		logFile:write(string.format("%02d %s %s\n", level, os.date("%x.%X"), str))
+		logFile:flush()
 	end
 end
 
@@ -624,7 +631,7 @@ local function isDeviceOn(targetid)
 		if dst then return dst.state == 1 end
 		D("isDeviceOn() dev %1 state not cached, fetching", r)
 		if luup.device_supports_service(SWITCH_SID, r) then
-			val =  luup.variable_get(SWITCH_SID, "Status", r) or "0"
+			val = luup.variable_get(SWITCH_SID, "Status", r) or "0"
 		end
 		D("isDeviceOn(): current device %1 status is %2", r, val)
 		updateDeviceState( targetid, val ~= "0", nil )
@@ -649,7 +656,7 @@ local function doActionHook( target, state )
 		end
 	end
 	if actionHook == nil then
-		local f,err = loadfile( "/etc/cmh-ludl/DEMIIAction.lua" )
+		local f,err = loadfile( getInstallPath() .. "DEMIIAction.lua" )
 		if err then
 			L({level=2,msg="DEMIIAction.lua can't be loaded: %1"}, err)
 			actionHook = false -- prevent further load attempts
@@ -740,7 +747,7 @@ local function targetControl(targetid, turnOn)
 			luup.call_action(DIMMER_SID, "SetLoadLevelTarget", { newLoadlevelTarget=tostring(lvl) }, devid) -- note odd case inconsistency in word "level"
 		else
 			-- Everything else gets handled as a switch.
-			if not luup.device_supports_service("urn:upnp-org:serviceId:SwitchPower1") then
+			if not luup.device_supports_service("urn:upnp-org:serviceId:SwitchPower1", devid) then
 				L({level=2,msg="Device %1 (#%2) type unrecognized, being handled as binary light."}, luup.devices[devid], devid)
 			end
 			lvl = turnOn and "1" or "0"
@@ -876,6 +883,7 @@ end
 
 local function startCycling(dev)
 	D("startCycling(%1)", dev)
+	clearDeviceState()
 	setVar(MYSID, "State", STATE_CYCLE, dev)
 	setVar(MYSID, "NextStep", "0", dev)
 	-- Give externals a chance to react to state change
@@ -914,6 +922,7 @@ local function runOnce()
 		initVar( MYSID, "MinTargetsOn", 1, pluginDevice )
 		initVar( MYSID, "MaxTargetsOn", 0, pluginDevice )
 		initVar( MYSID, "LeaveLightsOn", 0, pluginDevice )
+		initVar( MYSID, "MaxLogSize", 0, pluginDevice )
 		initVar( MYSID, "Active", "0", pluginDevice )
 		initVar( MYSID, "LastHouseMode", "1", pluginDevice )
 		initVar( MYSID, "NextStep", "0", pluginDevice )
@@ -975,13 +984,11 @@ local function runOnce()
 		initVar( MYSID, "MaxOffDelay", "", pluginDevice )
 	end
 	if s < 20904 then
-		initVar( MYSID, "MaxLogSize", "0", pluginDevice )
+		initVar( MYSID, "MaxLogSize", "64", pluginDevice )
 	end
 
 	-- Update version state last.
-	if (s ~= _CONFIGVERSION) then
-		initVar(MYSID, "Version", _CONFIGVERSION, pluginDevice)
-	end
+	setVar(MYSID, "Version", _CONFIGVERSION, pluginDevice)
 end
 
 -- Return the plugin version string
@@ -1004,7 +1011,8 @@ function deusEnable(dev)
 	-- Resume house mode poller
 	if systemHMD then
 		setHMTModeSetting( systemHMD )
-		sysTaskManager.getTask( "hmpoll" ):delay( 15 )
+		local hmp = sysTaskManager.getTask( "hmpoll" )
+		if hmp then hmp:delay( 15 ) end
 	end
 
 	-- Kick master task.
@@ -1051,18 +1059,22 @@ function actionActivate( dev, newState )
 		if newState then
 			-- Activate.
 			L("Manual activation action.")
-			setMessage("Activating,,,")
-			if currState == STATE_IDLE then
+			local n = getVarNumeric( "NextStep", 0 )
+			if currState == STATE_IDLE or n == 0 then
+				setMessage("Activating,,,")
 				startCycling(dev)
 			elseif currState == STATE_SHUTDOWN then
+				setMessage("Resuming cycling...")
 				setVar(MYSID, "State", STATE_CYCLE, dev )
 			else
+				setMessage("Activated; next cycle " .. os.date("%X", n))
 				L("Ignored request for manual activation, already running (%1).", currState)
 			end
 		else
 			if currState == STATE_CYCLE then
 				L("Manual deactivation action.")
 				setVar(MYSID, "State", STATE_SHUTDOWN, dev)
+				setVar(MYSID, "NextStep", 0, dev)
 				setMessage("Deactivating...")
 				sysTaskManager.getTask( "cycler" ):delay( 0 ) -- kick cycler
 			else
@@ -1202,15 +1214,6 @@ local function runCyclerTask( task, dev )
 		return -- do not schedule
 	end
 
-	-- See if we're on time (early ticks come from restarts, usually)
-	local nextStep = getVarNumeric("NextStep", 0, pluginDevice)
-	if nextStep > now then
-		D("runCyclerTask(): early step, delaying to %1", nextStep)
-		setMessage( "Resuming; next at " .. os.date("%X", nextStep))
-		task:schedule( nextStep )
-		return
-	end
-
 	-- See if log file needs to be opened
 	if getVarNumeric("MaxLogSize", 0) > 0 then
 		if logFile == false then -- false means we've never tried to open it
@@ -1220,6 +1223,15 @@ local function runCyclerTask( task, dev )
 		-- Needs to be closed.
 		logFile:close()
 		logFile = false
+	end
+
+	-- See if we're on time (early ticks come from restarts, usually)
+	local nextStep = getVarNumeric("NextStep", 0, pluginDevice)
+	if nextStep > now then
+		D("runCyclerTask(): early step, delaying to %1", nextStep)
+		setMessage( "Resuming; next at " .. os.date("%X", nextStep))
+		task:schedule( nextStep )
+		return
 	end
 
 	-- Ready to do some work.
@@ -1241,8 +1253,11 @@ local function runCyclerTask( task, dev )
 			setMessage("Idle")
 			return -- without rescheduling
 		end
+		D("runCyclerTask(): next cycle delay %1", d)
 		task:delay( d )
-		local m = "Deactivating; next at " .. os.date("%X", now+d)
+		local wh = now + d
+		setVar( MYSID, "NextStep", wh, pluginDevice )
+		local m = "Deactivating; next at " .. os.date("%X", wh)
 		L(m)
 		setMessage(m)
 		return
@@ -1297,7 +1312,7 @@ local function runCyclerTask( task, dev )
 							else
 								L("Cycle: turn %1 ON", devspec)
 								local maxOnTime = targetControl(devspec, true)
-								if maxOnTime then nextCycleDelay = maxOnTime end
+								if maxOnTime then nextCycleDelay = math.min(nextCycleDelay, maxOnTime) end
 							end
 							break
 						end
@@ -1340,7 +1355,7 @@ local function checkHouseMode()
 end
 
 local function runHouseModeDefaultTask( task, dev )
-	D("houseModeDefaultTask(%1,%2)",task,dev)
+	D("runHouseModeDefaultTask(%1,%2)", task, dev)
 	if isEnabled() then
 		task:delay( 60 )
 		checkHouseMode()
@@ -1357,6 +1372,10 @@ function deusInit(pdev)
 		return false
 	end
 	pluginDevice = pdev
+
+	if getVarNumeric("MaxLogSize", 0) > 0 then
+		pcall( logToFile, "startup" )
+	end
 
 	maxEvents = getVarNumeric( "MaxEvents", 300, pdev )
 	if maxEvents < 1 then maxEvents = 1 end
@@ -1388,22 +1407,32 @@ function deusInit(pdev)
 				{ newDeviceType=MYTYPE, newScriptFile="J_DeusExMachinaII1_ALTUI.js", newDeviceDrawFunc="DeusExMachina_ALTUI.DeviceDraw" },
 				k )
 			D("deusInit() ALTUI's RegisterPlugin action returned resultCode=%1, resultString=%2, job=%3, returnArguments=%4", rc,rs,jj,ra)
-		elseif v.device_type == "openLuup" then
+		elseif v.device_type == "openLuup" and v.device_num_parent == 0 then
 			D("deusInit() detected openLuup")
-			isOpenLuup = true
+			isOpenLuup = k
 		end
 	end
 
 	-- House mode tracking
-	systemHMD = getHouseModeTracker( true, pdev )
-	if systemHMD then
-		D("deusInit(): watching system HMD device #%1", systemHMD)
-		luup.attr_set( "invisible", debugMode and 0 or 1, systemHMD )
-		luup.attr_set( "hidden", debugMode and 0 or 1, systemHMD )
-		luup.attr_set( "room", luup.attr_get( "room", pdev ) or "0", systemHMD )
-		setVar( "urn:micasaverde-com:serviceId:SecuritySensor1", "Tripped", "0", systemHMD )
-		setHMTModeSetting( systemHMD )
-		luup.variable_watch( "deusWatch", "urn:micasaverde-com:serviceId:SecuritySensor1", "Armed", systemHMD )
+	if isOpenLuup then
+		luup.variable_watch( "deusWatch", "openLuup", "HouseMode", isOpenLuup)
+	else
+		systemHMD = getHouseModeTracker( true, pdev )
+		if systemHMD then
+			D("deusInit(): watching system HMD device #%1", systemHMD)
+			luup.attr_set( "invisible", debugMode and 0 or 1, systemHMD )
+			luup.attr_set( "hidden", debugMode and 0 or 1, systemHMD )
+			luup.attr_set( "room", luup.attr_get( "room", pdev ) or "0", systemHMD )
+			setVar( "urn:micasaverde-com:serviceId:SecuritySensor1", "Tripped", "0", systemHMD )
+			setHMTModeSetting( systemHMD )
+			luup.variable_watch( "deusWatch", "urn:micasaverde-com:serviceId:SecuritySensor1", "Armed", systemHMD )
+		end
+
+		-- Create and start the house mode poller ask fallback to HMD
+		if getVarNumeric("PollHouseMode",0) ~= 0 then
+			t = sysTaskManager.Task:new( "hmpoll", pluginDevice, runHouseModeDefaultTask, { pluginDevice } )
+			t:delay( 60 )
+		end
 	end
 
 	-- Other initialization
@@ -1423,10 +1452,6 @@ function deusInit(pdev)
 		t:delay( 30 )
 	end
 
-	-- Create and start the house mode poller ask fallback to HMD
-	t = sysTaskManager.Task:new( "hmpoll", pluginDevice, runHouseModeDefaultTask, { pluginDevice } )
-	t:delay( 60 )
-
 	luup.set_failure( 0, pdev )
 	return true, "OK", _PLUGIN_NAME
 end
@@ -1442,6 +1467,11 @@ function deusWatch( dev, sid, var, oldVal, newVal )
 			local task = sysTaskManager.getTask( 'hmpoll' )
 			if task then task:delay( 60, { replace=true } ) end -- defer poll
 			checkHouseMode() -- also updates/resets HMT
+		end
+	elseif isOpenLuup and dev == isOpenLuup and var == "HouseMode" then
+		L("openLuup house mode change detected from %1 to %2", oldVal, newVal)
+		if isEnabled() then
+			checkHouseMode()
 		end
 	elseif sid == MYSID and var == "State" then
 		-- Turn off active flag in inactive states. Cycler turns flag on when it's working.
