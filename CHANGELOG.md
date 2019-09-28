@@ -1,7 +1,9 @@
 # DeusExMachinaII Change Log #
 
-## Version 2.10 (development)
+## Version 2.10 (released)
 
+* Support DeusActivity.log file, enabled by setting `MaxLogSize` to a non-zero value (units are kilobytes; logs larger than this size are "rotated" through a single LZO archive).
+* Clear device state cache at the start of cycling, to ensure up-to-date state; no bug associated with this, it's just a noticed omission.
 * Enhancement: implement PreactionScene (state variable) and DEMIIAction.lua hook. The latter (file), if it exists, is loaded and run; the code is expected to return a function that accepts two arguments: target and state. Before DEMII turns a target on or off, it will call this function. This is the result of a request by @rafale77 for a "hook" to allow him to mute his camera motion sensors before lights change.
 * Handle any unknown device as binary light rather than erroring-out for that device; this is more flexible, and creates the opportunity for immediate manual configuration of unrecognized devices, without the need to wait for code changes.
 * Clean up device list in configuration, and improve device type detection.

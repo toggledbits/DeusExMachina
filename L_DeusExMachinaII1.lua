@@ -10,7 +10,7 @@ local string = require("string")
 
 local _PLUGIN_ID = 8702 -- luacheck: ignore 211
 local _PLUGIN_NAME = "DeusExMachinaII"
-local _PLUGIN_VERSION = "2.10develop-19267"
+local _PLUGIN_VERSION = "2.10"
 local _PLUGIN_URL = "https://www.toggledbits.com/demii"
 local _CONFIGVERSION = 20904 -- increment only, do not change 20 prefix
 
@@ -922,7 +922,7 @@ local function runOnce()
 		initVar( MYSID, "MinTargetsOn", 1, pluginDevice )
 		initVar( MYSID, "MaxTargetsOn", 0, pluginDevice )
 		initVar( MYSID, "LeaveLightsOn", 0, pluginDevice )
-		initVar( MYSID, "MaxLogSize", 64, pluginDevice )
+		initVar( MYSID, "MaxLogSize", 0, pluginDevice )
 		initVar( MYSID, "Active", "0", pluginDevice )
 		initVar( MYSID, "LastHouseMode", "1", pluginDevice )
 		initVar( MYSID, "NextStep", "0", pluginDevice )
@@ -984,7 +984,7 @@ local function runOnce()
 		initVar( MYSID, "MaxOffDelay", "", pluginDevice )
 	end
 	if s < 20904 then
-		initVar( MYSID, "MaxLogSize", "64", pluginDevice )
+		initVar( MYSID, "MaxLogSize", "0", pluginDevice )
 	end
 
 	-- Update version state last.
@@ -1101,20 +1101,25 @@ end
 local function runMasterTask( task, dev )
 	D("runMasterTask(%1,%2)",task,dev)
 	if isEnabled() then
-		local currState = getVarNumeric("State", STATE_STANDBY, dev)
+		-- By default, master task will run every 60 seconds. But a lot can change that...
+		task:delay( 60 )
 
 		-- Get going...
+		local currState = getVarNumeric("State", STATE_STANDBY, dev)
+		local nextStep = getVarNumeric("NextStep", 0, dev)
 		local isAutoTiming = getVarNumeric( "AutoTiming", 1, dev ) ~= 0
 		if not isAutoTiming then
+			-- Manual/external activation mode. We just wait.
 			-- Set message for idle state. Other states handled in runCyclerTask.
 			D("runMasterTask() auto-timing off; current state is %1", currState)
 			if currState == STATE_IDLE then
 				setMessage("Waiting for activation")
+				task:suspend() -- we just wait
 			else
-				local nextStep = getVarNumeric( "NextStep", 0, dev )
-				setMessage("Cycling; next at " .. os.date("%X", nextStep))
+				-- Still shutting down
+				setMessage((currState==STATE_CYCLE and "Cycling" or "Lights-out") .. "; next at " .. os.date("%X", nextStep))
 			end
-			return -- don't reschedule master task
+			return
 		end
 
 		-- Auto-timing check.
@@ -1133,9 +1138,9 @@ local function runMasterTask( task, dev )
 		local inActiveHouseMode = isActiveHouseMode( mode )
 		-- We're auto-timing. We may need to do something...
 		if inActiveTimePeriod then
-			D("runMasterTask(): in active time period")
+			D("runMasterTask(): in active time period, currstate=%1", currState)
 			if inActiveHouseMode then
-				D("runMasterTask(): in active house mode, currState=%1", currState)
+				D("runMasterTask(): in active house mode")
 				-- Right time, right house mode.
 				if currState == STATE_IDLE then
 					-- Get rolling!
@@ -1150,10 +1155,10 @@ local function runMasterTask( task, dev )
 						t:delay( 0 )
 					end
 				end
-				return task:delay( 60 )
+				return
 			else
 				-- Right time, wrong house mode.
-				D("runMasterTask(): not active house mode, currState=%1", currState)
+				D("runMasterTask(): active period, but not active house mode")
 				if currState == STATE_CYCLE or currState == STATE_SHUTDOWN then
 					L("Stopping; inactive house mode")
 					setMessage("Stopping; inactive house mode")
@@ -1164,33 +1169,34 @@ local function runMasterTask( task, dev )
 				return task:schedule( nextStart ) -- default timing
 			end
 		else
-			D("runMasterTask(): not active time period")
+			D("runMasterTask(): not active time period, currState=%1", currState)
 			if inActiveHouseMode then
-				D("runMasterTask(): in active house mode for inactive period, currState=%1", currState)
+				D("runMasterTask(): in active house mode for inactive period")
 				-- Wrong time, right house mode.
 				if currState == STATE_CYCLE then
 					L("Lights-out (auto timing), transitioning to shut-off cycles...")
 					setMessage("Starting lights-out...")
 					setVar(MYSID, "State", STATE_SHUTDOWN, dev)
-					return task:delay( 60 )
+					return
 				elseif currState == STATE_SHUTDOWN then
 					-- Keep working.
-					return task:delay( 60 )
+					setMessage("Lights-out; next at " .. os.date("%X", nextStep))
+					return
 				end
 			else
 				-- Wrong time, wrong house mode.
-				D("runMasterTask(): inactive house mode, inactive time period, currState=%1", currState)
+				D("runMasterTask(): inactive house mode, inactive time period")
 				if currState == STATE_CYCLE or currState == STATE_SHUTDOWN then
 					L("Stopping; inactive house mode")
 					setMessage("Stopping; inactive house mode")
 					stopCycling( dev )
 				end
 			end
-			L("Waiting for " .. startWord)
-			setMessage("Waiting for " .. startWord)
-			if nextStart <= os.time() then nextStart = nextStart + 86400 end
-			return task:schedule( nextStart ) -- default timing
 		end
+		L("Waiting for " .. startWord)
+		setMessage("Waiting for " .. startWord)
+		if nextStart <= os.time() then nextStart = nextStart + 86400 end
+		return task:schedule( nextStart ) -- default timing
 	else
 		D("runMasterTask() disabled")
 		setMessage("Disabled")
