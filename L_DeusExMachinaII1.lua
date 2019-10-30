@@ -187,14 +187,16 @@ TaskManager = function( luupCallbackName )
 		end
 	end
 
-	function Task:schedule( when, flags )
+	function Task:schedule( when, flags, args )
 		assert(self.id, "Can't reschedule() a closed task")
+		if args then self.args = args end
 		scheduleTick( self.id, when, flags )
 		return self
 	end
 
-	function Task:delay( delay, flags )
+	function Task:delay( delay, flags, args )
 		assert(self.id, "Can't delay() a closed task")
+		if args then self.args = args end
 		scheduleTick( self.id, os.time()+delay, flags )
 		return self
 	end
@@ -1166,7 +1168,7 @@ local function runMasterTask( task, dev )
 				end
 				setMessage( "Inactive in " .. ( houseModeText[mode] or tostring(mode) ) .. " mode" )
 				if nextStart <= os.time() then nextStart = nextStart + 86400 end
-				return task:schedule( nextStart ) -- default timing
+				return task:schedule( nextStart, { replace=true } ) -- default timing
 			end
 		else
 			D("runMasterTask(): not active time period, currState=%1", currState)
@@ -1196,7 +1198,7 @@ local function runMasterTask( task, dev )
 		L("Waiting for " .. startWord)
 		setMessage("Waiting for " .. startWord)
 		if nextStart <= os.time() then nextStart = nextStart + 86400 end
-		return task:schedule( nextStart ) -- default timing
+		return task:schedule( nextStart, { replace=true } ) -- default timing
 	else
 		D("runMasterTask() disabled")
 		setMessage("Disabled")
