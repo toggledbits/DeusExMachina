@@ -10,7 +10,7 @@ local string = require("string")
 
 local _PLUGIN_ID = 8702 -- luacheck: ignore 211
 local _PLUGIN_NAME = "DeusExMachinaII"
-local _PLUGIN_VERSION = "2.10"
+local _PLUGIN_VERSION = "2.11develop-20020"
 local _PLUGIN_URL = "https://www.toggledbits.com/demii"
 local _CONFIGVERSION = 20904 -- increment only, do not change 20 prefix
 
@@ -229,7 +229,7 @@ TaskManager = function( luupCallbackName )
 		assert( type(owner) == "number" )
 		assert( type(tickFunction) == "function" )
 
-		local obj = { when=0, owner=owner, func=tickFunction, name=desc or tostring(owner), args=args }
+		local obj = { when=0, owner=owner, func=tickFunction, name=desc or tostring(id), args=args }
 		obj.id = tostring( id or obj )
 		setmetatable(obj, self)
 		self.__index = self
@@ -1483,10 +1483,8 @@ function deusWatch( dev, sid, var, oldVal, newVal )
 		end
 	elseif sid == MYSID and var == "State" then
 		-- Turn off active flag in inactive states. Cycler turns flag on when it's working.
-		local state = tonumber(newVal)
-		if not (state == STATE_CYCLE or state == STATE_SHUTDOWN) then
-			setVar( MYSID, "Active", "0", dev )
-		end
+		local state = tonumber(newVal) or 0
+		setVar( MYSID, "Active", (state == STATE_CYCLE or state == STATE_SHUTDOWN) and 1 or 0, dev )
 	end
 end
 
