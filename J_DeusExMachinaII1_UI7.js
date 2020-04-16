@@ -12,7 +12,7 @@
 
 var DeusExMachinaII = (function(api, $) {
 
-	var pluginVersion = '2.10';
+	var pluginVersion = '2.11develop-20107';
 
 	// unique identifier for this plugin...
 	var uuid = '11816AA9-0C7C-4E8F-B490-AAB429FA140F';
