@@ -10,7 +10,7 @@ local string = require("string")
 
 local _PLUGIN_ID = 8702 -- luacheck: ignore 211
 local _PLUGIN_NAME = "DeusExMachinaII"
-local _PLUGIN_VERSION = "2.11develop-20020"
+local _PLUGIN_VERSION = "2.11develop-20104"
 local _PLUGIN_URL = "https://www.toggledbits.com/demii"
 local _CONFIGVERSION = 20904 -- increment only, do not change 20 prefix
 
@@ -338,7 +338,7 @@ end
 
 -- Log message to log file.
 logToFile = function(str, level)
-	lfn = getInstallPath() .. "DeusActivity.log"
+	local lfn = getInstallPath() .. "DeusActivity.log"
 	if logFile == false then
 		logFile = io.open(lfn, "a")
 		-- Yes, we leave nil if it can't be opened, and therefore don't
