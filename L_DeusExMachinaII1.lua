@@ -1,5 +1,5 @@
 -- L_DeusExMachinaII1.lua - Core module for DeusExMachinaII
--- Copyright 2016,2017,2019 Patrick H. Rigney, All Rights Reserved.
+-- Copyright 2016,2017,2019,2022 Patrick H. Rigney, All Rights Reserved.
 -- This file is part of DeusExMachinaII. For license information, see LICENSE at https://github.com/toggledbits/DeusExMachina
 
 module("L_DeusExMachinaII1", package.seeall)
@@ -10,7 +10,7 @@ local string = require("string")
 
 local _PLUGIN_ID = 8702 -- luacheck: ignore 211
 local _PLUGIN_NAME = "DeusExMachinaII"
-local _PLUGIN_VERSION = "2.11develop-20104"
+local _PLUGIN_VERSION = "2.11-22333"
 local _PLUGIN_URL = "https://www.toggledbits.com/demii"
 local _CONFIGVERSION = 20904 -- increment only, do not change 20 prefix
 
@@ -1374,6 +1374,9 @@ end
 function deusInit(pdev)
 	D("deusInit(%1)", pdev)
 	L("starting plugin version %2 device %1", pdev, _PLUGIN_VERSION)
+
+	-- Disconnect this version from the App Marketplace (no longer used).
+	luup.attr_set( 'plugin', '', pdev )
 
 	if pluginDevice >= 0 then
 		setMessage("Another Deus is running!", pdev)

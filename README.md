@@ -7,11 +7,7 @@ It takes over your house while you're away on vacation by creating a ghost that 
 Simply specify the lights you want to have controlled by the plugin, specify a "Lights Out" time when lights will begin to
 turn off, and come sundown DeusExMachina will take over.
 
-There are currently two versions of Deus Ex Machina available:
-
-* Deus Ex Machina -- for UI5 (only); this is the legacy version and although it installs for UI6 and UI7, it does not work properly on those platforms. This version is only available from the MiCasaVerde plugin library.
-
-* Deus Ex Machina II -- for UI7 (only). This version was developed and tested on firmware version 1.7.855, but should work for any full release of UI7 provided by MiCasaVerde. The current release is available via both GitHub and the MiCasaVerde plugin library. Advanced builds are also available in the GitHub repository.
+**IMPORTANT:** This plugin is no longer distributed/updated in the Vera App Marketplace, which as of this writing has been down for months and is apparently not fully functional and well-supported by Ezlo these days. Updates will be offered exclusively through the plugin's [Github repository](https://github.com/toggledbits/DeusExMachina).
 
 ## History ##
 
@@ -35,12 +31,27 @@ DeusExMachina is offered under GPL (the GNU Public License).
 
 ### Installation ###
 
-The plugin is installed in the usual way: go to Apps in the left navigation, and click on "Install Apps".
-Search for "Deus Ex Machina II" (make sure you include the "II" at the end to get the UI7-compatible version),
-and then click the "Details" button in its listing of the search results. From here, simply click "Install"
-and wait for the install to complete. A full refresh of the UI is necessary (e.g. Ctrl-F5 on Windows) after installation.
+**IMPORTANT:** This plugin is no longer distributed/updated in the Vera App Marketplace, which as of this writing has been down for months and is apparently not well supported within Ezlo these days. Updates will be offered exclusively through the plugin's [Github repository](https://github.com/toggledbits/DeusExMachina).
 
-Once you have installed the plugin and refreshed the browser, you can proceed to device configuation.
+1. Download the latest release package in ZIP format: [release packages](https://github.com/toggledbits/DeusExMachina/releases)
+2. Unzip the downloaded archive to a location on your local system (remember where!).
+3. Open the Vera UI in your browser.
+4. Go to *Apps > Develop apps > Luup files*
+5. Go the folder container the unzipped files; select all of the files as a group, and drag them as a group to the *Upload* button in the Vera UI.
+6. Wait for the upload to complete and your Vera to reload Luup.
+7. [Hard refresh](https://www.howtogeek.com/672607/how-to-hard-refresh-your-web-browser-to-bypass-your-cache/) your browser.
+
+**If and only if** you are installing this plugin for the first time, perform the following additional steps to create the DeusExMachina II master device:
+
+1. Go to *Apps > Develop apps > Create device* in the Vera UI.
+2. For *Description*, copy-paste: `DeusExMachina II`
+2. For *Upnp Device Filename*, copy-paste: `D_DeusExMachinaII1.xml`
+4. For *Upnp Implementation Filename*, copy-paste: `I_DeusExMachinaII1.xml`
+5. Select a room if you wish.
+6. Press *Create device*.
+7. Go to *Apps > Develop apps > Test Luup code (Lua)*
+8. Enter and run `luup.reload()`
+9. Wait until Luup reloads and then hard-refresh your browser again (see last step above).
 
 ### Simple Configuration ###
 

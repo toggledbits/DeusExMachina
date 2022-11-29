@@ -1,4 +1,12 @@
-# DeusExMachinaII Change Log #
+# DeusExMachinaII Change Log
+
+**IMPORTANT:** This plugin is no longer distributed/updated in the Vera App Marketplace, which as of this writing has been down for months and is apparently not well supported within Ezlo these days. Updates will be offered exclusively through the plugin's [Github repository](https://github.com/toggledbits/DeusExMachina). Please see the README file in the Github repository for installation instructions.
+
+## Version 2.11 (22333, development)
+
+* Make sure `Active` flag tracks state correctly for non-active states.
+* Update docs for new install procedure (no Vera App Marketplace).
+* Code cleanup.
 
 ## Version 2.10 (released)
 

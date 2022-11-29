@@ -3,7 +3,7 @@
  * J_DeusExMachinaII1_UI7.js
  * Configuration interface for DeusExMachinaII
  *
- * Copyright 2016,2017 Patrick H. Rigney, All Rights Reserved.
+ * Copyright 2016,2017,2019,2022 Patrick H. Rigney, All Rights Reserved.
  * This file is part of DeusExMachinaII. For license information, see LICENSE at https://github.com/toggledbits/DeusExMachina
  */
 /* globals api,jQuery,$,Utils */
@@ -12,7 +12,7 @@
 
 var DeusExMachinaII = (function(api, $) {
 
-	var pluginVersion = '2.11develop-20107';
+	var pluginVersion = '2.11-22333';
 
 	// unique identifier for this plugin...
 	var uuid = '11816AA9-0C7C-4E8F-B490-AAB429FA140F';
@@ -37,7 +37,7 @@ var DeusExMachinaII = (function(api, $) {
 	}
 
 	function isControllable(d) {
-		if ( !d ) return false;
+		if ( !d || d.invisible ) return false;
 		if ( d.device_type === "urn:schemas-toggledbits-com:device:DeusExMachinaII:1" ) return false;
 		var cat = parseInt( d.category_num ) || 0;
 		if ( cat === 2 || cat === 3 ) return true;

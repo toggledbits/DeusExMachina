@@ -1,6 +1,6 @@
 {
 	"_comment": "This file is part of DeusExMachinaII",
-	"_copyright": "Copyright (c) 2016, 2017, 2018, 2019 Patrick H. Rigney, All Rights Reserved.",
+	"_copyright": "Copyright (c) 2016,2017,2019,2022 Patrick H. Rigney, All Rights Reserved.",
 	"default_icon": "https://dtabq7xg0g1t1.cloudfront.net/deusII.png",
 	"state_icons": [{
 			"img": "https://dtabq7xg0g1t1.cloudfront.net/deus-red.png",
@@ -171,7 +171,7 @@
 					"left": 0,
 					"Label": {
 						"lang_tag": "dem_about",
-						"text": "DeusExMachinaII ver 2.11develop-20107 &#169; 2016,2019 Patrick H. Rigney, All Rights Reserved. For documentation, license, or to report bugs, please go to the <a target='_blank' href='https://github.com/toggledbits/DeusExMachina'>DeusExMachinaII Github repository</a>. Use of this plugin constitutes acceptance of and agreement to the license terms without limitation or exclusion."
+						"text": "DeusExMachinaII ver 2.11-22333 &#169; 2016,2017,2019,2022 Patrick H. Rigney, All Rights Reserved. For documentation, license, or to report bugs, please go to the <a target='_blank' href='https://github.com/toggledbits/DeusExMachina'>DeusExMachinaII Github repository</a>. Use of this plugin constitutes acceptance of and agreement to the license terms without limitation or exclusion."
 					},
 					"Display": {
 						"Top": 90,

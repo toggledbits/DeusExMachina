@@ -1,110 +1,110 @@
 {
-    "_comment": "This file is part of DeusExMachinaII",
-    "_copyright": "Copyright (c) 2016, 2017 Patrick H. Rigney, All Rights Reserved.",
-    "flashicon": "https://dtabq7xg0g1t1.cloudfront.net/deusII.png",
-    "default_icon": "https://dtabq7xg0g1t1.cloudfront.net/deusII.png",
-    "doc_url": {
-        "doc_language": 1,
-        "doc_manual": 1,
-        "doc_version": 1,
-        "doc_platform": 0,
-        "doc_page": "devices"
-    },
-    "in_scene": 1,
-    "x": 2,
-    "y": 4,
-    "Tabs": [{
-        "Label": {
-            "lang_tag": "tabname_control",
-            "text": "Control"
-        },
-        "Position": "0",
-        "TabType": "flash",
-        "ControlGroup": [{
-            "id": "1",
-            "isSingle": "0",
-            "scenegroup": "1"
-        }],
-        "SceneGroup": [{
-            "id": "1",
-            "top": "2",
-            "left": "0",
-            "x": "2",
-            "y": "1"
-        }],
-        "Control": [{
-            "ControlGroup": "1",
-            "ControlType": "button",
-            "top": 0,
-            "left": 0,
-            "Label": {
-                "lang_tag": "cmd_disabled",
-                "text": "Disabled"
-            },
-            "Display": {
-                "Top": 20,
-                "Left": 120,
-                "Width": 80,
-                "Height": 20,
-                "Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
-                "Variable": "Enabled",
-                "Value": "0"
-            },
-            "Command": {
-                "Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
-                "Action": "SetEnabled",
-                "Parameters": [{
-                    "Name": "NewEnabledValue",
-                    "Value": "0"
-                }]
-            },
-            "ControlCode": "dem_disable"
-        }, {
-            "ControlGroup": "1",
-            "ControlType": "button",
-            "top": 0,
-            "left": 1,
-            "Label": {
-                "lang_tag": "cmd_enabled",
-                "text": "Enabled"
-            },
-            "Display": {
-                "Top": 20,
-                "Left": 20,
-                "Width": 80,
-                "Height": 20,
-                "Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
-                "Variable": "Enabled",
-                "Value": "1"
-            },
-            "Command": {
-                "Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
-                "Action": "SetEnabled",
-                "Parameters": [{
-                    "Name": "NewEnabledValue",
-                    "Value": "1"
-                }]
-            },
-            "ControlCode": "dem_enable"
-        }]
-    }, {
-        "Label": {
-            "lang_tag": "configure",
-            "text": "Configure"
-        },
-        "Position": "2",
-        "TabType": "javascript",
-        "ScriptName": "J_DeusExMachinaII1.js",
-        "Function": "configureDeus"
-    }, {
-        "Label": {
-            "lang_tag": "advanced",
-            "text": "Advanced"
-        },
-        "Position": "3",
-        "TabType": "javascript",
-        "ScriptName": "shared.js",
-        "Function": "advanced_device"
-    }],
-    "device_type": "urn:schemas-toggledbits-com:device:DeusExMachinaII:1"
+	"_comment": "This file is part of DeusExMachinaII",
+	"_copyright": "Copyright (c) 2016,2017,2019,2022 Patrick H. Rigney, All Rights Reserved.",
+	"flashicon": "https://dtabq7xg0g1t1.cloudfront.net/deusII.png",
+	"default_icon": "https://dtabq7xg0g1t1.cloudfront.net/deusII.png",
+	"doc_url": {
+		"doc_language": 1,
+		"doc_manual": 1,
+		"doc_version": 1,
+		"doc_platform": 0,
+		"doc_page": "devices"
+	},
+	"in_scene": 1,
+	"x": 2,
+	"y": 4,
+	"Tabs": [{
+		"Label": {
+			"lang_tag": "tabname_control",
+			"text": "Control"
+		},
+		"Position": "0",
+		"TabType": "flash",
+		"ControlGroup": [{
+			"id": "1",
+			"isSingle": "0",
+			"scenegroup": "1"
+		}],
+		"SceneGroup": [{
+			"id": "1",
+			"top": "2",
+			"left": "0",
+			"x": "2",
+			"y": "1"
+		}],
+		"Control": [{
+			"ControlGroup": "1",
+			"ControlType": "button",
+			"top": 0,
+			"left": 0,
+			"Label": {
+				"lang_tag": "cmd_disabled",
+				"text": "Disabled"
+			},
+			"Display": {
+				"Top": 20,
+				"Left": 120,
+				"Width": 80,
+				"Height": 20,
+				"Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
+				"Variable": "Enabled",
+				"Value": "0"
+			},
+			"Command": {
+				"Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
+				"Action": "SetEnabled",
+				"Parameters": [{
+					"Name": "NewEnabledValue",
+					"Value": "0"
+				}]
+			},
+			"ControlCode": "dem_disable"
+		}, {
+			"ControlGroup": "1",
+			"ControlType": "button",
+			"top": 0,
+			"left": 1,
+			"Label": {
+				"lang_tag": "cmd_enabled",
+				"text": "Enabled"
+			},
+			"Display": {
+				"Top": 20,
+				"Left": 20,
+				"Width": 80,
+				"Height": 20,
+				"Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
+				"Variable": "Enabled",
+				"Value": "1"
+			},
+			"Command": {
+				"Service": "urn:toggledbits-com:serviceId:DeusExMachinaII1",
+				"Action": "SetEnabled",
+				"Parameters": [{
+					"Name": "NewEnabledValue",
+					"Value": "1"
+				}]
+			},
+			"ControlCode": "dem_enable"
+		}]
+	}, {
+		"Label": {
+			"lang_tag": "configure",
+			"text": "Configure"
+		},
+		"Position": "2",
+		"TabType": "javascript",
+		"ScriptName": "J_DeusExMachinaII1.js",
+		"Function": "configureDeus"
+	}, {
+		"Label": {
+			"lang_tag": "advanced",
+			"text": "Advanced"
+		},
+		"Position": "3",
+		"TabType": "javascript",
+		"ScriptName": "shared.js",
+		"Function": "advanced_device"
+	}],
+	"device_type": "urn:schemas-toggledbits-com:device:DeusExMachinaII:1"
 }
